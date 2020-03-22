@@ -1,3 +1,5 @@
+#ifndef EVENT_H
+#define EVENT_H
 
 /*************************************************************
  * Open Ventilator
@@ -19,30 +21,50 @@
  **************************************************************
 */
 
+//#ifdef VENTSIM
+//  #include "arduino_libs.h"
+//#else
+//  #include <Arduino.h>
+//#endif
 
-#include "vent.h"
-#include "hal.h"
-#include "ui_native.h"
-   
+#define TEXT_PARAM_SIZE 64
 
-//----------- Locals -------------
+typedef enum  {
+    EVT_KEY_PRESS,
+    EVT_KEY_RELEASE,
+} EVENT_TYPE;
+
+typedef  enum {
+    PROPAGATE = 0,
+    PROPAGATE_STOP,
+} propagate_t;
+
+typedef struct event_st {
+    EVENT_TYPE type;
+    int iParam;
+    unsigned long long lParam;
+    char * tParam[TEXT_PARAM_SIZE];
+} event_t;
+
+void evtPostEx( EVENT_TYPE type,
+                int iParam,
+                unsigned long long lParam,
+                char * tParam);
+
+void evtPost(  EVENT_TYPE type,
+               int iParam);
+
+void evtDispatchAll();
+
+class CEvent {
+
+public:
+    CEvent();
+    ~CEvent();
 
 
-static CUiNative ui;
+    virtual propagate_t onEvent(event_t * event);
+};
 
 
-//------------ Global -----------
- void ventLoop()
- {
-    halBlinkLED();
-    evtDispatchAll();
- }
-
-void ventSetup()
-{
-  halLcdWrite(0,0,(const char *) "01234567890");
-  halLcdWrite(9,1,(const char *) "X1234567890");
-  halLcdWrite(14,2,(const char *) "Y1234567890");
-  halLcdWrite(0,3,(const char *) "Z1234567890");
-}
- 
+#endif // EVENT_H

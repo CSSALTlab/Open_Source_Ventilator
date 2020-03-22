@@ -27,6 +27,7 @@
 //#include "../ArduinoVent/vent.h"
 #include "vent.h"
 #include "hal.h"
+#include "event.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -54,11 +55,13 @@ MainWindow::~MainWindow()
 void MainWindow::onBtFuncPressed()
 {
     qDebug() << "onBtFuncPressed";
+    evtPost(EVT_KEY_PRESS, 0);
 }
 
 void MainWindow::onBtFuncRelease()
 {
     qDebug() << "onBtFuncRelease";
+    evtPost(EVT_KEY_RELEASE, 0);
 }
 
 

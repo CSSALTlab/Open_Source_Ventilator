@@ -1,3 +1,5 @@
+#ifndef UI_NATIVE_H
+#define UI_NATIVE_H
 
 /*************************************************************
  * Open Ventilator
@@ -18,31 +20,20 @@
  *
  **************************************************************
 */
+#ifdef VENTSIM
+  #include "arduino_libs.h"
+#else
+  #include <Arduino.h> 
+#endif
 
+#include "event.h"
 
-#include "vent.h"
-#include "hal.h"
-#include "ui_native.h"
-   
+class CUiNative : CEvent {
+public:
+    CUiNative();
+    ~CUiNative();
 
-//----------- Locals -------------
+    virtual propagate_t onEvent(event_t * event);
+};
 
-
-static CUiNative ui;
-
-
-//------------ Global -----------
- void ventLoop()
- {
-    halBlinkLED();
-    evtDispatchAll();
- }
-
-void ventSetup()
-{
-  halLcdWrite(0,0,(const char *) "01234567890");
-  halLcdWrite(9,1,(const char *) "X1234567890");
-  halLcdWrite(14,2,(const char *) "Y1234567890");
-  halLcdWrite(0,3,(const char *) "Z1234567890");
-}
- 
+#endif // UI_NATIVE_H
