@@ -1,4 +1,4 @@
-#VentCode
+# VentCode
 
 * **ArduinoVent** The final target code for the Ventilator Controller
 
@@ -39,13 +39,13 @@ Where the rows represent the following tokes:
 
  * **First**: Status (Idle, Alarm/Error or Running). BLE indicates:
    * X: Bluetooth is not installed
-   * A: Bluettooth is disabled
-   * A: Bluettooth is advertising
-   * C: Bluettooth is connected.
+   * D: Bluetooth is disabled
+   * A: Bluetooth is advertising
+   * C: Bluetooth is connected.
 
  * **Second** row shows in real time the inhalation/exhalation progress.
 
- * **The other** rows are scrollable and show parameters. The operator can change the parameter values by pressing the Function button. The selected row starts flashing indicating that the parameter can be changed; If Function button is pressed once again then the next row will be selected (flash); if the arrows buttons are pressed then it will increase/decrease the parameter value. The Enter button will commit the change. If Enter button is not pressed (and no other button so) then it will time out and the current parameter will not be changed.
+ * **The other** rows are scrollable and show parameters. The **Function** button scrools the selected row/paramater (select the next parameter); Then the operator can change the parameter values by pressing/holding the **Function** button for 2+ seconds. The selected row starts flashing indicating that the parameter can be changed; if the **arrows** buttons are pressed then it will increase/decrease the parameter value. The **Enter** button will commit the change. If **Enter** button is not pressed (and no other button so) then it will time out and the current parameter will not be changed. Pressing the **Function** button without **Enter** will also ignore the changes.
 
 ### Android UI
 TBD
