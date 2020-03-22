@@ -1,8 +1,12 @@
-# VentCode
+# Controller Source Code Projects
 
 * **ArduinoVent** The final target code for the Ventilator Controller
 
 * **VentSim** The VentSim purpose is to focus on UI and high level control of the Ventilator. Some particular files will be port to the real Ventilator project and others emulates the native Arduino libraries.
+
+* **Android** Placeholder for Android App
+
+* **iOS** Placeholder for iOS App
 
 ## Project concept
 The goal of the Ventilator project is to provide ways to anyone produce a ventilator using low cost out-of-shelf components.
