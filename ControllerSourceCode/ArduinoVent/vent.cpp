@@ -22,37 +22,48 @@
 
 #include "vent.h"
    
-static int gCount = 0;
+static unsigned long tm_led;
+static int led_state = 0;
 
 //----------- Locals -------------
-static void _setup() {
+static void _init() {
 #ifndef VENTSIM
   // initialize digital pin LED_BUILTIN as an output.
   pinMode(LED_BUILTIN, OUTPUT);
 #endif
+  tm_led = millis();
 }
 
-// the loop function runs over and over again forever
-static void _loop() {
-#ifndef VENTSIM
-  digitalWrite(LED_BUILTIN, HIGH);   // turn the LED on 
-  delay(100);                       // wait for half a second
-  digitalWrite(LED_BUILTIN, LOW);    // turn the LED off 
-  delay(100);                       // wait for half a second
+static void blinkLED()
+{
+    if (tm_led + 1000 < millis()) {
+        tm_led = millis();
+
+        
+#ifdef VENTSIM
+        LOG("LED Timer expired");
+#else
+        if (led_state) {
+          led_state = 0;
+          digitalWrite(LED_BUILTIN, LOW);
+        }
+        else {
+          led_state = 1;
+          digitalWrite(LED_BUILTIN, HIGH);
+        }
 #endif
+        
+    }
 }
+
 
 //------------ Global -----------
  void ventLoop()
  {
-   gCount++; 
- //  LOG("This is printf counter = %d\n");
- _loop();
- 
-
+    blinkLED();
  }
 
  void ventSetup() {
-  _setup();
+  _init();
  }
  

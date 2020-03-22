@@ -22,7 +22,10 @@
 */
 
 #include <QDebug>
+#include <QElapsedTimer>
 
+void init_libs();
+unsigned long millis();
 void LOG(char * s);
 
 //#ifdef __cplusplus

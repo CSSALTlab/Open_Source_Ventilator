@@ -33,7 +33,13 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
-    timerId = startTimer(1000);
+    connect(ui->bt_func, SIGNAL (pressed()),this, SLOT (onBtFuncRelease()));
+    connect(ui->bt_func, SIGNAL (released()),this, SLOT (onBtFuncRelease()));
+
+    init_libs();
+    ventSetup();
+
+    timerId = startTimer(1);
 
 }
 
@@ -43,9 +49,19 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+void MainWindow::onBtFuncPressed()
+{
+    qDebug() << "onBtFuncPressed";
+}
+
+void MainWindow::onBtFuncRelease()
+{
+    qDebug() << "onBtFuncRelease";
+}
+
+
 void MainWindow::timerEvent(QTimerEvent *event)
 {
-    qDebug() << "update";
     ventLoop();
 }
 

@@ -40,6 +40,10 @@ private:
     Ui::MainWindow *ui;
     int timerId;
 
+public slots:
+    void onBtFuncPressed();
+    void onBtFuncRelease();
+
 protected:
     void timerEvent(QTimerEvent *event);
 };

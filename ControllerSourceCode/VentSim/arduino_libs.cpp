@@ -21,6 +21,20 @@
 #include "arduino_libs.h"
 #include <stdio.h>
 
+static QElapsedTimer milliTimer;
+
+unsigned long millis()
+{
+    return (unsigned long) milliTimer.elapsed();
+}
+
+void init_libs()
+{
+    milliTimer.start();
+}
+
+
+
 void LOG(char * s) {
     qDebug() << QString(s);
 }

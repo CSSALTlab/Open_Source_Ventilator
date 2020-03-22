@@ -128,7 +128,7 @@ Duty cycle:      1:1
 </string>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton">
+   <widget class="QPushButton" name="bt_enter">
     <property name="geometry">
      <rect>
       <x>380</x>
@@ -141,7 +141,7 @@ Duty cycle:      1:1
      <string>Enter</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton_2">
+   <widget class="QPushButton" name="bt_func">
     <property name="geometry">
      <rect>
       <x>10</x>
@@ -154,7 +154,7 @@ Duty cycle:      1:1
      <string>Function</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton_3">
+   <widget class="QPushButton" name="bt_left">
     <property name="geometry">
      <rect>
       <x>130</x>
@@ -167,7 +167,7 @@ Duty cycle:      1:1
      <string>&lt;</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton_4">
+   <widget class="QPushButton" name="bt_right">
     <property name="geometry">
      <rect>
       <x>250</x>
@@ -195,4 +195,8 @@ Duty cycle:      1:1
  </widget>
  <resources/>
  <connections/>
+ <slots>
+  <slot>onBtFunctionPressed()</slot>
+  <slot>onBtFunctionReleased()</slot>
+ </slots>
 </ui>
