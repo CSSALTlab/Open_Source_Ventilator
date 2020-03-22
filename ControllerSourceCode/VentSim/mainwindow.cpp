@@ -26,6 +26,7 @@
 #include <QDebug>
 //#include "../ArduinoVent/vent.h"
 #include "vent.h"
+#include "hal.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -36,6 +37,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->bt_func, SIGNAL (pressed()),this, SLOT (onBtFuncRelease()));
     connect(ui->bt_func, SIGNAL (released()),this, SLOT (onBtFuncRelease()));
 
+    halInit(ui->plainTextEdit);
     init_libs();
     ventSetup();
 

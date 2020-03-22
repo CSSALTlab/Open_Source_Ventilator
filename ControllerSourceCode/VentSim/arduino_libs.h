@@ -1,5 +1,5 @@
 #ifndef ARDUINO_LIBS_H
-#define ARDUINO_LIBS_
+#define ARDUINO_LIBS_H
 
 /*************************************************************
  * Open Ventilator

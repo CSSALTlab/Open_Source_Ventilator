@@ -1,3 +1,5 @@
+#ifndef HAL_H
+#define HAL_H
 
 /*************************************************************
  * Open Ventilator
@@ -18,29 +20,26 @@
  *
  **************************************************************
 */
+#ifdef VENTSIM
+  #include "arduino_libs.h"
+  #include <QPlainTextEdit>
+#else
+  #include <Arduino.h>
+  #include <LiquidCrystal_I2C.h>
+#endif
+
+#ifdef VENTSIM
+  void halInit(QPlainTextEdit * ed);
+#else
+  void halInit();
+  void LOG();
+#endif
+
+void halBlinkLED();
+void halLcdClear();
+void halLcdSetCursor(int col, int row);
+void halLcdWrite(const char * txt);
+void halLcdWrite(int col, int row, const char * txt);
 
 
-#include "vent.h"
-#include "hal.h"
-   
-
-//----------- Locals -------------
-
-
-
-
-
-//------------ Global -----------
- void ventLoop()
- {
-    halBlinkLED();
- }
-
-void ventSetup()
-{
-  halLcdWrite(0,0,(const char *) "01234567890");
-  halLcdWrite(9,1,(const char *) "X1234567890");
-  halLcdWrite(14,2,(const char *) "Y1234567890");
-  halLcdWrite(0,3,(const char *) "Z1234567890");
-}
- 
+#endif // HAL_H
