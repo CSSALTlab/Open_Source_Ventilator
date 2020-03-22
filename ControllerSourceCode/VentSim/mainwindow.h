@@ -43,7 +43,12 @@ private:
 public slots:
     void onBtFuncPressed();
     void onBtFuncRelease();
-
+    void onBtRightPressed();
+    void onBtRightRelease();
+    void onBtLeftPressed();
+    void onBtLeftRelease();
+    void onBtEnterPressed();
+    void onBtEnterRelease();
 protected:
     void timerEvent(QTimerEvent *event);
 };

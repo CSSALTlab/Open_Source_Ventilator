@@ -29,6 +29,14 @@
 
 #define TEXT_PARAM_SIZE 64
 
+enum  {
+    KEY_FUNCTION,
+    KEY_RIGHT,
+    KEY_LEFT,
+    KEY_ENTER
+};
+
+
 typedef enum  {
     EVT_KEY_PRESS,
     EVT_KEY_RELEASE,

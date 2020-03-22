@@ -42,5 +42,7 @@ CUiNative::~CUiNative()
  
 propagate_t CUiNative::onEvent(event_t * event)
 {
-    LOG( (char *) "onEvent Called");
+    char b[64];
+    sprintf(b, "onEvent: type = %d, key = %d\n", event->type, event->iParam);
+    LOG( (char *) b);
 }
