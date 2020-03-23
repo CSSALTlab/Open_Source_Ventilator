@@ -22,6 +22,7 @@
 
 #include "ui_native.h"
 #include "hal.h"
+#include "properties.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -48,7 +49,6 @@ static bool check_func_hold = false;
 static int ignore_release = 0;
 
 //----------- Locals -------------
-static
 
 static int state_idx = 0;
 static int blink_mask = 0;
@@ -83,35 +83,35 @@ typedef struct params_st {
 
 } params_t;
 
-static const char * dutycycles[] = {
-    "  1:1",
-    "  1:2",
-    "  1:3",
-    "  1:4"
-};
+//static const char * propDutyCycleTxt[] = {
+//    "  1:1",
+//    "  1:2",
+//    "  1:3",
+//    "  1:4"
+//};
 
-static void propChangeVent(int val) {
-    LOG("propChangeVent");
+static void handleChangeVent(int val) {
+    propSetVent(val);
 }
 
-static void propChangeBps(int val) {
-    LOG("propChangeBps");
+static void handleChangeBps(int val) {
+    propSetBps(val);
 }
 
-static void propChangeDutyCycle(int val) {
-     LOG("propChangeDutyCycle");
+static void handleChangeDutyCycle(int val) {
+     propSetDutyCycle(val);
 }
 
-static void propChangePause(int val) {
-     LOG("propChangePause");
+static void handleChangePause(int val) {
+     propSetPause(val);
 }
 
-static void propChangeLcdAutoOff(int val) {
-     LOG("propChangeLcdAutoOff");
+static void handleChangeLcdAutoOff(int val) {
+     propSetLcdAutoOff(val);
 }
 
-static void propChangeBle(int val) {
-      LOG("propChangeBle");
+static void handleChangeBle(int val) {
+      propSetBle(val);
 }
 
 static const char * onOffTxt[] = {
@@ -128,7 +128,7 @@ static params_t params[] = {
       1,                        // max
       onOffTxt ,                // text array for options
       false,                    // no dynamic changes
-      &propChangeVent           // change prop function
+      &handleChangeVent           // change prop function
     },
     { PARAM_INT,                // type
       "BPM",                    // name
@@ -138,7 +138,7 @@ static params_t params[] = {
       30,                       // max
       0,                        // text array for options
       true,                     // no dynamic changes
-      &propChangeBps            // change prop function
+      &handleChangeBps            // change prop function
     },
 
     { PARAM_TXT_OPTIONS,        // type
@@ -147,9 +147,9 @@ static params_t params[] = {
       1,                        // step
       0,                        // min
       3,                        // max
-      dutycycles,               // text array for options
+      propDutyCycleTxt,               // text array for options
       true,                     // no dynamic changes
-      &propChangeDutyCycle      // change prop function
+      &handleChangeDutyCycle      // change prop function
     },
 
     { PARAM_INT,                // type
@@ -160,7 +160,7 @@ static params_t params[] = {
       2000,                     // max
       0,                        // text array for options
       true,                     // no dynamic changes
-      &propChangePause          // change prop function
+      &handleChangePause          // change prop function
     },
     { PARAM_TXT_OPTIONS,        // type
       "LCD auto-off",           // name
@@ -170,7 +170,7 @@ static params_t params[] = {
       1,                        // max
       onOffTxt,                 // text array for options
       false,                    // no dynamic changes
-      &propChangeLcdAutoOff     // change prop function
+      &handleChangeLcdAutoOff     // change prop function
     },
     { PARAM_TXT_OPTIONS,        // type
       "Bluetooth",              // name
@@ -180,7 +180,7 @@ static params_t params[] = {
       1,                        // max
       onOffTxt,                 // text array for options
       false,                    // no dynamic changes
-      &propChangeBle            // change prop function
+      &handleChangeBle            // change prop function
     },
 };
 

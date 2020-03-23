@@ -166,6 +166,23 @@ void halLcdWrite(int col, int row, const char * txt)
     halLcdWrite(txt);
 }
 
+void halValveInOn()
+{
+
+}
+void halValveInOff()
+{
+
+}
+void halValveOutOn()
+{
+
+}
+void halValveOutOff()
+{
+
+}
+
 
 
  

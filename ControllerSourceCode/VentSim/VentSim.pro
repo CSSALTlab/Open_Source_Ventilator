@@ -17,9 +17,11 @@ DEFINES += VENTSIM
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    ../ArduinoVent/breather.cpp \
     ../ArduinoVent/event.cpp \
     ../ArduinoVent/hal.cpp \
     ../ArduinoVent/log.cpp \
+    ../ArduinoVent/properties.cpp \
     ../ArduinoVent/ui_native.cpp \
     ../ArduinoVent/vent.cpp \
     arduino_libs.cpp \
@@ -27,9 +29,11 @@ SOURCES += \
     mainwindow.cpp
 
 HEADERS += \
+    ../ArduinoVent/breather.h \
     ../ArduinoVent/event.h \
     ../ArduinoVent/hal.h \
     ../ArduinoVent/log.h \
+    ../ArduinoVent/properties.h \
     ../ArduinoVent/ui_native.h \
     ../ArduinoVent/vent.h \
     arduino_libs.h \

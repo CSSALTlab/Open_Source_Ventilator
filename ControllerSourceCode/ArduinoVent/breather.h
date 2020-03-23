@@ -1,5 +1,5 @@
-#ifndef HAL_H
-#define HAL_H
+#ifndef BREATHER_H
+#define BREATHER_H
 
 /*************************************************************
  * Open Ventilator
@@ -20,36 +20,7 @@
  *
  **************************************************************
 */
-#include "log.h"
 
-#ifdef VENTSIM
-  #include "arduino_libs.h"
-  #include <QPlainTextEdit>
-#else
-  #include <Arduino.h>
-  #include <LiquidCrystal_I2C.h>
-#endif
+void breatherLoop();
 
-#define LCD_NUM_ROWS 4
-#define LCD_NUM_COLS 20
-
-#ifdef VENTSIM
-  void halInit(QPlainTextEdit * ed);
-#else
-  void halInit();
-  void LOG();
-#endif
-
-void halBlinkLED();
-void halLcdClear();
-void halLcdSetCursor(int col, int row);
-void halLcdWrite(const char * txt);
-void halLcdWrite(int col, int row, const char * txt);
-
-void halValveInOn();
-void halValveInOff();
-void halValveOutOn();
-void halValveOutOff();
-
-
-#endif // HAL_H
+#endif // BREATHER_H

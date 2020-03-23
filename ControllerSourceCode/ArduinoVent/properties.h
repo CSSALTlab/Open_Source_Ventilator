@@ -1,5 +1,5 @@
-#ifndef HAL_H
-#define HAL_H
+#ifndef PROPS_H
+#define PROPS_H
 
 /*************************************************************
  * Open Ventilator
@@ -20,36 +20,23 @@
  *
  **************************************************************
 */
-#include "log.h"
 
-#ifdef VENTSIM
-  #include "arduino_libs.h"
-  #include <QPlainTextEdit>
-#else
-  #include <Arduino.h>
-  #include <LiquidCrystal_I2C.h>
-#endif
+extern const char * propDutyCycleTxt[4];
 
-#define LCD_NUM_ROWS 4
-#define LCD_NUM_COLS 20
+// ---------- Setters ------------
+void propSetVent(int val);
+void propSetBps(int val);
+void propSetDutyCycle(int val);
+void propSetPause(int val);
+void propSetLcdAutoOff(int val);
+void propSetBle(int val);
 
-#ifdef VENTSIM
-  void halInit(QPlainTextEdit * ed);
-#else
-  void halInit();
-  void LOG();
-#endif
+// ---------- Getters ------------
+int propGetVent();
+int propGetBps();
+int propGetDutyCycle();
+int propGetPause();
+int propGetLcdAutoOff();
+int propGetBle();
 
-void halBlinkLED();
-void halLcdClear();
-void halLcdSetCursor(int col, int row);
-void halLcdWrite(const char * txt);
-void halLcdWrite(int col, int row, const char * txt);
-
-void halValveInOn();
-void halValveInOff();
-void halValveOutOn();
-void halValveOutOff();
-
-
-#endif // HAL_H
+#endif // PROPS_H
