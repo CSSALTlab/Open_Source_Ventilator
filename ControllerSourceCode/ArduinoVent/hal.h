@@ -28,6 +28,9 @@
   #include <LiquidCrystal_I2C.h>
 #endif
 
+#define LCD_NUM_ROWS 4
+#define LCD_NUM_COLS 20
+
 #ifdef VENTSIM
   void halInit(QPlainTextEdit * ed);
 #else

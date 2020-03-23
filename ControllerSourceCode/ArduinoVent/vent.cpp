@@ -28,7 +28,7 @@
 //----------- Locals -------------
 
 
-static CUiNative ui;
+static CUiNative * uiNative;
 
 
 //------------ Global -----------
@@ -40,9 +40,10 @@ static CUiNative ui;
 
 void ventSetup()
 {
-  halLcdWrite(0,0,(const char *) "01234567890");
-  halLcdWrite(9,1,(const char *) "X1234567890");
-  halLcdWrite(14,2,(const char *) "Y1234567890");
-  halLcdWrite(0,3,(const char *) "Z1234567890");
+  uiNative = new CUiNative();
+//  halLcdWrite(0,0,(const char *) "01234567890");
+//  halLcdWrite(9,1,(const char *) "X1234567890");
+//  halLcdWrite(14,2,(const char *) "Y1234567890");
+//  halLcdWrite(0,3,(const char *) "Z1234567890");
 }
  

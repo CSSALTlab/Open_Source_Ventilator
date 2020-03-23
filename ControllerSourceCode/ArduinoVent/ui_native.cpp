@@ -22,21 +22,136 @@
 
 #include "ui_native.h"
 #include "hal.h"
+#include <stdio.h>
+#include <string.h>
    
 
 //----------- Locals -------------
+static int bps = 10;
+static float dutyCycle = 0.1f;
 
+typedef enum {
+    PARAM_INT = 1,
+    PARAM_TXT_OPTIONS,
 
+    PARAM_END
+
+} p_type_t;
+
+typedef struct params_st {
+    p_type_t        type;
+    const char *    name;
+    int             val;
+    int             step;
+    int             min;
+    int             max;
+    const char **   options;
+} params_t;
+
+static const char * dutycycles[] = {
+    "1:1",
+    "1:2",
+    "1:3",
+    "1:4",
+    0
+};
+
+static params_t params[] = {
+    { PARAM_INT,                // type
+      "BPM",                    // name
+      10,                       // val
+      2,                        // step
+      10,                       // min
+      30,                       // max
+      0                         // text array for options
+    },
+
+    { PARAM_INT,                // type
+      "Duty Cyc.",              // name
+      0,                        // val
+      1,                        // step
+      0,                        // min
+      3,                        // max
+      dutycycles                // text array for options
+    },
+
+    { PARAM_INT,                // type
+      "Pause (ms)",             // name
+      200,                      // val
+      50,                       // step
+      0,                        // min
+      2000,                     // max
+      0                         // text array for options
+    },
+
+    { PARAM_END,0,0,0,0,0,0}
+};
+
+#define NUM_PARAMS ((sizeof(params)/sizeof(params_t)) - 1)
+
+static int params_idx = 0;
+
+#define LCD_STATUS_ROW              0
+#define LCD_PARAMS_FIRST_ROW        1
+#define LCD_PARAMS_LAST_ROW         3
+#define LCD_PARAMS_NUM_ROWS         ( (LCD_PARAMS_LAST_ROW - LCD_PARAMS_FIRST_ROW) + 1)
 
 //------------ Global -----------
 CUiNative::CUiNative()
 {
-
+    updateStatus();
+    updateParams();
 }
 
 CUiNative::~CUiNative()
 {
 
+}
+
+static const char * st_txt[3] = {
+    (const char *) "idle",
+    (const char *) "run ",
+    (const char *) "Err "
+};
+
+static int state_idx = 0;
+
+void CUiNative::updateStatus()
+{
+  char buf[LCD_NUM_COLS+1];
+  memset(buf, 0x20, LCD_NUM_COLS);
+  buf[LCD_NUM_COLS] = 0;
+  int len = sprintf(buf, "st=%s Bt=%c", (const char *) st_txt[state_idx], 'X');
+
+  buf[len] = 0x20;
+  halLcdWrite(0, LCD_STATUS_ROW, buf);
+}
+
+void CUiNative::updateParams()
+{
+  int idx = params_idx;
+  int i;
+  char buf[LCD_NUM_COLS+1];
+
+  for (i=0; i < LCD_PARAMS_NUM_ROWS; i++) {
+      memset(buf, 0x20, LCD_NUM_COLS);
+      buf[LCD_NUM_COLS] = 0;
+      if (i == 0) {
+        buf[0] = '>';
+      }
+      memcpy(&buf[1], params[idx].name, strlen(params[idx].name));
+      halLcdWrite(0, LCD_PARAMS_FIRST_ROW + i, buf);
+
+      idx++;
+      if (idx >= NUM_PARAMS) idx = 0;
+  }
+}
+
+void CUiNative::scroolParams()
+{
+    params_idx++;
+    if ( params_idx >= NUM_PARAMS) params_idx = 0;
+    updateParams();
 }
 
  
@@ -45,4 +160,10 @@ propagate_t CUiNative::onEvent(event_t * event)
     char b[64];
     sprintf(b, "onEvent: type = %d, key = %d\n", event->type, event->iParam);
     LOG( (char *) b);
+
+    if ( (event->type == EVT_KEY_PRESS) && (event->iParam == KEY_FUNCTION) ) {
+        scroolParams();
+    }
+
+    return PROPAGATE;
 }

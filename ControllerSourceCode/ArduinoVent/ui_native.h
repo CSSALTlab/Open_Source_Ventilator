@@ -33,6 +33,10 @@ public:
     CUiNative();
     ~CUiNative();
 
+    void updateStatus();
+    void updateParams();
+    void scroolParams();
+
     virtual propagate_t onEvent(event_t * event);
 };
 

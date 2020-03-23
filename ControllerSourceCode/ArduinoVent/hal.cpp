@@ -24,8 +24,7 @@
 
 
 //---------- Constants ---------
-#define LCD_NUM_ROWS 4
-#define LCD_NUM_COLS 20
+
 
 //-------- variables --------
 static unsigned long tm_led;
