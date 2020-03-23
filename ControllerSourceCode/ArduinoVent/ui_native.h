@@ -40,6 +40,7 @@ public:
     void blinker();
     void blinkOff(int mask);
     void blinkOn(int mask);
+    void refreshValue(bool force);
     void checkFuncHold ();
 
     virtual propagate_t onEvent(event_t * event);

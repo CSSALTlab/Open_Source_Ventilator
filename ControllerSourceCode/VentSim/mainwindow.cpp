@@ -60,49 +60,41 @@ MainWindow::~MainWindow()
 
 void MainWindow::onBtFuncPressed()
 {
-    qDebug() << "onBtFuncPressed";
     evtPost(EVT_KEY_PRESS, KEY_FUNCTION);
 }
 
 void MainWindow::onBtFuncRelease()
 {
-    qDebug() << "onBtFuncRelease";
     evtPost(EVT_KEY_RELEASE, KEY_FUNCTION);
 }
 
 void MainWindow::onBtRightPressed()
 {
-    qDebug() << "onBtRightPressed";
     evtPost(EVT_KEY_PRESS, KEY_RIGHT);
 }
 
 void MainWindow::onBtRightRelease()
 {
-    qDebug() << "onBtFuncRelease";
     evtPost(EVT_KEY_RELEASE, KEY_RIGHT);
 }
 
 void MainWindow::onBtLeftPressed()
 {
-    qDebug() << "onBtFuncPressed";
     evtPost(EVT_KEY_PRESS, KEY_LEFT);
 }
 
 void MainWindow::onBtLeftRelease()
 {
-    qDebug() << "onBtFuncRelease";
     evtPost(EVT_KEY_RELEASE, KEY_LEFT);
 }
 
 void MainWindow::onBtEnterPressed()
 {
-    qDebug() << "onBtFuncPressed";
     evtPost(EVT_KEY_PRESS, KEY_ENTER);
 }
 
 void MainWindow::onBtEnterRelease()
 {
-    qDebug() << "onBtFuncRelease";
     evtPost(EVT_KEY_RELEASE, KEY_ENTER);
 }
 

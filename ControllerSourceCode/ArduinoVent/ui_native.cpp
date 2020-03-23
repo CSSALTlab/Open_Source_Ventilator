@@ -26,9 +26,16 @@
 #include <string.h>
 
 #define TM_BLINK                    400   // milliseconds
-#define TM_FUNC_HOLD                2000  // twoseconds
+#define TM_FUNC_HOLD                1000  // twoseconds
 #define BLINK_PARAMETER_VAL         1
 #define BLINK_SATUS                 2
+
+static int params_idx = 0;
+
+#define LCD_STATUS_ROW              0
+#define LCD_PARAMS_FIRST_ROW        1
+#define LCD_PARAMS_LAST_ROW         3
+#define LCD_PARAMS_NUM_ROWS         ( (LCD_PARAMS_LAST_ROW - LCD_PARAMS_FIRST_ROW) + 1)
 
 typedef enum {
     SHOW_MODE = 0,
@@ -61,6 +68,8 @@ typedef enum {
 
 } p_type_t;
 
+typedef void (*propchancefunc_t)(int);
+
 typedef struct params_st {
     p_type_t        type;
     const char *    name;
@@ -69,24 +78,67 @@ typedef struct params_st {
     int             min;
     int             max;
     const char **   options;
+    bool            quickUpdate;
+    propchancefunc_t handler;
+
 } params_t;
 
 static const char * dutycycles[] = {
     "  1:1",
     "  1:2",
     "  1:3",
-    "  1:4",
-    0
+    "  1:4"
 };
 
-static const  params_t params[] = {
+static void propChangeVent(int val) {
+    LOG("propChangeVent");
+}
+
+static void propChangeBps(int val) {
+    LOG("propChangeBps");
+}
+
+static void propChangeDutyCycle(int val) {
+     LOG("propChangeDutyCycle");
+}
+
+static void propChangePause(int val) {
+     LOG("propChangePause");
+}
+
+static void propChangeLcdAutoOff(int val) {
+     LOG("propChangeLcdAutoOff");
+}
+
+static void propChangeBle(int val) {
+      LOG("propChangeBle");
+}
+
+static const char * onOffTxt[] = {
+     "  off",
+     "   on",
+};
+
+static params_t params[] = {
+    { PARAM_TXT_OPTIONS,        // type
+      "Ventilator",              // name
+      0,                        // val
+      1,                        // step
+      0,                        // min
+      1,                        // max
+      onOffTxt ,                // text array for options
+      false,                    // no dynamic changes
+      &propChangeVent           // change prop function
+    },
     { PARAM_INT,                // type
       "BPM",                    // name
       10,                       // val
       2,                        // step
       10,                       // min
       30,                       // max
-      0                         // text array for options
+      0,                        // text array for options
+      true,                     // no dynamic changes
+      &propChangeBps            // change prop function
     },
 
     { PARAM_TXT_OPTIONS,        // type
@@ -95,7 +147,9 @@ static const  params_t params[] = {
       1,                        // step
       0,                        // min
       3,                        // max
-      dutycycles                // text array for options
+      dutycycles,               // text array for options
+      true,                     // no dynamic changes
+      &propChangeDutyCycle      // change prop function
     },
 
     { PARAM_INT,                // type
@@ -104,19 +158,33 @@ static const  params_t params[] = {
       50,                       // step
       0,                        // min
       2000,                     // max
-      0                         // text array for options
+      0,                        // text array for options
+      true,                     // no dynamic changes
+      &propChangePause          // change prop function
     },
-
+    { PARAM_TXT_OPTIONS,        // type
+      "LCD auto-off",           // name
+      0,                        // val
+      1,                        // step
+      0,                        // min
+      1,                        // max
+      onOffTxt,                 // text array for options
+      false,                    // no dynamic changes
+      &propChangeLcdAutoOff     // change prop function
+    },
+    { PARAM_TXT_OPTIONS,        // type
+      "Bluetooth",              // name
+      0,                        // val
+      1,                        // step
+      0,                        // min
+      1,                        // max
+      onOffTxt,                 // text array for options
+      false,                    // no dynamic changes
+      &propChangeBle            // change prop function
+    },
 };
 
-#define NUM_PARAMS (sizeof(params)/sizeof(params_t)) 
-
-static int params_idx = 0;
-
-#define LCD_STATUS_ROW              0
-#define LCD_PARAMS_FIRST_ROW        1
-#define LCD_PARAMS_LAST_ROW         3
-#define LCD_PARAMS_NUM_ROWS         ( (LCD_PARAMS_LAST_ROW - LCD_PARAMS_FIRST_ROW) + 1)
+#define NUM_PARAMS (sizeof(params)/sizeof(params_t))
 
 //------------ Global -----------
 CUiNative::CUiNative()
@@ -181,9 +249,25 @@ void CUiNative::blinker()
             halLcdWrite(PARAM_VAL_START_COL, LCD_PARAMS_FIRST_ROW, buf);
         }
     }
-
-
 }
+
+void CUiNative::refreshValue(bool force)
+{
+    char buf[(LCD_NUM_COLS - PARAM_VAL_START_COL) + 1];
+    int len = LCD_NUM_COLS - PARAM_VAL_START_COL;
+
+    if (params[params_idx].quickUpdate || force) {
+        params[params_idx].handler(params[params_idx].val);
+    }
+
+    memset(buf, 0x20, (size_t) len); // spaces
+    buf[len] = 0; // NULL terminate
+
+    tm_blink = millis();
+    fillValBuf(buf, params_idx);
+    halLcdWrite(PARAM_VAL_START_COL, LCD_PARAMS_FIRST_ROW, buf);
+}
+
 
 void CUiNative::updateParameterValue()
 {
@@ -255,11 +339,14 @@ void CUiNative::checkFuncHold()
 propagate_t CUiNative::onEvent(event_t * event)
 {
     char b[64];
-    sprintf(b, "onEvent: type = %d, key = %d\n", event->type, event->iParam);
-    LOG( (char *) b);
+    //sprintf(b, "onEvent: type = %d, key = %d\n", event->type, event->iParam);
+    //LOG( (char *) b);
 
 
+    //============== SHOW Mode =============
     if (ui_state == SHOW_MODE) {
+
+        //--------- Function Key -------------
         if (event->iParam == KEY_FUNCTION)  {
             if (event->type == EVT_KEY_RELEASE)  {
                 if (ignore_release) {
@@ -276,14 +363,31 @@ propagate_t CUiNative::onEvent(event_t * event)
         }
     }
 
+    //============== ENTER Mode =============
     else if (ui_state == ENTER_MODE) {
+
+        //--------- Function Key -------------
         if (event->iParam == KEY_FUNCTION && event->type == EVT_KEY_PRESS)  {
             blinkOff(BLINK_PARAMETER_VAL);
             LOG("** SHOW mode");
             ui_state = SHOW_MODE;
             check_func_hold = false;
             ignore_release = 1;
-            //tm_func_hold = millis();
+            refreshValue(true);
+        }
+
+        //------- Right (UP) Key
+        if (event->iParam == KEY_RIGHT && event->type == EVT_KEY_PRESS)  {
+          if (params[params_idx].val < params[params_idx].max) {
+              params[params_idx].val += params[params_idx].step;
+              refreshValue(false);
+          }
+        }
+        if (event->iParam == KEY_LEFT && event->type == EVT_KEY_PRESS)  {
+          if (params[params_idx].val > params[params_idx].min) {
+              params[params_idx].val -= params[params_idx].step;
+              refreshValue(false);
+          }
         }
     }
 
