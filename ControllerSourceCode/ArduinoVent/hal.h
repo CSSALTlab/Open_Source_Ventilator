@@ -40,6 +40,7 @@
   void LOG();
 #endif
 
+void halLoop();
 void halBlinkLED();
 void halLcdClear();
 void halLcdSetCursor(int col, int row);

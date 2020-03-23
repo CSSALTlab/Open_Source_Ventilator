@@ -34,7 +34,7 @@ static CUiNative * uiNative;
 //------------ Global -----------
  void ventLoop()
  {
-    halBlinkLED();
+    halLoop();
     evtDispatchAll();
     uiNative->loop();
  }

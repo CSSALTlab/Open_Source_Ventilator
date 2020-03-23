@@ -133,7 +133,7 @@ static params_t params[] = {
     { PARAM_INT,                // type
       "BPM",                    // name
       10,                       // val
-      2,                        // step
+      5,                        // step
       10,                       // min
       30,                       // max
       0,                        // text array for options
