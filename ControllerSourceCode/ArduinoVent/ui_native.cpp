@@ -27,7 +27,7 @@
 #include <string.h>
 
 #define TM_BLINK                    400   // milliseconds
-#define TM_FUNC_HOLD                1000  // twoseconds
+#define TM_FUNC_HOLD                500  // twoseconds
 #define BLINK_PARAMETER_VAL         1
 #define BLINK_SATUS                 2
 

@@ -23,6 +23,7 @@
 #include "vent.h"
 #include "hal.h"
 #include "ui_native.h"
+#include "breather.h"
    
 
 //----------- Locals -------------
@@ -37,6 +38,7 @@ static CUiNative * uiNative;
     halLoop();
     evtDispatchAll();
     uiNative->loop();
+    breatherLoop();
  }
 
 void ventSetup()

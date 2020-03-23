@@ -87,6 +87,7 @@ void halInit() {
 }
 #endif
 
+#ifndef VENTSIM
 static void testKey()
 {
   #if 1
@@ -96,6 +97,7 @@ static void testKey()
   #endif
   digitalWrite(VALVE_OUT_PIN, digitalRead(KEY_RIGHT_PIN));
 }
+#endif
 
 void halBlinkLED()
 {
@@ -246,19 +248,19 @@ void halValveOutOff()
 // ----------- sim -------------
 void halValveInOn()
 {
-
+  LOG(">>>>>> Valve IN ON");
 }
 void halValveInOff()
 {
-
+    LOG(">>>>>> Valve IN OFF");
 }
 void halValveOutOn()
 {
-
+  LOG("<<<<<<<< Valve OUT ON");
 }
 void halValveOutOff()
 {
-
+  LOG("<<<<<<<< Valve OUT OFF");
 }
 #endif
 
@@ -279,7 +281,7 @@ static keys_t keys[3] = {
 
 static void processKeys()
 {
-#if 0
+#ifndef VENTSIM
     if (tm_key_sampling + TM_KEY_SAMPLING < millis()) {
         tm_key_sampling = millis();
 
@@ -289,7 +291,7 @@ static void processKeys()
         }
     }
       
-#else
+
     int i;
     if (tm_key_sampling + TM_KEY_SAMPLING < millis()) {
         tm_key_sampling = millis();

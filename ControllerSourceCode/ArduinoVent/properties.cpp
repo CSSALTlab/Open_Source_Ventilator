@@ -78,7 +78,7 @@ void propSetBle(int val) {
 
 // ---------- Getters ------------
 int propGetVent() {
-    LOG("propGetVent");
+//    LOG("propGetVent");
     return propVent;
 }
 
