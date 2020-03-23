@@ -25,16 +25,30 @@
 #include <stdio.h>
 #include <string.h>
 
-#define TM_BLINK                    400  // milliseconds
+#define TM_BLINK                    400   // milliseconds
+#define TM_FUNC_HOLD                2000  // twoseconds
 #define BLINK_PARAMETER_VAL         1
 #define BLINK_SATUS                 2
 
+typedef enum {
+    SHOW_MODE = 0,
+    ENTER_MODE,
+} UI_STATE_T;
+
+static UI_STATE_T ui_state = SHOW_MODE;
+static unsigned long tm_func_hold;
+static bool check_func_hold = false;
+static int ignore_release = 0;
+
 //----------- Locals -------------
+static
 
 static int state_idx = 0;
 static int blink_mask = 0;
 static unsigned long tm_blink;
 static int blink_phase = 0;
+
+
 
 static int bps = 10;
 static float dutyCycle = 0.1f;
@@ -75,7 +89,7 @@ static const  params_t params[] = {
       0                         // text array for options
     },
 
-    { PARAM_INT,                // type
+    { PARAM_TXT_OPTIONS,        // type
       "Duty Cyc.",              // name
       0,                        // val
       1,                        // step
@@ -110,6 +124,9 @@ CUiNative::CUiNative()
     tm_blink = millis();
     updateStatus();
     updateParams();
+//    char buf[32];
+//    sprintf(buf,"size of tm_blink = %d\n", sizeof(tm_blink));
+//    LOG(buf);
 }
 
 CUiNative::~CUiNative()
@@ -125,8 +142,25 @@ static const char * st_txt[3] = {
 
 #define PARAM_VAL_START_COL 15
 
-void CUiNative::blinker()
+static void fillValBuf(char * buf, int idx)
 {
+    if (params[idx].type == PARAM_INT)
+        sprintf(buf, "%5d", params[idx].val);
+    else if (params[idx].type == PARAM_TXT_OPTIONS)
+        strcpy(buf, params[idx].options[ params[idx].val ]);
+    else
+        LOG("blinker: Unexpected type");
+}
+
+
+void CUiNative::loop()
+{
+    checkFuncHold();
+    blinker();
+}
+
+void CUiNative::blinker()
+{   
     char buf[(LCD_NUM_COLS - PARAM_VAL_START_COL) + 1];
     int len = LCD_NUM_COLS - PARAM_VAL_START_COL;
     memset(buf, 0x20, (size_t) len); // spaces
@@ -134,16 +168,18 @@ void CUiNative::blinker()
 
     if (tm_blink + TM_BLINK < millis()) {
         tm_blink = millis();
+
+        if (blink_mask == 0) return;
+
         blink_phase++;
         blink_phase &= 1;
 
-        if (blink_phase) {
-            sprintf(buf, "%5d", params[params_idx].val);
+        if (blink_mask & BLINK_PARAMETER_VAL) {
+            if (blink_phase) {
+                fillValBuf(buf, params_idx);
+            }
+            halLcdWrite(PARAM_VAL_START_COL, LCD_PARAMS_FIRST_ROW, buf);
         }
-        else {
-
-        }
-        halLcdWrite(PARAM_VAL_START_COL, LCD_PARAMS_FIRST_ROW, buf);
     }
 
 
@@ -156,12 +192,12 @@ void CUiNative::updateParameterValue()
 
 void CUiNative::blinkOn(int mask)
 {
-    blink_mask != mask;
+    blink_mask |= mask;
 }
 void CUiNative::blinkOff(int mask)
 {
-    blink_mask != ~mask;
-    updateParameterValue();
+    blink_mask &= ~mask;
+    updateParams();
 }
 
 void CUiNative::updateStatus()
@@ -188,6 +224,7 @@ void CUiNative::updateParams()
         buf[0] = '>';
       }
       memcpy(&buf[1], params[idx].name, strlen(params[idx].name));
+      fillValBuf(&buf[PARAM_VAL_START_COL], idx);
       halLcdWrite(0, LCD_PARAMS_FIRST_ROW + i, buf);
 
       idx++;
@@ -202,15 +239,52 @@ void CUiNative::scroolParams()
     updateParams();
 }
 
- 
+void CUiNative::checkFuncHold()
+{
+    if (check_func_hold == false || ui_state != SHOW_MODE) {
+        return;
+    }
+    if (tm_func_hold + TM_FUNC_HOLD < millis()) {
+      blinkOn(BLINK_PARAMETER_VAL);
+      LOG("** ENTER mode");
+      ui_state = ENTER_MODE;
+
+    }
+}
+
 propagate_t CUiNative::onEvent(event_t * event)
 {
     char b[64];
     sprintf(b, "onEvent: type = %d, key = %d\n", event->type, event->iParam);
     LOG( (char *) b);
 
-    if ( (event->type == EVT_KEY_PRESS) && (event->iParam == KEY_FUNCTION) ) {
-        scroolParams();
+
+    if (ui_state == SHOW_MODE) {
+        if (event->iParam == KEY_FUNCTION)  {
+            if (event->type == EVT_KEY_RELEASE)  {
+                if (ignore_release) {
+                    ignore_release--;
+                    return PROPAGATE;
+                }
+                scroolParams();
+                check_func_hold = false;
+            }
+            else if (event->type == EVT_KEY_PRESS) {
+                tm_func_hold = millis();
+                check_func_hold = true;
+            }
+        }
+    }
+
+    else if (ui_state == ENTER_MODE) {
+        if (event->iParam == KEY_FUNCTION && event->type == EVT_KEY_PRESS)  {
+            blinkOff(BLINK_PARAMETER_VAL);
+            LOG("** SHOW mode");
+            ui_state = SHOW_MODE;
+            check_func_hold = false;
+            ignore_release = 1;
+            //tm_func_hold = millis();
+        }
     }
 
     return PROPAGATE;

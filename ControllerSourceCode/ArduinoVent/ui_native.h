@@ -32,7 +32,7 @@ class CUiNative : CEvent {
 public:
     CUiNative();
     ~CUiNative();
-
+    void loop();
     void updateStatus();
     void updateParams();
     void updateParameterValue();
@@ -40,6 +40,7 @@ public:
     void blinker();
     void blinkOff(int mask);
     void blinkOn(int mask);
+    void checkFuncHold ();
 
     virtual propagate_t onEvent(event_t * event);
 };
