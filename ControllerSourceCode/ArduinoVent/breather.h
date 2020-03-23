@@ -26,11 +26,13 @@ typedef enum {
     B_ST_WAIT_TO_OUT,
     B_ST_OUT,
     B_ST_PAUSE,
+    B_ST_STOPPING,
 } B_STATE_t;
 
 void breatherLoop();
 void breatherStartCycle();
 B_STATE_t breatherGetState();
+int breatherGetPropress();
 
 
 #endif // BREATHER_H

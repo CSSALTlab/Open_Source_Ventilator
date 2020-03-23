@@ -23,6 +23,7 @@
 #include "ui_native.h"
 #include "hal.h"
 #include "properties.h"
+#include "breather.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -37,6 +38,13 @@ static int params_idx = 0;
 #define LCD_PARAMS_FIRST_ROW        1
 #define LCD_PARAMS_LAST_ROW         3
 #define LCD_PARAMS_NUM_ROWS         ( (LCD_PARAMS_LAST_ROW - LCD_PARAMS_FIRST_ROW) + 1)
+
+#define PROGRESS_ROW        0
+#define PROGRESS_NUM_CHARS  6
+#define PROGRESS_COL       14
+#define PROGRESS_CHARACTER '|'
+
+static int progress = 0;
 
 typedef enum {
     SHOW_MODE = 0,
@@ -83,12 +91,6 @@ typedef struct params_st {
 
 } params_t;
 
-//static const char * propDutyCycleTxt[] = {
-//    "  1:1",
-//    "  1:2",
-//    "  1:3",
-//    "  1:4"
-//};
 
 static void handleChangeVent(int val) {
     propSetVent(val);
@@ -225,6 +227,7 @@ void CUiNative::loop()
 {
     checkFuncHold();
     blinker();
+    updateProgress();
 }
 
 void CUiNative::blinker()
@@ -268,6 +271,25 @@ void CUiNative::refreshValue(bool force)
     halLcdWrite(PARAM_VAL_START_COL, LCD_PARAMS_FIRST_ROW, buf);
 }
 
+void CUiNative::updateProgress()
+{
+    int i;
+    char buf[PROGRESS_NUM_CHARS+1];
+    memset(buf, 0x20, sizeof (buf)); // spaces
+    buf[sizeof (buf) - 1] = 0;
+
+    B_STATE_t s = breatherGetState();
+    int p = (breatherGetPropress() * PROGRESS_NUM_CHARS) / 90;
+    if (p > PROGRESS_NUM_CHARS) p = PROGRESS_NUM_CHARS;
+    if (p == progress)
+        return;
+
+    progress = p;
+    for(i=0; i<progress; i++) {
+        buf[i] = PROGRESS_CHARACTER;
+    }
+    halLcdWrite(PROGRESS_COL, PROGRESS_ROW, buf);
+}
 
 void CUiNative::updateParameterValue()
 {

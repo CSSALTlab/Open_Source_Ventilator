@@ -27,6 +27,7 @@
 
 #define MINUTE_MILLI 60000
 #define TM_WAIT_TO_OUT 50 // 50 milliseconds
+#define TM_STOPPING 4000 // 4 seconds to stop
 
 
 static int curr_pause;
@@ -34,12 +35,17 @@ static int curr_rate;
 static int curr_in_milli;
 static int curr_out_milli;
 static int curr_total_cycle_milli;
-static int curr_progress_cycly_milli;
+static int curr_progress;
 static unsigned long tm_start;
 
 static const int rate[4] = {1,2,3,4} ;
 
 static B_STATE_t b_state = B_ST_STOPPED;
+
+int breatherGetPropress()
+{
+    return curr_progress;
+}
 
 void breatherStartCycle()
 {
@@ -49,7 +55,7 @@ void breatherStartCycle()
     int in_out_t = curr_total_cycle_milli - (curr_rate + TM_WAIT_TO_OUT);
     curr_out_milli = (in_out_t/2) / rate[curr_rate];
     curr_in_milli = in_out_t - curr_out_milli;
-    curr_progress_cycly_milli = 0;
+    curr_progress = 0;
     tm_start = millis();
     b_state = B_ST_IN;
     halValveOutOff();
@@ -79,11 +85,16 @@ static void fsmStopped()
 
 static void fsmIn()
 {
-    if (tm_start + curr_in_milli < millis()) {
+    unsigned long m = millis();
+    if (tm_start + curr_in_milli < m) {
         // in valve off
         halValveInOff();
         tm_start = millis();
         b_state = B_ST_WAIT_TO_OUT;
+    }
+    else {
+        curr_progress = ((m - tm_start) * 100)/ curr_in_milli;
+        //curr_progress = 100 - (100 * tm_start + curr_in_milli) / m;
     }
 }
 
@@ -99,11 +110,28 @@ static void fsmWaitToOut()
 
 static void fsmOut()
 {
-    if (tm_start + curr_out_milli < millis()) {
+    unsigned long m = millis();
+    if (tm_start + curr_out_milli < m) {
         // switch valves
         tm_start = millis();
         b_state = B_ST_PAUSE;
         halValveOutOff();
+    }
+    else {
+        //curr_progress = 100 - (m - tm_start / curr_out_milli * 100);
+        //curr_progress = (100 * tm_start + curr_in_milli) / m;
+        curr_progress = 100 - ((m - tm_start) * 100)/ curr_out_milli;
+    }
+}
+
+static void fsmStopping()
+{
+    if (tm_start + TM_STOPPING < millis()) {
+        // switch valves
+        tm_start = millis();
+        b_state = B_ST_STOPPED;
+        halValveOutOff();
+        halValveInOff();
     }
 }
 
@@ -116,8 +144,13 @@ static void fsmPause()
 
 void breatherLoop()
 {
-    if (propGetVent() == 0) {
+    if (b_state != B_ST_STOPPED && b_state != B_ST_STOPPING && propGetVent() == 0) {
         // force stop
+        tm_start = millis();
+        b_state = B_ST_STOPPING;
+        curr_progress = 0;
+        halValveInOff();
+        halValveOutOn();
     }
 
     if (b_state == B_ST_STOPPED)
@@ -130,6 +163,8 @@ void breatherLoop()
         fsmOut();
     else if (b_state == B_ST_PAUSE)
         fsmPause();
+    else if (b_state == B_ST_STOPPING)
+        fsmStopping();
     else {
         LOG("breatherLoop: unexpected state");
     }

@@ -42,6 +42,7 @@ public:
     void blinkOn(int mask);
     void refreshValue(bool force);
     void checkFuncHold ();
+    void updateProgress();
 
     virtual propagate_t onEvent(event_t * event);
 };
