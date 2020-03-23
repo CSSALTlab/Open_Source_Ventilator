@@ -282,14 +282,14 @@ static keys_t keys[3] = {
 static void processKeys()
 {
 #ifndef VENTSIM
-    if (tm_key_sampling + TM_KEY_SAMPLING < millis()) {
-        tm_key_sampling = millis();
-
-        if (digitalRead(keys[0].pin) == LOW) {
-            evtPost(EVT_KEY_PRESS, keys[0].keyCode);
-            evtPost(EVT_KEY_RELEASE, keys[0].keyCode);
-        }
-    }
+//    if (tm_key_sampling + TM_KEY_SAMPLING < millis()) {
+//        tm_key_sampling = millis();
+//
+//        if (digitalRead(keys[0].pin) == LOW) {
+//            evtPost(EVT_KEY_PRESS, keys[0].keyCode);
+//            evtPost(EVT_KEY_RELEASE, keys[0].keyCode);
+//        }
+//    }
       
 
     int i;
