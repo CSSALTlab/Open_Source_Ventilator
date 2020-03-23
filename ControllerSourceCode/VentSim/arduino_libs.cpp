@@ -33,8 +33,3 @@ void init_libs()
     milliTimer.start();
 }
 
-
-
-void LOG(char * s) {
-    qDebug() << QString(s);
-}

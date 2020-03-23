@@ -26,7 +26,6 @@
 
 void init_libs();
 unsigned long millis();
-void LOG(char * s);
 
 //#ifdef __cplusplus
 // extern "C" {

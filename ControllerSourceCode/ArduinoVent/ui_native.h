@@ -35,7 +35,11 @@ public:
 
     void updateStatus();
     void updateParams();
+    void updateParameterValue();
     void scroolParams();
+    void blinker();
+    void blinkOff(int mask);
+    void blinkOn(int mask);
 
     virtual propagate_t onEvent(event_t * event);
 };

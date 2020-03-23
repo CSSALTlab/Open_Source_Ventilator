@@ -27,7 +27,7 @@
 //  #include <Arduino.h>
 //#endif
 
-#define TEXT_PARAM_SIZE 64
+#define TEXT_PARAM_SIZE 14
 
 enum  {
     KEY_FUNCTION,

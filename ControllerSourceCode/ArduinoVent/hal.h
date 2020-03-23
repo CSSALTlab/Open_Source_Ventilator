@@ -20,6 +20,8 @@
  *
  **************************************************************
 */
+#include "log.h"
+
 #ifdef VENTSIM
   #include "arduino_libs.h"
   #include <QPlainTextEdit>

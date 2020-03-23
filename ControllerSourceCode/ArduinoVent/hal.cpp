@@ -22,7 +22,6 @@
 
 #include "hal.h"
 
-
 //---------- Constants ---------
 
 
@@ -47,7 +46,6 @@ void halInit(QPlainTextEdit * ed) {
 }
 #else
 LiquidCrystal_I2C lcd(0x27,4,4);  
-void LOG(char * txt) { /*dummy */} 
   
 void halInit() {
   pinMode(LED_BUILTIN, OUTPUT);

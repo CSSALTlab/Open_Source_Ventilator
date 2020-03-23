@@ -24,9 +24,18 @@
 #include "hal.h"
 #include <stdio.h>
 #include <string.h>
-   
+
+#define TM_BLINK                    400  // milliseconds
+#define BLINK_PARAMETER_VAL         1
+#define BLINK_SATUS                 2
 
 //----------- Locals -------------
+
+static int state_idx = 0;
+static int blink_mask = 0;
+static unsigned long tm_blink;
+static int blink_phase = 0;
+
 static int bps = 10;
 static float dutyCycle = 0.1f;
 
@@ -49,14 +58,14 @@ typedef struct params_st {
 } params_t;
 
 static const char * dutycycles[] = {
-    "1:1",
-    "1:2",
-    "1:3",
-    "1:4",
+    "  1:1",
+    "  1:2",
+    "  1:3",
+    "  1:4",
     0
 };
 
-static params_t params[] = {
+static const  params_t params[] = {
     { PARAM_INT,                // type
       "BPM",                    // name
       10,                       // val
@@ -84,10 +93,9 @@ static params_t params[] = {
       0                         // text array for options
     },
 
-    { PARAM_END,0,0,0,0,0,0}
 };
 
-#define NUM_PARAMS ((sizeof(params)/sizeof(params_t)) - 1)
+#define NUM_PARAMS (sizeof(params)/sizeof(params_t)) 
 
 static int params_idx = 0;
 
@@ -99,6 +107,7 @@ static int params_idx = 0;
 //------------ Global -----------
 CUiNative::CUiNative()
 {
+    tm_blink = millis();
     updateStatus();
     updateParams();
 }
@@ -114,7 +123,46 @@ static const char * st_txt[3] = {
     (const char *) "Err "
 };
 
-static int state_idx = 0;
+#define PARAM_VAL_START_COL 15
+
+void CUiNative::blinker()
+{
+    char buf[(LCD_NUM_COLS - PARAM_VAL_START_COL) + 1];
+    int len = LCD_NUM_COLS - PARAM_VAL_START_COL;
+    memset(buf, 0x20, (size_t) len); // spaces
+    buf[len] = 0; // NULL terminate
+
+    if (tm_blink + TM_BLINK < millis()) {
+        tm_blink = millis();
+        blink_phase++;
+        blink_phase &= 1;
+
+        if (blink_phase) {
+            sprintf(buf, "%5d", params[params_idx].val);
+        }
+        else {
+
+        }
+        halLcdWrite(PARAM_VAL_START_COL, LCD_PARAMS_FIRST_ROW, buf);
+    }
+
+
+}
+
+void CUiNative::updateParameterValue()
+{
+
+}
+
+void CUiNative::blinkOn(int mask)
+{
+    blink_mask != mask;
+}
+void CUiNative::blinkOff(int mask)
+{
+    blink_mask != ~mask;
+    updateParameterValue();
+}
 
 void CUiNative::updateStatus()
 {

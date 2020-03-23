@@ -27,8 +27,8 @@
 //----------- Locals -------------
 
 
-#define QUEUE_SIZE 16
-#define NUM_MAX_LISNERS 8
+#define QUEUE_SIZE 6
+#define NUM_MAX_LISNERS 4
 
 extern void LOG(char * txt);
 

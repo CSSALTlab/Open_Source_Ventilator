@@ -19,6 +19,7 @@ DEFINES += VENTSIM
 SOURCES += \
     ../ArduinoVent/event.cpp \
     ../ArduinoVent/hal.cpp \
+    ../ArduinoVent/log.cpp \
     ../ArduinoVent/ui_native.cpp \
     ../ArduinoVent/vent.cpp \
     arduino_libs.cpp \
@@ -28,6 +29,7 @@ SOURCES += \
 HEADERS += \
     ../ArduinoVent/event.h \
     ../ArduinoVent/hal.h \
+    ../ArduinoVent/log.h \
     ../ArduinoVent/ui_native.h \
     ../ArduinoVent/vent.h \
     arduino_libs.h \
