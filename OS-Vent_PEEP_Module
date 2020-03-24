@@ -1,0 +1,43 @@
+Design Thoughts
+Daniel J. Gibson, Ph.D.
+Institute for Wound Research
+University of Florida
+Gainesville, FL 32608
+
+
+Design A (Water Column):  
+Pros:
+1. Easiest to calibrate & adjust due to ease of hydrostatic pressure generation via a water column.
+
+Cons:
+1. Creating an air-water column interface without leaks using austere materials will be challenging.
+
+Possible Pathways (PEEP_H2O-Concept.png):
+1. Using a 3 way "T" type configuration, with the 3 ways being: 
+  1) the 22mm corrugated tubing carrying the exhaled gas
+  2) the conditionally blocked route to the atmosphere (default: closed)
+  3) the inlet for the water column to control access to #2
+  
+  The challenge is to have a shuttle/bead/piston which can slide within the "T" conditionally putting #'s 1 & 2 into contact
+  while able to form a seal between #1 & #2, without allowing the water to leak between #2 & #3.  Such a shuttle would not likely
+  be able to be placed into the T unless it was elastic or unless it was a T with differening inlets (e.g. 1" #1, >1" #2 & #3).
+  One solution to the water control issue would be to use either a condom (doubtful that they come in 30 cm lengths),
+  sausage casing, dialysis tubing (too leaky likely), or other long, but flexible tube which could contain the water, 
+  fit within the hardware and be the water column-fueled "spring" to keep the shuttle/ball/piston in the closed position until 
+  P > water column height is achieved.  I think that this is akin to a sleeve diaphragm, but cobbled together with non-purpose
+  bulit materials.
+
+2.  Similar to Pathway 1, but cast a silicone diaphragm or bellows like structure.  Wound need a custom interface to fit within
+the T and enable a male connector into the diaphragm/bellows with a male tubing adapter on the water column side.  Can benefit
+from less water needed (pressure is based solely on column height, not fluid volume.  Adjusting can be based on moving a filled
+and bent tube up and down vs. add/remove water.
+
+3. Either pathway 1 or 2, with the condom/diaphragm alone without the shuttle as both the seal between #1 and #2 and the 
+containment for the water column.
+
+Design B (Spring Loaded Valve aka Check Valve with Adjustable Break Pressure)
+
+Basically, just a custom made check valve with a screw-based tension adjustment to increase or decrease the cracking/break
+pressure.  Easiest to make, easiest to adjust, but less calibrated (adjustments would be somewhat calibrated to begin with, but
+would then devolve to more vs. less pressure.
+  
