@@ -30,6 +30,7 @@ SOURCES += \
 
 HEADERS += \
     ../ArduinoVent/breather.h \
+    ../ArduinoVent/config.h \
     ../ArduinoVent/event.h \
     ../ArduinoVent/hal.h \
     ../ArduinoVent/log.h \

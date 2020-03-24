@@ -21,13 +21,7 @@
 
 #include "log.h"
 #include "properties.h"
-
-#define  DEFAULT_VENT            0
-#define  DEFAULT_BPS             15
-#define  DEFAULT_DUTY_CYCLE      0
-#define  DEFAULT_PAUSE           100
-#define  DEFAULT_LCD_AUTO_OFF    0
-#define  DEFAULT_BLE             0
+#include "config.h"
 
 
 static int propVent         = DEFAULT_VENT;
@@ -37,6 +31,8 @@ static int propPause        = DEFAULT_PAUSE;
 static int propLcdAutoOff   = DEFAULT_LCD_AUTO_OFF;
 static int propBle          = DEFAULT_BLE;
 
+// Note: defaults values will takes place in case the stored parameters are corrupted or empty
+
 const char * propDutyCycleTxt[4] = {
     "  1:1",
     "  1:2",
@@ -44,6 +40,10 @@ const char * propDutyCycleTxt[4] = {
     "  1:4"
 };
 
+void propSave()
+{
+
+}
 
 void propSetVent(int val) {
     LOG("propSetVent");

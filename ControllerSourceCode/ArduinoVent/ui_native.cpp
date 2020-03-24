@@ -52,8 +52,10 @@ typedef enum {
 } UI_STATE_T;
 
 static UI_STATE_T ui_state = SHOW_MODE;
-static unsigned long tm_func_hold;
-static bool check_func_hold = false;
+static unsigned long tm_set_hold;
+static bool check_set_hold = false;
+static unsigned long tm_decrement_hold;
+static bool check_decrement_hold = false;
 static int ignore_release = 0;
 
 //----------- Locals -------------
@@ -112,6 +114,8 @@ static void handleChangeLcdAutoOff(int val) {
      propSetLcdAutoOff(val);
 }
 
+static void handleSave(int val); // prototype
+
 static void handleChangeBle(int val) {
       propSetBle(val);
 }
@@ -120,6 +124,12 @@ static const char * onOffTxt[] = {
      "  off",
      "   on",
 };
+
+static const char * yesNoTxt[] = {
+     "   no",
+     "  yes",
+};
+
 
 static params_t params[] = {
     { PARAM_TXT_OPTIONS,        // type
@@ -184,6 +194,19 @@ static params_t params[] = {
       false,                    // no dynamic changes
       &handleChangeBle            // change prop function
     },
+
+
+    //---- This Must be the very last parameter ----
+    { PARAM_TXT_OPTIONS,        // type
+      "Save (now)",             // name
+      0,                        // val
+      1,                        // step
+      0,                        // min
+      1,                        // max
+      yesNoTxt,                 // text array for options
+      false,                    // no dynamic changes
+      &handleSave               // change prop function
+    },
 };
 
 #define NUM_PARAMS (sizeof(params)/sizeof(params_t))
@@ -211,6 +234,14 @@ static const char * st_txt[3] = {
 };
 
 #define PARAM_VAL_START_COL 15
+
+static void handleSave(int val) {
+    if (val) {
+        propSave();
+        params[NUM_PARAMS-1].val = 0; // sets back to off
+    }
+}
+
 
 static void fillValBuf(char * buf, int idx)
 {
@@ -245,12 +276,18 @@ void CUiNative::blinker()
         blink_phase++;
         blink_phase &= 1;
 
+        //-------- paramater Blinking ------------
         if (blink_mask & BLINK_PARAMETER_VAL) {
             if (blink_phase) {
                 fillValBuf(buf, params_idx);
             }
             halLcdWrite(PARAM_VAL_START_COL, LCD_PARAMS_FIRST_ROW, buf);
         }
+
+        //-------- other Blinking... ------------
+        //if (blink_mask & WHATEVER) {
+        //}
+
     }
 }
 
@@ -338,23 +375,43 @@ void CUiNative::updateParams()
   }
 }
 
-void CUiNative::scroolParams()
+void CUiNative::scroolParams( bool down)
 {
-    params_idx++;
-    if ( params_idx >= NUM_PARAMS) params_idx = 0;
+    if (down) {
+      params_idx++;
+      if ( params_idx >= NUM_PARAMS)
+          params_idx = 0;
+    }
+    else {
+      params_idx--;
+      if (params_idx < 0)
+          params_idx = NUM_PARAMS - 1;
+    }
+
     updateParams();
 }
 
 void CUiNative::checkFuncHold()
 {
-    if (check_func_hold == false || ui_state != SHOW_MODE) {
+    if (ui_state != SHOW_MODE) {
         return;
     }
-    if (tm_func_hold + TM_FUNC_HOLD < millis()) {
-      blinkOn(BLINK_PARAMETER_VAL);
-      LOG("** ENTER mode");
-      ui_state = ENTER_MODE;
 
+    //-------- process KEY_SET hold ------
+    if (check_set_hold) {
+      if (tm_set_hold + TM_FUNC_HOLD < millis()) {
+        blinkOn(BLINK_PARAMETER_VAL);
+        LOG("** ENTER mode");
+        ui_state = ENTER_MODE;
+      }
+    }
+
+    //-------- process KEY_DECREMENT hold ------
+    if (check_decrement_hold) {
+      if (tm_decrement_hold + TM_FUNC_HOLD < millis()) {
+        params_idx = -1;
+        scroolParams(true);
+      }
     }
 }
 
@@ -369,19 +426,36 @@ propagate_t CUiNative::onEvent(event_t * event)
     if (ui_state == SHOW_MODE) {
 
         //--------- Function Key -------------
-        if (event->iParam == KEY_FUNCTION)  {
+        if (event->iParam == KEY_SET)  {
             if (event->type == EVT_KEY_RELEASE)  {
                 if (ignore_release) {
                     ignore_release--;
                     return PROPAGATE;
                 }
-                scroolParams();
-                check_func_hold = false;
+                // scroolParams(true);
+                check_set_hold = false;
             }
             else if (event->type == EVT_KEY_PRESS) {
-                tm_func_hold = millis();
-                check_func_hold = true;
+                tm_set_hold = millis();
+                check_set_hold = true;
             }
+        }
+
+        //------------- Decrement key --------------
+        if (event->iParam == KEY_DECREMENT) {
+            if (event->type == EVT_KEY_PRESS)  {
+              scroolParams(false);
+              tm_decrement_hold = millis();
+              check_decrement_hold = true;
+            }
+            else {
+                check_decrement_hold = false;
+            }
+        }
+
+        //------------- increment key --------------
+        if (event->iParam == KEY_INCREMENT && event->type == EVT_KEY_PRESS)  {
+            scroolParams(true);
         }
     }
 
@@ -389,23 +463,23 @@ propagate_t CUiNative::onEvent(event_t * event)
     else if (ui_state == ENTER_MODE) {
 
         //--------- Function Key -------------
-        if (event->iParam == KEY_FUNCTION && event->type == EVT_KEY_PRESS)  {
+        if (event->iParam == KEY_SET && event->type == EVT_KEY_PRESS)  {
             blinkOff(BLINK_PARAMETER_VAL);
             LOG("** SHOW mode");
             ui_state = SHOW_MODE;
-            check_func_hold = false;
+            check_set_hold = false;
             ignore_release = 1;
             refreshValue(true);
         }
 
         //------- Right (UP) Key
-        if (event->iParam == KEY_RIGHT && event->type == EVT_KEY_PRESS)  {
+        if (event->iParam == KEY_INCREMENT && event->type == EVT_KEY_PRESS)  {
           if (params[params_idx].val < params[params_idx].max) {
               params[params_idx].val += params[params_idx].step;
               refreshValue(false);
           }
         }
-        if (event->iParam == KEY_LEFT && event->type == EVT_KEY_PRESS)  {
+        if (event->iParam == KEY_DECREMENT && event->type == EVT_KEY_PRESS)  {
           if (params[params_idx].val > params[params_idx].min) {
               params[params_idx].val -= params[params_idx].step;
               refreshValue(false);

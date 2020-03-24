@@ -30,6 +30,7 @@ void propSetDutyCycle(int val);
 void propSetPause(int val);
 void propSetLcdAutoOff(int val);
 void propSetBle(int val);
+void propSave();
 
 // ---------- Getters ------------
 int propGetVent();

@@ -41,8 +41,6 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->bt_right, SIGNAL (released()),this, SLOT (onBtRightRelease()));
     connect(ui->bt_left, SIGNAL (pressed()),this, SLOT (onBtLeftPressed()));
     connect(ui->bt_left, SIGNAL (released()),this, SLOT (onBtLeftRelease()));
-    connect(ui->bt_enter, SIGNAL (pressed()),this, SLOT (onBtEnterPressed()));
-    connect(ui->bt_enter, SIGNAL (released()),this, SLOT (onBtEnterRelease()));
 
     halInit(ui->plainTextEdit);
     init_libs();
@@ -60,42 +58,42 @@ MainWindow::~MainWindow()
 
 void MainWindow::onBtFuncPressed()
 {
-    evtPost(EVT_KEY_PRESS, KEY_FUNCTION);
+    evtPost(EVT_KEY_PRESS, KEY_SET);
 }
 
 void MainWindow::onBtFuncRelease()
 {
-    evtPost(EVT_KEY_RELEASE, KEY_FUNCTION);
+    evtPost(EVT_KEY_RELEASE, KEY_SET);
 }
 
 void MainWindow::onBtRightPressed()
 {
-    evtPost(EVT_KEY_PRESS, KEY_RIGHT);
+    evtPost(EVT_KEY_PRESS, KEY_INCREMENT);
 }
 
 void MainWindow::onBtRightRelease()
 {
-    evtPost(EVT_KEY_RELEASE, KEY_RIGHT);
+    evtPost(EVT_KEY_RELEASE, KEY_INCREMENT);
 }
 
 void MainWindow::onBtLeftPressed()
 {
-    evtPost(EVT_KEY_PRESS, KEY_LEFT);
+    evtPost(EVT_KEY_PRESS, KEY_DECREMENT);
 }
 
 void MainWindow::onBtLeftRelease()
 {
-    evtPost(EVT_KEY_RELEASE, KEY_LEFT);
+    evtPost(EVT_KEY_RELEASE, KEY_DECREMENT);
 }
 
 void MainWindow::onBtEnterPressed()
 {
-    evtPost(EVT_KEY_PRESS, KEY_ENTER);
+    evtPost(EVT_KEY_PRESS, KEY_RESERVE);
 }
 
 void MainWindow::onBtEnterRelease()
 {
-    evtPost(EVT_KEY_RELEASE, KEY_ENTER);
+    evtPost(EVT_KEY_RELEASE, KEY_RESERVE);
 }
 
 void MainWindow::timerEvent(QTimerEvent *event)

@@ -22,16 +22,9 @@
 
 #include "hal.h"
 #include "event.h"
+#include "config.h"
 
 //---------- Constants ---------
-#define VALVE_ACTIVE_LOW
-
-#define KEY_FUNC_PIN  3
-#define KEY_LEFT_PIN  4
-#define KEY_RIGHT_PIN  5
-
-#define VALVE_IN_PIN  6
-#define VALVE_OUT_PIN  7
 
 #define TM_KEY_SAMPLING 5  // 5 ms
 
@@ -70,12 +63,12 @@ void halInit() {
   halLcdClear();
 
   // -----  keys -------
-  pinMode(KEY_FUNC_PIN, INPUT);           // set pin to input
-  digitalWrite(KEY_FUNC_PIN, HIGH);       // turn on pullup resistors
-  pinMode(KEY_RIGHT_PIN, INPUT);           // set pin to input
-  digitalWrite(KEY_RIGHT_PIN, HIGH);       // turn on pullup resistors
-  pinMode(KEY_LEFT_PIN, INPUT);           // set pin to input
-  digitalWrite(KEY_LEFT_PIN, HIGH);       // turn on pullup resistors
+  pinMode(KEY_SET_PIN, INPUT);           // set pin to input
+  digitalWrite(KEY_SET_PIN, HIGH);       // turn on pullup resistors
+  pinMode(KEY_INCREMENT_PIN, INPUT);           // set pin to input
+  digitalWrite(KEY_INCREMENT_PIN, HIGH);       // turn on pullup resistors
+  pinMode(KEY_DECREMENT_PIN, INPUT);           // set pin to input
+  digitalWrite(KEY_DECREMENT_PIN, HIGH);       // turn on pullup resistors
 
 // ------ valves -------
   pinMode(VALVE_IN_PIN, OUTPUT);           // set pin to input
@@ -91,11 +84,11 @@ void halInit() {
 static void testKey()
 {
   #if 1
-  digitalWrite(VALVE_IN_PIN, digitalRead(KEY_FUNC_PIN));
+  digitalWrite(VALVE_IN_PIN, digitalRead(KEY_SET_PIN));
   #else
-    digitalWrite(VALVE_IN_PIN, digitalRead(KEY_LEFT_PIN));
+    digitalWrite(VALVE_IN_PIN, digitalRead(KEY_DECREMENT_PIN));
   #endif
-  digitalWrite(VALVE_OUT_PIN, digitalRead(KEY_RIGHT_PIN));
+  digitalWrite(VALVE_OUT_PIN, digitalRead(KEY_INCREMENT_PIN));
 }
 #endif
 
@@ -274,9 +267,9 @@ typedef struct keys_st {
 } keys_t;
 
 static keys_t keys[3] = {
-  {0, 0, KEY_FUNC_PIN, KEY_FUNCTION},
-  {0, 0, KEY_LEFT_PIN, KEY_LEFT},
-  {0, 0, KEY_RIGHT_PIN, KEY_RIGHT},  
+  {0, 0, KEY_DECREMENT_PIN, KEY_DECREMENT},
+  {0, 0, KEY_INCREMENT_PIN, KEY_INCREMENT},
+  {0, 0, KEY_SET_PIN, KEY_SET},
 };
 
 static void processKeys()

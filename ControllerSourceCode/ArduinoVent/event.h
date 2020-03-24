@@ -30,10 +30,11 @@
 #define TEXT_PARAM_SIZE 14
 
 enum  {
-    KEY_FUNCTION,
-    KEY_RIGHT,
-    KEY_LEFT,
-    KEY_ENTER
+    KEY_DECREMENT,
+    KEY_INCREMENT,
+    KEY_SET,
+
+    KEY_RESERVE
 };
 
 

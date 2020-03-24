@@ -36,7 +36,7 @@ public:
     void updateStatus();
     void updateParams();
     void updateParameterValue();
-    void scroolParams();
+    void scroolParams(bool down);
     void blinker();
     void blinkOff(int mask);
     void blinkOn(int mask);
