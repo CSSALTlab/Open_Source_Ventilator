@@ -41,15 +41,15 @@ VentSim simulates the LCD and buttons. The LCD displays the following rows:
 
 Where the rows represent the following tokes:
 
- * **First**: Status (Idle, Alarm/Error or Running). BLE indicates:
+ * **First Row**: St (Idle, On, or Error). Bt indicates:
    * X: Bluetooth is not installed
    * D: Bluetooth is disabled
    * A: Bluetooth is advertising
    * C: Bluetooth is connected.
+   The last 6 characters on the right displays the breath progress, where "||||||" means lung full and 6 spaces empty lung. 
 
- * **Second** row shows in real time the inhalation/exhalation progress.
-
- * **The other** rows are scrollable and show parameters. The **Function** button scrools the selected row/paramater (select the next parameter); Then the operator can change the parameter values by pressing/holding the **Function** button for 2+ seconds. The selected row starts flashing indicating that the parameter can be changed; if the **arrows** buttons are pressed then it will increase/decrease the parameter value. The **Enter** button will commit the change. If **Enter** button is not pressed (and no other button so) then it will time out and the current parameter will not be changed. Pressing the **Function** button without **Enter** will also ignore the changes.
+ * **The other rows** are scrollable and show parameters. In "Normal" mode the **"-"** and **"+"** buttons are use to scroll the parameter list. Pressing and hold the **"-"** button scrolls the list up to the top.
+ To change a parameter the user needs to press and hold the **"Set"** button for half+ second; it enters in "Enter" mode; then the selected row starts flashing indicating that the parameter can be changed; the The **"-"** and **"+"** buttons increment or decrement the value; Pressing the **"Set"** button commits the change (and so if times-out) and return the unit to "Normal" mode. 
 
 ### Android UI
 TBD
