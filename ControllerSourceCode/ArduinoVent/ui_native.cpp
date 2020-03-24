@@ -26,6 +26,7 @@
 #include "breather.h"
 #include <stdio.h>
 #include <string.h>
+#include "config.h"
 
 #define TM_BLINK                    400   // milliseconds
 #define TM_FUNC_HOLD                500  // twoseconds
@@ -36,7 +37,15 @@ static int params_idx = 0;
 
 #define LCD_STATUS_ROW              0
 #define LCD_PARAMS_FIRST_ROW        1
-#define LCD_PARAMS_LAST_ROW         3
+
+#if (LCD_CFG_2_ROWS == 1)
+  #define LCD_PARAMS_LAST_ROW         1
+#elif (LCD_CFG_4_ROWS == 1)
+  #define LCD_PARAMS_LAST_ROW         3
+#else
+  #error "At least one LCD_CFG_x_ROWS must be set to 1 in config.h"
+#endif
+
 #define LCD_PARAMS_NUM_ROWS         ( (LCD_PARAMS_LAST_ROW - LCD_PARAMS_FIRST_ROW) + 1)
 
 #define PROGRESS_ROW        0

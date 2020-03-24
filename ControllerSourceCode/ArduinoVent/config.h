@@ -39,6 +39,10 @@
 #define VALVE_IN_PIN  6
 #define VALVE_OUT_PIN  7
 
+//--------- LCD Num Rows ----------
+#define LCD_CFG_2_ROWS  0
+#define LCD_CFG_4_ROWS  1
+
 /*======================================
   =                                    =
   =      Paramater default Values      =
