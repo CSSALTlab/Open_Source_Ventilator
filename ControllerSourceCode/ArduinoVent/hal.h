@@ -27,7 +27,7 @@
   #include <QPlainTextEdit>
 #else
   #include <Arduino.h>
-  #include <LiquidCrystal_I2C.h>
+  #include "LiquidCrystal_I2C_mv.h"
 #endif
 
 #define LCD_NUM_ROWS 4
