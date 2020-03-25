@@ -33,12 +33,21 @@
 #define LCD_NUM_ROWS 4
 #define LCD_NUM_COLS 20
 
+typedef enum {
+  MONITOR_LED_NORMAL,
+  MONITOR_LED_FAST,
+  MONITOR_LED_SLOW,
+} MONITOR_LET_T;
+
 #ifdef VENTSIM
   void halInit(QPlainTextEdit * ed);
 #else
   void halInit();
   void LOG();
 #endif
+
+void halSetMonitorLED (MONITOR_LET_T speed);
+MONITOR_LET_T halGetMonitorLED ();
 
 void halLoop();
 void halBlinkLED();

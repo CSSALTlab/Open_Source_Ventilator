@@ -27,6 +27,11 @@
   =                                    =
   ======================================
  */
+
+#ifndef VENTSIM
+  #define WATCHDOG_ENABLE  // to disable watchdog comment out this line
+#endif
+
 //------------ Input Keys ---------------
 
 #define KEY_DECREMENT_PIN   3
@@ -39,9 +44,12 @@
 #define VALVE_IN_PIN  6
 #define VALVE_OUT_PIN  7
 
+#define MONITOR_LED_PIN LED_BUILTIN
+
 //--------- LCD Num Rows ----------
 #define LCD_CFG_2_ROWS  0
 #define LCD_CFG_4_ROWS  1
+
 
 /*======================================
   =                                    =

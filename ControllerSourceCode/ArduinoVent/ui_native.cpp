@@ -434,7 +434,7 @@ propagate_t CUiNative::onEvent(event_t * event)
     //============== SHOW Mode =============
     if (ui_state == SHOW_MODE) {
 
-        //--------- Function Key -------------
+        //--------- SET Key -------------
         if (event->iParam == KEY_SET)  {
             if (event->type == EVT_KEY_RELEASE)  {
                 if (ignore_release) {

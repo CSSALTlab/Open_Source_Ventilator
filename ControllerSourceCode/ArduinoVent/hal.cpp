@@ -24,9 +24,25 @@
 #include "event.h"
 #include "config.h"
 
+
+#ifdef WATCHDOG_ENABLE
+  #if defined(__AVR__)
+    #include <avr/wdt.h>
+  #else 
+    error "MPU not supported... either add support or disable watchdog."
+  #endif
+#endif
+
+
 //---------- Constants ---------
 
 #define TM_KEY_SAMPLING 5  // 5 ms
+
+static MONITOR_LET_T monitor_led_speed = MONITOR_LED_NORMAL;
+
+#define TM_MONITOR_LED_NORMAL       500
+#define TM_MONITOR_LED_FAST         50 //
+#define TM_MONITOR_LED_SLOW         2000
 
 //-------- variables --------
 static unsigned long tm_led;
@@ -53,11 +69,54 @@ void halInit(QPlainTextEdit * ed) {
   halLcdClear();
 }
 #else
-LiquidCrystal_I2C lcd(0x27,4,4);  
+LiquidCrystal_I2C lcd(0x27,4,4);
+
+#define TM_WAIT_TO_ENABLE_WATCHDOG 3000
+
+unsigned long tm_wdt = 0;
+static int wdt_st;
+
+
+
+static initWdt()
+{
+#ifdef WATCHDOG_ENABLE
+  wdt_st = 0;
+  tm_wdt = millis();
+
+  if ( MCUSR & (1<<WDRF) ) { // if we are starting dua watchdog recover LED will be fast
+    halSetMonitorLED(MONITOR_LED_FAST);
+  }
+  else{
+    halSetMonitorLED(MONITOR_LED_NORMAL);
+  }
+  wdt_disable(); // keep WDT disable for a couple seconds
+#else
+  halSetMonitorLED(MONITOR_LED_SLOW);
+#endif
+}
+static loopWdt()
+{
+#ifdef WATCHDOG_ENABLE
+  if (wdt_st == 0) { // wait to enable WDT 
+    if (tm_wdt + TM_WAIT_TO_ENABLE_WATCHDOG < millis()) {
+        tm_wdt = millis();
+        wdt_st = 1;
+        wdt_enable(WDTO_2S); //WDTO_2S Note: LCD Library is TOO SLOW... need to fix to get real time and lower WDT
+        
+    }
+    return;
+  }
+  //------- if we are here then WDT is enabled... kick it
+  wdt_reset();
+#endif
+}
+
   
 void halInit() {
-  pinMode(LED_BUILTIN, OUTPUT);
+  pinMode(MONITOR_LED_PIN, OUTPUT);
   tm_led = millis();
+
   lcd.init();                      // initialize the lcd 
   lcd.backlight();
   halLcdClear();
@@ -77,6 +136,7 @@ void halInit() {
   digitalWrite(VALVE_OUT_PIN, HIGH);       // turn on pullup resistors
 
   tm_key_sampling = millis();
+  initWdt();
 }
 #endif
 
@@ -92,10 +152,30 @@ static void testKey()
 }
 #endif
 
+
+void halSetMonitorLED (MONITOR_LET_T speed)
+{
+  monitor_led_speed = speed;
+}
+MONITOR_LET_T halGetMonitorLED ()
+{
+  return monitor_led_speed;
+}
+
 void halBlinkLED()
 {
-  //testKey();
-    if (tm_led + 1000 < millis()) {
+  int tm;
+  if (monitor_led_speed == MONITOR_LED_FAST) {
+    tm = TM_MONITOR_LED_FAST;
+  }
+  else if (monitor_led_speed == MONITOR_LED_SLOW) {
+    tm = TM_MONITOR_LED_SLOW;
+  }
+  else {
+    tm = TM_MONITOR_LED_NORMAL;
+  }
+  
+    if (tm_led + tm < millis()) {
         tm_led = millis();
 
         
@@ -104,11 +184,11 @@ void halBlinkLED()
 #else
         if (led_state) {
           led_state = 0;
-          digitalWrite(LED_BUILTIN, LOW);
+          digitalWrite(MONITOR_LED_PIN, LOW);
         }
         else {
           led_state = 1;
-          digitalWrite(LED_BUILTIN, HIGH);
+          digitalWrite(MONITOR_LED_PIN, HIGH);
         }
 #endif
         
@@ -330,6 +410,11 @@ void halLoop()
 {
   halBlinkLED();
   processKeys();
+
+#ifdef WATCHDOG_ENABLE
+  loopWdt();
+#endif
+
 }
 
 
