@@ -84,6 +84,8 @@ static initWdt()
   wdt_st = 0;
   tm_wdt = millis();
 
+  // the following line always return zero as bootloader clears the bit.
+  // see hack at: https://www.reddit.com/r/arduino/comments/29kev1/a_question_about_the_mcusr_and_the_wdrf_after_a/
   if ( MCUSR & (1<<WDRF) ) { // if we are starting dua watchdog recover LED will be fast
     halSetMonitorLED(MONITOR_LED_FAST);
   }
