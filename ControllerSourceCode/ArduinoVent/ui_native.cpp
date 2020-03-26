@@ -28,6 +28,8 @@
 #include <string.h>
 #include "config.h"
 
+//#define TEST_WDT // Debug only... it makes Watchdor to trigger reset when Set button is pressed
+
 #define TM_BLINK                    400   // milliseconds
 #define TM_FUNC_HOLD                500  // twoseconds
 #define BLINK_PARAMETER_VAL         1
@@ -447,6 +449,10 @@ propagate_t CUiNative::onEvent(event_t * event)
             else if (event->type == EVT_KEY_PRESS) {
                 tm_set_hold = millis();
                 check_set_hold = true;
+#ifdef TEST_WDT
+                // test WDT
+                delay(2000); // triggers reset via WDT
+#endif
             }
         }
 

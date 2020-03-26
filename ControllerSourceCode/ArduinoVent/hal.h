@@ -42,7 +42,7 @@ typedef enum {
 #ifdef VENTSIM
   void halInit(QPlainTextEdit * ed);
 #else
-  void halInit();
+  void halInit(uint8_t reset_val);
   void LOG();
 #endif
 

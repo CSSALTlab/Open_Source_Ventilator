@@ -78,7 +78,7 @@ static int wdt_st;
 
 
 
-static initWdt()
+static void initWdt(uint8_t reset_val)
 {
 #ifdef WATCHDOG_ENABLE
   wdt_st = 0;
@@ -86,7 +86,8 @@ static initWdt()
 
   // the following line always return zero as bootloader clears the bit.
   // see hack at: https://www.reddit.com/r/arduino/comments/29kev1/a_question_about_the_mcusr_and_the_wdrf_after_a/
-  if ( MCUSR & (1<<WDRF) ) { // if we are starting dua watchdog recover LED will be fast
+  //if ( MCUSR & (1<<WDRF) ) { // if we are starting dua watchdog recover LED will be fast
+  if (reset_val & (1<<WDRF) ) {
     halSetMonitorLED(MONITOR_LED_FAST);
   }
   else{
@@ -97,7 +98,7 @@ static initWdt()
   halSetMonitorLED(MONITOR_LED_SLOW);
 #endif
 }
-static loopWdt()
+static void loopWdt()
 {
 #ifdef WATCHDOG_ENABLE
   if (wdt_st == 0) { // wait to enable WDT 
@@ -105,7 +106,11 @@ static loopWdt()
         tm_wdt = millis();
         wdt_st = 1;
         wdt_enable(WDTO_1S); //WDTO_2S Note: LCD Library is TOO SLOW... need to fix to get real time and lower WDT
-        
+
+        /* WDT possible values for ATMega 8, 168, 328, 1280, 2560
+             WDTO_15MS, WDTO_30MS, WDTO_60MS, WDTO_120MS, WDTO_250MS, WDTO_500MS, WDTO_1S, WDTO_2S
+           WDT possible values for  ATMega 168, 328, 1280, 2560
+             WDTO_4S, WDTO_8S */
     }
     return;
   }
@@ -115,7 +120,7 @@ static loopWdt()
 }
 
   
-void halInit() {
+void halInit(uint8_t reset_val) {
   pinMode(MONITOR_LED_PIN, OUTPUT);
   tm_led = millis();
 
@@ -138,7 +143,7 @@ void halInit() {
   digitalWrite(VALVE_OUT_PIN, HIGH);       // turn on pullup resistors
 
   tm_key_sampling = millis();
-  initWdt();
+  initWdt(reset_val);
 }
 #endif
 
