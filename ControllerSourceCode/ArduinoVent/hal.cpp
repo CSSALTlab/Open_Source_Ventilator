@@ -104,7 +104,7 @@ static loopWdt()
     if (tm_wdt + TM_WAIT_TO_ENABLE_WATCHDOG < millis()) {
         tm_wdt = millis();
         wdt_st = 1;
-        wdt_enable(WDTO_2S); //WDTO_2S Note: LCD Library is TOO SLOW... need to fix to get real time and lower WDT
+        wdt_enable(WDTO_1S); //WDTO_2S Note: LCD Library is TOO SLOW... need to fix to get real time and lower WDT
         
     }
     return;

@@ -58,7 +58,9 @@ void LiquidCrystal_I2C::init(){
 
 void LiquidCrystal_I2C::init_priv()
 {
+  Wire.setClock(400000);
   Wire.begin();
+  Wire.setClock(500000);
   _displayfunction = LCD_4BITMODE | LCD_1LINE | LCD_5x8DOTS;
   begin(_cols, _rows);  
 }
@@ -81,7 +83,7 @@ void LiquidCrystal_I2C::begin(uint8_t cols, uint8_t lines, uint8_t dotsize) {
   
   // Now we pull both RS and R/W low to begin commands
   expanderWrite(_backlightval); // reset expanderand turn backlight off (Bit 8 =1)
-  delay(1000);
+  delay(200); //1000
 
     //put the LCD into 4 bit mode
   // this is according to the hitachi HD44780 datasheet
@@ -260,7 +262,7 @@ void LiquidCrystal_I2C::pulseEnable(uint8_t _data){
   delayMicroseconds(1);   // enable pulse must be >450ns
   
   expanderWrite(_data & ~En); // En low
-  delayMicroseconds(50);    // commands need > 37us to settle
+  delayMicroseconds(5); // was 50;    // commands need > 37us to settle
 } 
 
 
