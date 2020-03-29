@@ -43,7 +43,6 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->bt_left, SIGNAL (released()),this, SLOT (onBtLeftRelease()));
 
     halInit(ui->plainTextEdit);
-    init_libs();
     ventSetup();
 
     timerId = startTimer(1);

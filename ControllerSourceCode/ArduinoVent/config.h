@@ -27,6 +27,7 @@
   =                                    =
   ======================================
  */
+#define BLUETOOTH_ENABLE
 
 #ifndef VENTSIM
   #define WATCHDOG_ENABLE  // to disable watchdog comment out this line
@@ -44,7 +45,11 @@
 #define VALVE_IN_PIN  6
 #define VALVE_OUT_PIN  7
 
-#define MONITOR_LED_PIN LED_BUILTIN
+#ifndef BLUETOOTH_ENABLE
+  #define MONITOR_LED_PIN LED_BUILTIN
+#else
+  #define MONITOR_LED_PIN 13 
+#endif
 
 //--------- LCD Num Rows ----------
 #define LCD_CFG_2_ROWS  0

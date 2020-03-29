@@ -19,6 +19,10 @@
  **************************************************************
 */
 
+#ifdef VENTSIM
+#else
+  #include <Arduino.h>
+#endif
 
 #include "vent.h"
 #include "hal.h"

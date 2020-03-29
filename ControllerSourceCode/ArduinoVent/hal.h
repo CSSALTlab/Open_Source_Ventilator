@@ -23,7 +23,6 @@
 #include "log.h"
 
 #ifdef VENTSIM
-  #include "arduino_libs.h"
   #include <QPlainTextEdit>
 #else
   #include <Arduino.h>
@@ -48,6 +47,9 @@ typedef enum {
 
 void halSetMonitorLED (MONITOR_LET_T speed);
 MONITOR_LET_T halGetMonitorLED ();
+
+uint64_t halStartTimerRef();
+bool halCheckTimerExpired(uint64_t timerRef, uint64_t lapseTime);
 
 void halLoop();
 void halBlinkLED();

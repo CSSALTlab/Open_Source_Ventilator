@@ -36,7 +36,7 @@ static int curr_in_milli;
 static int curr_out_milli;
 static int curr_total_cycle_milli;
 static int curr_progress;
-static unsigned long tm_start;
+static uint64_t tm_start;
 
 static const int rate[4] = {1,2,3,4} ;
 
@@ -56,7 +56,7 @@ void breatherStartCycle()
     curr_out_milli = (in_out_t/2) / rate[curr_rate];
     curr_in_milli = in_out_t - curr_out_milli;
     curr_progress = 0;
-    tm_start = millis();
+    tm_start = halStartTimerRef();
     b_state = B_ST_IN;
     halValveOutOff();
     halValveInOn();
@@ -85,11 +85,11 @@ static void fsmStopped()
 
 static void fsmIn()
 {
-    unsigned long m = millis();
+    uint64_t m = halStartTimerRef();
     if (tm_start + curr_in_milli < m) {
         // in valve off
         halValveInOff();
-        tm_start = millis();
+        tm_start = halStartTimerRef();
         b_state = B_ST_WAIT_TO_OUT;
     }
     else {
@@ -100,9 +100,9 @@ static void fsmIn()
 
 static void fsmWaitToOut()
 {
-    if (tm_start + TM_WAIT_TO_OUT < millis()) {
+    if (halCheckTimerExpired(tm_start, TM_WAIT_TO_OUT)) {
         // switch valves
-        tm_start = millis();
+        tm_start = halStartTimerRef();
         b_state = B_ST_OUT;
         halValveOutOn();
     }
@@ -110,10 +110,10 @@ static void fsmWaitToOut()
 
 static void fsmOut()
 {
-    unsigned long m = millis();
+    uint64_t m = halStartTimerRef();
     if (tm_start + curr_out_milli < m) {
         // switch valves
-        tm_start = millis();
+        tm_start = halStartTimerRef();
         b_state = B_ST_PAUSE;
         halValveOutOff();
     }
@@ -126,9 +126,9 @@ static void fsmOut()
 
 static void fsmStopping()
 {
-    if (tm_start + TM_STOPPING < millis()) {
+    if (halCheckTimerExpired(tm_start, TM_STOPPING)) {
         // switch valves
-        tm_start = millis();
+        tm_start = halStartTimerRef();
         b_state = B_ST_STOPPED;
         halValveOutOff();
         halValveInOff();
@@ -137,7 +137,7 @@ static void fsmStopping()
 
 static void fsmPause()
 {
-    if (tm_start + curr_pause < millis()) {
+    if (halCheckTimerExpired(tm_start, curr_pause)) {
         breatherStartCycle();
     }
 }
@@ -146,7 +146,7 @@ void breatherLoop()
 {
     if (b_state != B_ST_STOPPED && b_state != B_ST_STOPPING && propGetVent() == 0) {
         // force stop
-        tm_start = millis();
+        tm_start = halStartTimerRef();
         b_state = B_ST_STOPPING;
         curr_progress = 0;
         halValveInOff();

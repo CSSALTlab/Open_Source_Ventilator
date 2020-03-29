@@ -24,6 +24,12 @@
 #include "event.h"
 #include "config.h"
 
+#ifdef VENTSIM
+  #include <stdio.h>
+  #include <QElapsedTimer>
+  static QElapsedTimer milliTimer;
+#endif
+
 
 #ifdef WATCHDOG_ENABLE
   #if defined(__AVR__)
@@ -45,9 +51,9 @@ static MONITOR_LET_T monitor_led_speed = MONITOR_LED_NORMAL;
 #define TM_MONITOR_LED_SLOW         2000
 
 //-------- variables --------
-static unsigned long tm_led;
+static uint64_t tm_led;
 
-static unsigned long tm_key_sampling;
+static uint64_t tm_key_sampling;
 
 static char lcdBuffer [LCD_NUM_ROWS][LCD_NUM_COLS];
 static int cursor_col = 0, cursor_row = 0;
@@ -64,25 +70,57 @@ static int cursor_col = 0, cursor_row = 0;
 //----------- Locals -------------
 #ifdef VENTSIM
 void halInit(QPlainTextEdit * ed) {
+  milliTimer.start();
   lcdObj = ed;
-  tm_led = millis();
+  tm_led = halStartTimerRef();
   halLcdClear();
 }
+
+uint64_t halStartTimerRef()
+{
+    return (uint64_t) milliTimer.elapsed();
+}
+
+bool halCheckTimerExpired(uint64_t timerRef, uint64_t time)
+{
+    uint64_t now = halStartTimerRef();
+    if (timerRef + time < now)
+        return true;
+    return false;
+}
+
+
 #else
 LiquidCrystal_I2C lcd(0x27,4,4);
 
 #define TM_WAIT_TO_ENABLE_WATCHDOG 3000
 
-unsigned long tm_wdt = 0;
+uint64_t tm_wdt = 0;
 static int wdt_st;
 
+uint64_t halStartTimerRef()
+{
+    static uint32_t low32, high32;
+    uint32_t new_low32 = millis();
+    if (new_low32 < low32) high32++;
+    low32 = new_low32;
+    return (uint64_t) high32 << 32 | low32;
+}
+
+bool halCheckTimerExpired(uint64_t timerRef, uint64_t time)
+{
+    uint64_t now = halStartTimerRef();
+    if (timerRef + time < now)
+        return true;
+    return false;
+}
 
 
 static void initWdt(uint8_t reset_val)
 {
 #ifdef WATCHDOG_ENABLE
   wdt_st = 0;
-  tm_wdt = millis();
+  tm_wdt = halStartTimerRef();
 
   // the following line always return zero as bootloader clears the bit.
   // see hack at: https://www.reddit.com/r/arduino/comments/29kev1/a_question_about_the_mcusr_and_the_wdrf_after_a/
@@ -102,8 +140,8 @@ static void loopWdt()
 {
 #ifdef WATCHDOG_ENABLE
   if (wdt_st == 0) { // wait to enable WDT 
-    if (tm_wdt + TM_WAIT_TO_ENABLE_WATCHDOG < millis()) {
-        tm_wdt = millis();
+    if (halCheckTimerExpired(tm_wdt, TM_WAIT_TO_ENABLE_WATCHDOG)) {
+        tm_wdt = halStartTimerRef();
         wdt_st = 1;
         wdt_enable(WDTO_1S); //WDTO_2S Note: LCD Library is TOO SLOW... need to fix to get real time and lower WDT
 
@@ -122,7 +160,7 @@ static void loopWdt()
   
 void halInit(uint8_t reset_val) {
   pinMode(MONITOR_LED_PIN, OUTPUT);
-  tm_led = millis();
+  tm_led = halStartTimerRef();
 
   lcd.init();                      // initialize the lcd 
   lcd.backlight();
@@ -142,7 +180,7 @@ void halInit(uint8_t reset_val) {
   pinMode(VALVE_OUT_PIN, OUTPUT);           // set pin to input
   digitalWrite(VALVE_OUT_PIN, HIGH);       // turn on pullup resistors
 
-  tm_key_sampling = millis();
+  tm_key_sampling = halStartTimerRef();
   initWdt(reset_val);
 }
 #endif
@@ -171,7 +209,7 @@ MONITOR_LET_T halGetMonitorLED ()
 
 void halBlinkLED()
 {
-  int tm;
+  uint64_t tm;
   if (monitor_led_speed == MONITOR_LED_FAST) {
     tm = TM_MONITOR_LED_FAST;
   }
@@ -182,8 +220,8 @@ void halBlinkLED()
     tm = TM_MONITOR_LED_NORMAL;
   }
   
-    if (tm_led + tm < millis()) {
-        tm_led = millis();
+    if (halCheckTimerExpired(tm_led, tm)) {
+        tm_led = halStartTimerRef();
 
         
 #ifdef VENTSIM
@@ -326,6 +364,8 @@ void halValveOutOff()
 }
 #else
 // ----------- sim -------------
+
+
 void halValveInOn()
 {
   LOG(">>>>>> Valve IN ON");
@@ -362,8 +402,8 @@ static keys_t keys[3] = {
 static void processKeys()
 {
 #ifndef VENTSIM
-//    if (tm_key_sampling + TM_KEY_SAMPLING < millis()) {
-//        tm_key_sampling = millis();
+//    if (tm_key_sampling + TM_KEY_SAMPLING halCheckTimerExpired( , )) {
+//        tm_key_sampling = halStartTimerRef();
 //
 //        if (digitalRead(keys[0].pin) == LOW) {
 //            evtPost(EVT_KEY_PRESS, keys[0].keyCode);
@@ -373,8 +413,8 @@ static void processKeys()
       
 
     int i;
-    if (tm_key_sampling + TM_KEY_SAMPLING < millis()) {
-        tm_key_sampling = millis();
+    if ( halCheckTimerExpired(tm_key_sampling, TM_KEY_SAMPLING)) {
+        tm_key_sampling = halStartTimerRef();
       for (i=0; i<3; i++) {
         if (keys[i].state == 0) {
           // ------- key is release state -------

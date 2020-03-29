@@ -20,11 +20,7 @@
  *
  **************************************************************
 */
-#ifdef VENTSIM
-  #include "arduino_libs.h"
-#else
-  #include <Arduino.h> 
-#endif
+
 
 void ventLoop();
 void ventSetup();

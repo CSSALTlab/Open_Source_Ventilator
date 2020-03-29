@@ -24,7 +24,6 @@ SOURCES += \
     ../ArduinoVent/properties.cpp \
     ../ArduinoVent/ui_native.cpp \
     ../ArduinoVent/vent.cpp \
-    arduino_libs.cpp \
     main.cpp \
     mainwindow.cpp
 
@@ -37,7 +36,6 @@ HEADERS += \
     ../ArduinoVent/properties.h \
     ../ArduinoVent/ui_native.h \
     ../ArduinoVent/vent.h \
-    arduino_libs.h \
     mainwindow.h
 
 FORMS += \

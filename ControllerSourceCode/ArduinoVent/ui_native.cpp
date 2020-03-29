@@ -225,7 +225,7 @@ static params_t params[] = {
 //------------ Global -----------
 CUiNative::CUiNative()
 {
-    tm_blink = millis();
+    tm_blink = halStartTimerRef();
     updateStatus();
     updateParams();
 //    char buf[32];
@@ -279,8 +279,8 @@ void CUiNative::blinker()
     memset(buf, 0x20, (size_t) len); // spaces
     buf[len] = 0; // NULL terminate
 
-    if (tm_blink + TM_BLINK < millis()) {
-        tm_blink = millis();
+    if (halCheckTimerExpired(tm_blink, TM_BLINK)) {
+        tm_blink = halStartTimerRef();
 
         if (blink_mask == 0) return;
 
@@ -314,7 +314,7 @@ void CUiNative::refreshValue(bool force)
     memset(buf, 0x20, (size_t) len); // spaces
     buf[len] = 0; // NULL terminate
 
-    tm_blink = millis();
+    tm_blink = halStartTimerRef();
     fillValBuf(buf, params_idx);
     halLcdWrite(PARAM_VAL_START_COL, LCD_PARAMS_FIRST_ROW, buf);
 }
@@ -410,7 +410,7 @@ void CUiNative::checkFuncHold()
 
     //-------- process KEY_SET hold ------
     if (check_set_hold) {
-      if (tm_set_hold + TM_FUNC_HOLD < millis()) {
+      if (halCheckTimerExpired(tm_set_hold, TM_FUNC_HOLD)) {
         blinkOn(BLINK_PARAMETER_VAL);
         LOG("** ENTER mode");
         ui_state = ENTER_MODE;
@@ -419,7 +419,7 @@ void CUiNative::checkFuncHold()
 
     //-------- process KEY_DECREMENT hold ------
     if (check_decrement_hold) {
-      if (tm_decrement_hold + TM_FUNC_HOLD < millis()) {
+      if (halCheckTimerExpired(tm_decrement_hold, TM_FUNC_HOLD)) {
         params_idx = -1;
         scroolParams(true);
       }
@@ -447,7 +447,7 @@ propagate_t CUiNative::onEvent(event_t * event)
                 check_set_hold = false;
             }
             else if (event->type == EVT_KEY_PRESS) {
-                tm_set_hold = millis();
+                tm_set_hold = halStartTimerRef();
                 check_set_hold = true;
 #ifdef TEST_WDT
                 // test WDT
@@ -460,7 +460,7 @@ propagate_t CUiNative::onEvent(event_t * event)
         if (event->iParam == KEY_DECREMENT) {
             if (event->type == EVT_KEY_PRESS)  {
               scroolParams(false);
-              tm_decrement_hold = millis();
+              tm_decrement_hold = halStartTimerRef();
               check_decrement_hold = true;
             }
             else {
