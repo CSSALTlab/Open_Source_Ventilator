@@ -22,14 +22,25 @@
 #include "log.h"
 #include "properties.h"
 #include "config.h"
+#include <stdint.h>
 
+typedef struct __attribute__ ((packed))  props_st {
+  uint8_t propVent;
+  uint8_t propBps;
+  uint8_t propDutyCycle;
+  uint8_t propPause;
+  uint8_t propLcdAutoOff;
+  uint8_t propBle;
+} PROPS_T;
 
-static int propVent         = DEFAULT_VENT;
-static int propBps          = DEFAULT_BPS;
-static int propDutyCycle    = DEFAULT_DUTY_CYCLE;
-static int propPause        = DEFAULT_PAUSE;
-static int propLcdAutoOff   = DEFAULT_LCD_AUTO_OFF;
-static int propBle          = DEFAULT_BLE;
+static PROPS_T props = {
+  .propVent         = DEFAULT_VENT,
+  .propBps          = DEFAULT_BPS,
+  .propDutyCycle    = DEFAULT_DUTY_CYCLE,
+  .propPause        = DEFAULT_PAUSE,
+  .propLcdAutoOff   = DEFAULT_LCD_AUTO_OFF,
+  .propBle          = DEFAULT_BLE,
+};
 
 // Note: defaults values will takes place in case the stored parameters are corrupted or empty
 
@@ -40,70 +51,75 @@ const char * propDutyCycleTxt[4] = {
     "  1:4"
 };
 
-void propSave()
+void propInit()
+{
+
+}
+
+
+bool propSave()
 {
 
 }
 
 void propSetVent(int val) {
     LOG("propSetVent");
-    propVent = val;
+    props.propVent = val;
 }
 
 void propSetBps(int val) {
     LOG("propSetBps");
-    propBps = val;
+    props.propBps = (uint8_t) val & 0x000000ff;
 }
 
 void propSetDutyCycle(int val) {
      LOG("propSetDutyCycle");
-     propDutyCycle = val;
+     props.propDutyCycle =  (uint8_t) val & 0x000000ff;
 }
 
 void propSetPause(int val) {
      LOG("propSetPause");
-     propPause = val;
+     props.propPause =  (uint8_t) val & 0x000000ff;
 }
 
 void propSetLcdAutoOff(int val) {
      LOG("propSetLcdAutoOff");
-     propLcdAutoOff = val;
+     props.propLcdAutoOff =  (uint8_t) val & 0x000000ff;
 }
 
 void propSetBle(int val) {
       LOG("propSetBle");
-      propBle = val;
+      props.propBle =  (uint8_t) val & 0x000000ff;
 }
 
 
 // ---------- Getters ------------
 int propGetVent() {
 //    LOG("propGetVent");
-    return propVent;
+    return props.propVent;
 }
 
 int propGetBps() {
     LOG("propGetBps");
-    return propBps;
+    return props.propBps;
 }
 
 int propGetDutyCycle() {
      LOG("propGetDutyCycle");
-     return propDutyCycle;
+     return props.propDutyCycle;
 }
 
 int propGetPause() {
      LOG("propGetPause");
-     return propPause;
+     return props.propPause;
 }
 
 int propGetLcdAutoOff() {
      LOG("propGetLcdAutoOff");
-     return propLcdAutoOff;
+     return props.propLcdAutoOff;
 }
 
 int propGetBle() {
       LOG("propGetBle");
-      return propBle;
+      return props.propBle;
 }
-

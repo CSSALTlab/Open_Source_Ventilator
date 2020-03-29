@@ -1,5 +1,5 @@
-#ifndef PROPS_H
-#define PROPS_H
+#ifndef CRC_H
+#define CRC_H
 
 /*************************************************************
  * Open Ventilator
@@ -20,26 +20,13 @@
  *
  **************************************************************
 */
+#include <stdint.h>
 
-extern const char * propDutyCycleTxt[4];
+// usage: CalculateCRC16(0xffff, "123456789", 9);
 
-void propInit();
-bool propSave();
+uint16_t CalculateCRC16(
+    uint16_t crc,      // Seed for CRC calculation
+    const void *c_ptr, // Pointer to byte array to perform CRC on
+    int len);          // Number of bytes to CRC
 
-// ---------- Setters ------------
-void propSetVent(int val);
-void propSetBps(int val);
-void propSetDutyCycle(int val);
-void propSetPause(int val);
-void propSetLcdAutoOff(int val);
-void propSetBle(int val);
-
-// ---------- Getters ------------
-int propGetVent();
-int propGetBps();
-int propGetDutyCycle();
-int propGetPause();
-int propGetLcdAutoOff();
-int propGetBle();
-
-#endif // PROPS_H
+#endif // CRC_H
