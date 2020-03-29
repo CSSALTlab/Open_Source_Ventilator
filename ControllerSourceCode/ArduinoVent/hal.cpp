@@ -23,11 +23,14 @@
 #include "hal.h"
 #include "event.h"
 #include "config.h"
+#include "properties.h"
 
 #ifdef VENTSIM
   #include <stdio.h>
   #include <QElapsedTimer>
   static QElapsedTimer milliTimer;
+#else
+  #include "EEPROM.h"
 #endif
 
 
@@ -74,6 +77,7 @@ void halInit(QPlainTextEdit * ed) {
   lcdObj = ed;
   tm_led = halStartTimerRef();
   halLcdClear();
+  propInit();
 }
 
 uint64_t halStartTimerRef()
@@ -100,7 +104,7 @@ static int wdt_st;
 
 uint64_t halStartTimerRef()
 {
-    static uint32_t low32, high32;
+    static uint32_t low32, high32 = 0;
     uint32_t new_low32 = millis();
     if (new_low32 < low32) high32++;
     low32 = new_low32;
@@ -159,9 +163,13 @@ static void loopWdt()
 
   
 void halInit(uint8_t reset_val) {
+#ifdef DEBUG_SERIAL_LOGS
+  Serial.begin(9600);
+#endif
   pinMode(MONITOR_LED_PIN, OUTPUT);
   tm_led = halStartTimerRef();
-
+  
+  propInit();
   lcd.init();                      // initialize the lcd 
   lcd.backlight();
   halLcdClear();
@@ -239,6 +247,24 @@ void halBlinkLED()
         
     }
 }
+
+//-------- EEPROM ----------
+#ifndef VENTSIM
+uint8_t EEPROM_read(int addr)
+{
+  return EEPROM.read(addr); 
+}
+
+void EEPROM_write(uint8_t val, int addr)
+{
+  EEPROM.update(addr, val); 
+}
+#else
+//---- stubs -----
+uint8_t EEPROM_read(int addr) {}
+void EEPROM_write(uint8_t val, int addr){}
+#endif
+
 
 //-------- display --------
 #ifdef VENTSIM
@@ -402,16 +428,6 @@ static keys_t keys[3] = {
 static void processKeys()
 {
 #ifndef VENTSIM
-//    if (tm_key_sampling + TM_KEY_SAMPLING halCheckTimerExpired( , )) {
-//        tm_key_sampling = halStartTimerRef();
-//
-//        if (digitalRead(keys[0].pin) == LOW) {
-//            evtPost(EVT_KEY_PRESS, keys[0].keyCode);
-//            evtPost(EVT_KEY_RELEASE, keys[0].keyCode);
-//        }
-//    }
-      
-
     int i;
     if ( halCheckTimerExpired(tm_key_sampling, TM_KEY_SAMPLING)) {
         tm_key_sampling = halStartTimerRef();
@@ -457,6 +473,7 @@ void halLoop()
 {
   halBlinkLED();
   processKeys();
+  propLoop();
 
 #ifdef WATCHDOG_ENABLE
   loopWdt();

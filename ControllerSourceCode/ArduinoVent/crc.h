@@ -22,11 +22,8 @@
 */
 #include <stdint.h>
 
-// usage: CalculateCRC16(0xffff, "123456789", 9);
+// usage: crc_8("123456789", 9);
 
-uint16_t CalculateCRC16(
-    uint16_t crc,      // Seed for CRC calculation
-    const void *c_ptr, // Pointer to byte array to perform CRC on
-    int len);          // Number of bytes to CRC
+uint8_t crc_8( const uint8_t * input_str, int num_bytes );
 
 #endif // CRC_H

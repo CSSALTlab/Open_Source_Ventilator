@@ -27,7 +27,8 @@
   =                                    =
   ======================================
  */
-#define BLUETOOTH_ENABLE
+//#define BLUETOOTH_ENABLE
+//#define DEBUG_SERIAL_LOGS // MUST be commented out for production
 
 #ifndef VENTSIM
   #define WATCHDOG_ENABLE  // to disable watchdog comment out this line

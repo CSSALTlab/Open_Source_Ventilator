@@ -24,6 +24,8 @@
 extern const char * propDutyCycleTxt[4];
 
 void propInit();
+void propLoop();
+
 bool propSave();
 
 // ---------- Setters ------------

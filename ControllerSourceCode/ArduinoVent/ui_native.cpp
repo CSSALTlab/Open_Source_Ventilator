@@ -90,6 +90,7 @@ typedef enum {
 } p_type_t;
 
 typedef void (*propchancefunc_t)(int);
+typedef int (*propgetfunc_t)();
 
 typedef struct params_st {
     p_type_t        type;
@@ -101,6 +102,7 @@ typedef struct params_st {
     const char **   options;
     bool            quickUpdate;
     propchancefunc_t handler;
+    propgetfunc_t   propGetter;
 
 } params_t;
 
@@ -126,10 +128,31 @@ static void handleChangeLcdAutoOff(int val) {
 }
 
 static void handleSave(int val); // prototype
+//---------------
 
-static void handleChangeBle(int val) {
-      propSetBle(val);
+static int handleGetVent() {
+    return propGetVent();
 }
+
+static int handleGetBps() {
+    return propGetBps();
+}
+
+static int handleGetDutyCycle() {
+     return propGetDutyCycle();
+}
+
+static int handleGetPause() {
+     return propGetPause();
+}
+
+static int handleGetLcdAutoOff() {
+     return propGetLcdAutoOff();
+}
+
+//static void handleChangeBle(int val) {
+//      propSetBle(val);
+//}
 
 static const char * onOffTxt[] = {
      "  off",
@@ -151,7 +174,8 @@ static params_t params[] = {
       1,                        // max
       onOffTxt ,                // text array for options
       false,                    // no dynamic changes
-      &handleChangeVent           // change prop function
+      &handleChangeVent,        // change prop function
+      &handleGetVent            // propGetter
     },
     { PARAM_INT,                // type
       "BPM",                    // name
@@ -161,7 +185,8 @@ static params_t params[] = {
       30,                       // max
       0,                        // text array for options
       true,                     // no dynamic changes
-      &handleChangeBps            // change prop function
+      &handleChangeBps,          // change prop function
+      &handleGetBps             // propGetter
     },
 
     { PARAM_TXT_OPTIONS,        // type
@@ -170,9 +195,10 @@ static params_t params[] = {
       1,                        // step
       0,                        // min
       3,                        // max
-      propDutyCycleTxt,               // text array for options
+      propDutyCycleTxt,         // text array for options
       true,                     // no dynamic changes
-      &handleChangeDutyCycle      // change prop function
+      &handleChangeDutyCycle,   // change prop function
+      &handleGetDutyCycle       // propGetter
     },
 
     { PARAM_INT,                // type
@@ -183,7 +209,8 @@ static params_t params[] = {
       2000,                     // max
       0,                        // text array for options
       true,                     // no dynamic changes
-      &handleChangePause          // change prop function
+      &handleChangePause,       // change prop function
+      &handleGetPause           // propGetter
     },
     { PARAM_TXT_OPTIONS,        // type
       "LCD auto-off",           // name
@@ -193,18 +220,20 @@ static params_t params[] = {
       1,                        // max
       onOffTxt,                 // text array for options
       false,                    // no dynamic changes
-      &handleChangeLcdAutoOff     // change prop function
+      &handleChangeLcdAutoOff,  // change prop function
+      &handleGetLcdAutoOff      // propGetter
     },
-    { PARAM_TXT_OPTIONS,        // type
-      "Bluetooth",              // name
-      0,                        // val
-      1,                        // step
-      0,                        // min
-      1,                        // max
-      onOffTxt,                 // text array for options
-      false,                    // no dynamic changes
-      &handleChangeBle            // change prop function
-    },
+//    { PARAM_TXT_OPTIONS,        // type
+//      "Bluetooth",              // name
+//      0,                        // val
+//      1,                        // step
+//      0,                        // min
+//      1,                        // max
+//      onOffTxt,                 // text array for options
+//      false,                    // no dynamic changes
+//      &handleChangeBle          // change prop function
+//      &handleGetBle             // propGetter
+//    },
 
 
     //---- This Must be the very last parameter ----
@@ -216,7 +245,8 @@ static params_t params[] = {
       1,                        // max
       yesNoTxt,                 // text array for options
       false,                    // no dynamic changes
-      &handleSave               // change prop function
+      &handleSave,              // change prop function
+      0
     },
 };
 
@@ -225,17 +255,29 @@ static params_t params[] = {
 //------------ Global -----------
 CUiNative::CUiNative()
 {
+    initParams();
     tm_blink = halStartTimerRef();
     updateStatus();
     updateParams();
 //    char buf[32];
 //    sprintf(buf,"size of tm_blink = %d\n", sizeof(tm_blink));
 //    LOG(buf);
+
 }
 
 CUiNative::~CUiNative()
 {
 
+}
+
+void CUiNative::initParams()
+{
+  int i;
+  for (i=0; i<NUM_PARAMS; i++) {
+    if (params[i].propGetter) {
+      params[i].val = params[i].propGetter();
+    }
+  }
 }
 
 static const char * st_txt[3] = {

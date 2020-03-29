@@ -42,6 +42,7 @@ public:
     void refreshValue(bool force);
     void checkFuncHold ();
     void updateProgress();
+    void initParams();
 
     virtual propagate_t onEvent(event_t * event);
 };

@@ -18,6 +18,7 @@ DEFINES += VENTSIM
 
 SOURCES += \
     ../ArduinoVent/breather.cpp \
+    ../ArduinoVent/crc.cpp \
     ../ArduinoVent/event.cpp \
     ../ArduinoVent/hal.cpp \
     ../ArduinoVent/log.cpp \
@@ -30,6 +31,7 @@ SOURCES += \
 HEADERS += \
     ../ArduinoVent/breather.h \
     ../ArduinoVent/config.h \
+    ../ArduinoVent/crc.h \
     ../ArduinoVent/event.h \
     ../ArduinoVent/hal.h \
     ../ArduinoVent/log.h \

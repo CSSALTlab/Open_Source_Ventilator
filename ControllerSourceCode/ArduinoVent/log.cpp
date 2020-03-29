@@ -33,6 +33,8 @@ void LOG(char * s) {
 }
 #else
 void LOG(char * s) {
-    /* dummy */
+#ifdef DEBUG_SERIAL_LOGS
+    Serial.println(s);
+#endif
 }
 #endif

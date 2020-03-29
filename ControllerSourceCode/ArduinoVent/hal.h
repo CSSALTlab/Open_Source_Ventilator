@@ -21,6 +21,7 @@
  **************************************************************
 */
 #include "log.h"
+#include <stdint.h>
 
 #ifdef VENTSIM
   #include <QPlainTextEdit>
@@ -62,6 +63,10 @@ void halValveInOn();
 void halValveInOff();
 void halValveOutOn();
 void halValveOutOff();
+
+uint8_t EEPROM_read(int addr);
+void EEPROM_write(uint8_t val, int addr);
+
 
 
 #endif // HAL_H
