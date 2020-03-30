@@ -37,6 +37,8 @@
 #ifdef WATCHDOG_ENABLE
   #if defined(__AVR__)
     #include <avr/wdt.h>
+  #elif defined(ESP32)
+    #include "esp_system.h"
   #else 
     error "MPU not supported... either add support or disable watchdog."
   #endif
@@ -101,6 +103,12 @@ LiquidCrystal_I2C lcd(0x27,4,4);
 
 uint64_t tm_wdt = 0;
 static int wdt_st;
+#if defined(ESP32)
+  hw_timer_t *timer = NULL;
+  void IRAM_ATTR resetModule() { 
+    esp_restart();
+  }
+#endif
 
 uint64_t halStartTimerRef()
 {
@@ -125,7 +133,7 @@ static void initWdt(uint8_t reset_val)
 #ifdef WATCHDOG_ENABLE
   wdt_st = 0;
   tm_wdt = halStartTimerRef();
-
+#if defined(__AVR__)
   // the following line always return zero as bootloader clears the bit.
   // see hack at: https://www.reddit.com/r/arduino/comments/29kev1/a_question_about_the_mcusr_and_the_wdrf_after_a/
   //if ( MCUSR & (1<<WDRF) ) { // if we are starting dua watchdog recover LED will be fast
@@ -136,6 +144,9 @@ static void initWdt(uint8_t reset_val)
     halSetMonitorLED(MONITOR_LED_NORMAL);
   }
   wdt_disable(); // keep WDT disable for a couple seconds
+#elif defined(ESP32)
+  timer = timerBegin(0, 80, true);//timer 0, div 80
+#endif
 #else
   halSetMonitorLED(MONITOR_LED_SLOW);
 #endif
@@ -147,17 +158,27 @@ static void loopWdt()
     if (halCheckTimerExpired(tm_wdt, TM_WAIT_TO_ENABLE_WATCHDOG)) {
         tm_wdt = halStartTimerRef();
         wdt_st = 1;
+#if defined(__AVR__)
         wdt_enable(WDTO_1S); //WDTO_2S Note: LCD Library is TOO SLOW... need to fix to get real time and lower WDT
 
         /* WDT possible values for ATMega 8, 168, 328, 1280, 2560
              WDTO_15MS, WDTO_30MS, WDTO_60MS, WDTO_120MS, WDTO_250MS, WDTO_500MS, WDTO_1S, WDTO_2S
            WDT possible values for  ATMega 168, 328, 1280, 2560
              WDTO_4S, WDTO_8S */
+#elif defined(ESP32)
+        timerAttachInterrupt(timer, &resetModule, true);  //attach callback
+        timerAlarmWrite(timer, 1000 * 1000, false);       //set time in us
+        timerAlarmEnable(timer);                          //enable interrupt
+#endif
     }
     return;
   }
   //------- if we are here then WDT is enabled... kick it
-  wdt_reset();
+  #ifdef defined(__AVR__)
+    wdt_reset();
+  #elif defined(ESP32)
+    timerWrite(timer, 0); //reset timer (feed watchdog)
+  #endif
 #endif
 }
 
@@ -165,7 +186,6 @@ static void loopWdt()
 void halInit(uint8_t reset_val) {
 #ifdef DEBUG_SERIAL_LOGS
   Serial.begin(9600);
-  Serial.println("Porra");
 #endif
   pinMode(MONITOR_LED_PIN, OUTPUT);
   tm_led = halStartTimerRef();
@@ -258,7 +278,11 @@ uint8_t EEPROM_read(int addr)
 
 void EEPROM_write(uint8_t val, int addr)
 {
+#if defined(ESP32)
+  EEPROM.write(addr, val);
+#else
   EEPROM.update(addr, val); 
+#endif
 }
 #else
 //---- stubs -----
@@ -481,14 +505,6 @@ void halLoop()
 #endif
 
 }
-
-void halWriteSerial(char * s)
-{
-#ifndef VENTSIM
-  Serial.print(s);
-#endif
-}
-
 
 
  

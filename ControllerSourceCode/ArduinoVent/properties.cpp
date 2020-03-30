@@ -45,7 +45,7 @@ typedef struct __attribute__ ((packed))  props_st {
 } PROPS_T;
 
 typedef enum {
-  OK,
+  GOOD,
   EMPTY,
   ZERO,
   BAD
@@ -127,7 +127,7 @@ static CHECK_T checkRecord(PROPS_T * prop_ptr)
   // -------- check CRC ---------
   uint16_t crc = crc_8( (uint8_t *) prop_ptr, sizeof(PROPS_T) - 1);
   if (crc == prop_ptr->crc)
-    return OK;
+    return GOOD;
 
   return BAD;
 }
@@ -135,7 +135,7 @@ static CHECK_T checkRecord(PROPS_T * prop_ptr)
 void propInit()
 {
   readRecord(EEPROM_PROPS_BASE_ADDRESS, &props );
-  if (checkRecord(&props) != OK) {
+  if (checkRecord(&props) != GOOD) {
     LOG("EEPROM values not valid, loading default parameters");
     setDefaultValues();
   }
