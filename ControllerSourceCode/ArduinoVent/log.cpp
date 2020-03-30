@@ -21,6 +21,8 @@
 
 
 #include "log.h"
+#include "config.h"
+
 
 #ifdef VENTSIM
   #include <QDebug>
@@ -34,7 +36,10 @@ void LOG(char * s) {
 #else
 void LOG(char * s) {
 #ifdef DEBUG_SERIAL_LOGS
-    Serial.println(s);
+  extern halWriteSerial(char * s); // avoid including hal.h
+  halWriteSerial(s);
 #endif
 }
+
+//-------------------------------------------
 #endif

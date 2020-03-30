@@ -52,6 +52,8 @@ MONITOR_LET_T halGetMonitorLED ();
 uint64_t halStartTimerRef();
 bool halCheckTimerExpired(uint64_t timerRef, uint64_t lapseTime);
 
+void halWriteSerial(char * s);
+
 void halLoop();
 void halBlinkLED();
 void halLcdClear();

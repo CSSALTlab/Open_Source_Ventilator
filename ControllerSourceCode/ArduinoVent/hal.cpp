@@ -165,6 +165,7 @@ static void loopWdt()
 void halInit(uint8_t reset_val) {
 #ifdef DEBUG_SERIAL_LOGS
   Serial.begin(9600);
+  Serial.println("Porra");
 #endif
   pinMode(MONITOR_LED_PIN, OUTPUT);
   tm_led = halStartTimerRef();
@@ -480,6 +481,14 @@ void halLoop()
 #endif
 
 }
+
+void halWriteSerial(char * s)
+{
+#ifndef VENTSIM
+  Serial.print(s);
+#endif
+}
+
 
 
  
