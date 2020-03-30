@@ -14,6 +14,10 @@
 
 ## Project concept
 The goal of the Ventilator project is to provide ways to anyone produce a ventilator using low cost out-of-shelf components.
+### Concept Video
+[click here for Concept Video](https://youtu.be/OPbaNoG-sxQ)
+### UI Update
+[click here for UI Update Video](https://youtu.be/SgtlYgqE2HE)
 
 ### Some suggested components:
 
