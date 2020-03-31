@@ -25,8 +25,11 @@
 
 #ifdef VENTSIM
   #include <QPlainTextEdit>
+  #define PROGMEM /**/
+  #define F /**/
 #else
   #include <Arduino.h>
+    #include <avr/pgmspace.h>
   #include "LiquidCrystal_I2C_mv.h"
 #endif
 
@@ -43,7 +46,12 @@ typedef enum {
   void halInit(QPlainTextEdit * ed);
 #else
   void halInit(uint8_t reset_val);
-  void LOG();
+  //void LOG(const char * c);
+//  #ifdef DEBUG_SERIAL_LOGS
+//    #define LOG(x) Serial.print(F(x))
+//  #else
+//    #define LOG(x) /* dummy */
+//  #endif
 #endif
 
 void halSetMonitorLED (MONITOR_LET_T speed);

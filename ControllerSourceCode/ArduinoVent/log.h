@@ -20,7 +20,21 @@
  *
  **************************************************************
 */
+#include "config.h"
+//#include "hardwareSerial.h"
 
-void LOG(char * tct);
+#ifndef VENTSIM
+  #include <avr/pgmspace.h>
+  #ifdef DEBUG_SERIAL_LOGS
+    #define LOG(x) Serial.println(F(x))
+    #define LOGV(x)  Serial.println(x)
+  #else
+    #define LOG(x) /* dummy */
+    #define LOGV(x) /* dummy */
+  #endif
+#else
+  void LOG(const char * txt); // goes to flash memory in Arduino
+  void LOGV(char * txt);      // char * comes from a variable
+#endif
 
 #endif // LOG_H

@@ -164,8 +164,7 @@ static const char * yesNoTxt[] = {
      "  yes",
 };
 
-
-static params_t params[] = {
+static /* const */ params_t params[] /* PROGMEM */ =  {
     { PARAM_TXT_OPTIONS,        // type
       "Ventilator",              // name
       0,                        // val

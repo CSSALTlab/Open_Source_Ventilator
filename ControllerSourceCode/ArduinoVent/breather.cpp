@@ -67,7 +67,7 @@ void breatherStartCycle()
           curr_pause,
           curr_in_milli,
           curr_out_milli);
-  LOG(buf);
+  LOGV(buf);
 #endif
 }
 

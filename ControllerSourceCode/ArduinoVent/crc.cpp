@@ -21,8 +21,12 @@
 
 
 #include "crc.h"
-
-static const uint8_t crc8_table[] = {
+#ifndef VENTSIM
+#include <avr/pgmspace.h>
+  static const uint8_t crc8_table[] PROGMEM = {
+#else
+  static const uint8_t crc8_table[] = {
+#endif
 
   0,   49,  98,  83,  196, 245, 166, 151, 185, 136, 219, 234, 125, 76,  31,  46,
   67,  114, 33,  16,  135, 182, 229, 212, 250, 203, 152, 169, 62,  15,  92,  109,
@@ -42,6 +46,29 @@ static const uint8_t crc8_table[] = {
   130, 179, 224, 209, 70,  119, 36,  21,  59,  10,  89,  104, 255, 206, 157, 172
 };
 
+
+#ifndef VENTSIM
+uint8_t crc_8( const uint8_t * input_str, int num_bytes ) 
+{
+  int a;
+  uint8_t crc;
+  uint8_t table_idx;
+  const unsigned char *ptr;
+
+  crc = 0;
+  ptr = input_str;
+
+  if ( ptr != 0 )  {
+    for (a=0; a<num_bytes; a++) {
+      table_idx = (*ptr++) ^ crc;
+      crc = pgm_read_byte_near(crc8_table + table_idx);
+      //crc = crc8_table[(*ptr++) ^ crc];
+    }
+  }
+
+  return crc;
+}
+#else
 uint8_t crc_8( const uint8_t * input_str, int num_bytes ) 
 {
   int a;
@@ -58,8 +85,8 @@ uint8_t crc_8( const uint8_t * input_str, int num_bytes )
   }
 
   return crc;
-
-} 
+}
+#endif
 
 uint8_t update_crc_8( unsigned char crc, unsigned char val ) {
   return crc8_table[val ^ crc];

@@ -134,6 +134,8 @@ static CHECK_T checkRecord(PROPS_T * prop_ptr)
 
 void propInit()
 {
+  LOG("Test log");
+    LOG("bye now");
   readRecord(EEPROM_PROPS_BASE_ADDRESS, &props );
   if (checkRecord(&props) != OK) {
     LOG("EEPROM values not valid, loading default parameters");

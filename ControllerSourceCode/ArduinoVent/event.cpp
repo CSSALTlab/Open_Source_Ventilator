@@ -22,6 +22,7 @@
 
 #include "event.h"
 #include <string.h>
+#include "log.h"
    
 
 //----------- Locals -------------
@@ -30,7 +31,7 @@
 #define QUEUE_SIZE 6
 #define NUM_MAX_LISNERS 4
 
-extern void LOG(char * txt);
+extern void LOG(const char * txt);
 
 //------------ Global -----------
  static event_t eventQ[QUEUE_SIZE];

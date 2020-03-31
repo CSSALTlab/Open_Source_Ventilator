@@ -20,26 +20,21 @@
 */
 
 
+
+
+
+#ifdef VENTSIM
+
 #include "log.h"
 #include "config.h"
+#include <QDebug>
+#include <QElapsedTimer>
 
-
-#ifdef VENTSIM
-  #include <QDebug>
-  #include <QElapsedTimer>
-#endif
-
-#ifdef VENTSIM
-void LOG(char * s) {
+void LOG(const char * s) {
     qDebug() << QString(s);
 }
-#else
-void LOG(char * s) {
-#ifdef DEBUG_SERIAL_LOGS
-  extern halWriteSerial(char * s); // avoid including hal.h
-  halWriteSerial(s);
-#endif
+void LOGV(char * s) {
+    qDebug() << QString(s);
 }
 
-//-------------------------------------------
 #endif
