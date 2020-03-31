@@ -21,9 +21,9 @@
  **************************************************************
 */
 #include "config.h"
-//#include "hardwareSerial.h"
 
 #ifndef VENTSIM
+  #include "hardwareSerial.h"
   #include <avr/pgmspace.h>
   #ifdef DEBUG_SERIAL_LOGS
     #define LOG(x) Serial.println(F(x))
