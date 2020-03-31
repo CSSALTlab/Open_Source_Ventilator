@@ -21,20 +21,40 @@
 
 
 
-
+#include <stdarg.h>
+#include <stdio.h>
 
 #ifdef VENTSIM
+  #include <QDebug>
+  #include <QElapsedTimer>
+#else
+  #include <hardwareSerial.h>
+#endif
 
-#include "log.h"
-#include "config.h"
-#include <QDebug>
-#include <QElapsedTimer>
+#define V_BUF_SIZE  64
+static char buf[V_BUF_SIZE];
 
+void logv(const char *fmt, ...) {
+    int len;
+    va_list args;
+    va_start(args, fmt);
+    len = vsnprintf(buf, V_BUF_SIZE, fmt, args);
+    va_end(args);
+    buf[V_BUF_SIZE - 1] = 0;
+    if (len >= 63) {
+        buf[V_BUF_SIZE - 2] = '.';
+        buf[V_BUF_SIZE - 3] = '.';
+        buf[V_BUF_SIZE - 4] = '.';
+    }
+#ifdef VENTSIM
+    qDebug() << buf;
+#else
+    Serial.println(buf);
+#endif
+}
+
+#ifdef VENTSIM
 void LOG(const char * s) {
     qDebug() << QString(s);
 }
-void LOGV(char * s) {
-    qDebug() << QString(s);
-}
-
 #endif

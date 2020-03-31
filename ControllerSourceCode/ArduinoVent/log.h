@@ -22,19 +22,22 @@
 */
 #include "config.h"
 
+void logv(const char *fmt, ...);
+
 #ifndef VENTSIM
   #include "hardwareSerial.h"
   #include <avr/pgmspace.h>
   #ifdef DEBUG_SERIAL_LOGS
     #define LOG(x) Serial.println(F(x))
-    #define LOGV(x)  Serial.println(x)
+    //#define LOGV(x)  Serial.println(x)
+    #define LOGV(...) logv(__VA_ARGS__)
   #else
     #define LOG(x) /* dummy */
     #define LOGV(x) /* dummy */
   #endif
 #else
   void LOG(const char * txt); // goes to flash memory in Arduino
-  void LOGV(char * txt);      // char * comes from a variable
+  #define LOGV(...) logv(__VA_ARGS__)      // char * comes from a variable
 #endif
 
 #endif // LOG_H

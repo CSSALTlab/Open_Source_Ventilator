@@ -134,8 +134,6 @@ static CHECK_T checkRecord(PROPS_T * prop_ptr)
 
 void propInit()
 {
-  LOG("Test log");
-    LOG("bye now");
   readRecord(EEPROM_PROPS_BASE_ADDRESS, &props );
   if (checkRecord(&props) != OK) {
     LOG("EEPROM values not valid, loading default parameters");
@@ -170,37 +168,37 @@ bool propSave()
 }
 
 void propSetVent(int val) {
-    LOG("propSetVent");
+    //LOG("propSetVent");
     props.propVent = (uint8_t) val & 0x000000ff;
     setSavePending();
 }
 
 void propSetBps(int val) {
-    LOG("propSetBps");
+    //LOG("propSetBps");
     props.propBps = (uint8_t) val & 0x000000ff;
     setSavePending();
 }
 
 void propSetDutyCycle(int val) {
-     LOG("propSetDutyCycle");
+     //LOG("propSetDutyCycle");
      props.propDutyCycle =  (uint8_t) val & 0x000000ff;
      setSavePending();
 }
 
 void propSetPause(int val) {
-     LOG("propSetPause");
+     //LOG("propSetPause");
      props.propPause =  (uint8_t) val & 0x000000ff;
      setSavePending();
 }
 
 void propSetLcdAutoOff(int val) {
-     LOG("propSetLcdAutoOff");
+     //LOG("propSetLcdAutoOff");
      props.propLcdAutoOff =  (uint8_t) val & 0x000000ff;
      setSavePending();
 }
 
 void propSetBle(int val) {
-      LOG("propSetBle");
+      //LOG("propSetBle");
       props.propBle =  (uint8_t) val & 0x000000ff;
       setSavePending();
 }
@@ -213,27 +211,27 @@ int propGetVent() {
 }
 
 int propGetBps() {
-    LOG("propGetBps");
+    //LOG("propGetBps");
     return props.propBps;
 }
 
 int propGetDutyCycle() {
-     LOG("propGetDutyCycle");
+     //LOG("propGetDutyCycle");
      return props.propDutyCycle;
 }
 
 int propGetPause() {
-     LOG("propGetPause");
+     //LOG("propGetPause");
      return props.propPause;
 }
 
 int propGetLcdAutoOff() {
-     LOG("propGetLcdAutoOff");
+     //LOG("propGetLcdAutoOff");
      return props.propLcdAutoOff;
 }
 
 int propGetBle() {
-      LOG("propGetBle");
+      //LOG("propGetBle");
       return props.propBle;
 }
 

@@ -28,7 +28,7 @@
   ======================================
  */
 //#define BLUETOOTH_ENABLE
-//#define DEBUG_SERIAL_LOGS // MUST be commented out for production. Also a hack is needed to decrease buffers in HardwareSerial.h
+#define DEBUG_SERIAL_LOGS // MUST be commented out for production. Also a hack is needed to decrease buffers in HardwareSerial.h
 
 #ifndef VENTSIM
   #define WATCHDOG_ENABLE  // to disable watchdog comment out this line
