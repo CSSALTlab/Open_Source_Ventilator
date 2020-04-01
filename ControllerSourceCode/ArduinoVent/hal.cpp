@@ -173,9 +173,7 @@ static void loopWdt()
 void halInit(uint8_t reset_val) {
 #ifdef DEBUG_SERIAL_LOGS
   Serial.begin(9600);
-  Serial.println("Starting 1...");
-  Serial.println(F("Starting 2..."));
-  LOG("Starting 3...");
+  LOG("Starting...");
 #endif
   pinMode(MONITOR_LED_PIN, OUTPUT);
   tm_led = halStartTimerRef();
@@ -186,9 +184,17 @@ void halInit(uint8_t reset_val) {
   lcd.backlight();
 #else
   #if (LCD_CFG_4_ROWS == 1)
-    lcd.begin(16, 4);
+    #if (LCD_CFG_20_COLS == 1)
+        lcd.begin(20, 4);
+    #else
+        lcd.begin(16, 4);
+    #endif
   #else
-    lcd.begin(16, 2);
+    #if (LCD_CFG_20_COLS == 1)
+        lcd.begin(20, 2);
+    #else
+        lcd.begin(16, 2);
+    #endif
   #endif
 #endif
   halLcdClear();

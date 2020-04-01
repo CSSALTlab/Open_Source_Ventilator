@@ -78,8 +78,8 @@
 
 //--------- LCD Num Rows ----------
 // Default
-#define LCD_CFG_20_COLS  0
-#define LCD_CFG_16_COLS  1
+#define LCD_CFG_20_COLS  1
+#define LCD_CFG_16_COLS  0
 
 #define LCD_CFG_2_ROWS  0
 #define LCD_CFG_4_ROWS  1
