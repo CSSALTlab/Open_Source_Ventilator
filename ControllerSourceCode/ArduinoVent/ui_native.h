@@ -32,7 +32,7 @@ public:
     CUiNative();
     ~CUiNative();
     void loop();
-    void updateStatus();
+    //void updateStatus();
     void updateParams();
     void updateParameterValue();
     void scroolParams(bool down);

@@ -95,7 +95,15 @@ bool halCheckTimerExpired(uint64_t timerRef, uint64_t time)
 
 
 #else
-LiquidCrystal_I2C lcd(0x27,4,4);
+  #ifdef LCD_CFG_I2C
+    LiquidCrystal_I2C lcd(0x27,4,4);
+  #else
+    LiquidCrystal lcd(  LCD_CFG_RS, 
+                        LCD_CFG_E, LCD_CFG_D4, 
+                        LCD_CFG_D5, 
+                        LCD_CFG_D6, 
+                        LCD_CFG_D7);
+  #endif
 
 #define TM_WAIT_TO_ENABLE_WATCHDOG 3000
 
@@ -173,8 +181,16 @@ void halInit(uint8_t reset_val) {
   tm_led = halStartTimerRef();
   
   propInit();
+#ifdef LCD_CFG_I2C
   lcd.init();                      // initialize the lcd 
   lcd.backlight();
+#else
+  #if (LCD_CFG_4_ROWS == 1)
+    lcd.begin(16, 4);
+  #else
+    lcd.begin(16, 2);
+  #endif
+#endif
   halLcdClear();
 
   // -----  keys -------

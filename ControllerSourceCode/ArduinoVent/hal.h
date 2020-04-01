@@ -30,11 +30,36 @@
 #else
   #include <Arduino.h>
     #include <avr/pgmspace.h>
-  #include "LiquidCrystal_I2C_mv.h"
+    #ifdef LCD_CFG_I2C
+      #include "LiquidCrystal_I2C_mv.h"
+    #else 
+      #include "LiquidCrystal.h"
+    #endif
 #endif
 
-#define LCD_NUM_ROWS 4
-#define LCD_NUM_COLS 20
+
+#if (LCD_CFG_2_ROWS == 1)
+  #define LCD_NUM_ROWS 4
+#elif (LCD_CFG_4_ROWS == 1)
+  #define LCD_NUM_ROWS 4
+#else
+  #error "At least one LCD_CFG_x_ROWS must be set to 1 in config.h"
+#endif
+#if ((LCD_CFG_2_ROWS == 1) && (LCD_CFG_4_ROWS == 1))
+  #error "Only one LCD_CFG_x_ROWS must be set to 1 in config.h"
+#endif
+
+#if (LCD_CFG_20_COLS == 1)
+  #define LCD_NUM_COLS 20
+#elif (LCD_CFG_16_COLS == 1)
+  #define LCD_NUM_COLS 16
+#else
+  #error "At least one LCD_CFG_XX_COLS must be set to 1 in config.h"
+#endif
+#if ((LCD_CFG_20_COLS == 1) && (LCD_NUM_COLS == 1))
+  #error "Only one LCD_CFG_XX_COLS must be set to 1 in config.h"
+#endif
+
 
 typedef enum {
   MONITOR_LED_NORMAL,

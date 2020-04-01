@@ -47,13 +47,43 @@ static int params_idx = 0;
 #else
   #error "At least one LCD_CFG_x_ROWS must be set to 1 in config.h"
 #endif
+#if ((LCD_CFG_2_ROWS == 1) && (LCD_CFG_4_ROWS == 1))
+  #error "Only one LCD_CFG_x_ROWS must be set to 1 in config.h"
+#endif
+
+
+#if (LCD_CFG_20_COLS == 1)
+  #define PROGRESS_NUM_CHARS  6
+#elif (LCD_CFG_16_COLS == 1)
+  #define PROGRESS_NUM_CHARS  6
+#else
+  #error "At least one LCD_CFG_XX_COLS must be set to 1 in config.h"
+#endif
+#if ((LCD_CFG_20_COLS == 1) && (LCD_NUM_COLS == 1))
+  #error "Only one LCD_CFG_XX_COLS must be set to 1 in config.h"
+#endif
 
 #define LCD_PARAMS_NUM_ROWS         ( (LCD_PARAMS_LAST_ROW - LCD_PARAMS_FIRST_ROW) + 1)
 
+#define PARAM_VAL_MAX_SIZE  5
+#define PARAM_VAL_START_COL (LCD_NUM_COLS- PARAM_VAL_MAX_SIZE)
+
 #define PROGRESS_ROW        0
-#define PROGRESS_NUM_CHARS  6
-#define PROGRESS_COL       14
+#define PROGRESS_COL       (LCD_NUM_COLS - PROGRESS_NUM_CHARS)
 #define PROGRESS_CHARACTER '|'
+
+typedef  enum {
+    STATE_IDLE = 0,
+    STATE_RUN,
+    STATE_ERROR
+} RUN_STATE_T;
+
+static const char * st_txt[3] = {
+    (const char *) "idle",
+    (const char *) "run ",
+    (const char *) "Err "
+};
+
 
 static int progress = 0;
 
@@ -71,7 +101,7 @@ static int ignore_release = 0;
 
 //----------- Locals -------------
 
-static int state_idx = 0;
+static RUN_STATE_T state_idx = STATE_IDLE;
 static int blink_mask = 0;
 static unsigned long tm_blink;
 static int blink_phase = 0;
@@ -106,9 +136,24 @@ typedef struct params_st {
 
 } params_t;
 
+static void updateStatus()
+{
+  char buf[LCD_NUM_COLS+1];
+  memset(buf, 0x20, LCD_NUM_COLS);
+  buf[LCD_NUM_COLS] = 0;
+  int len = sprintf(buf, "st=%s", (const char *) st_txt[(int) state_idx]);
+
+  buf[len] = 0x20;
+  halLcdWrite(0, LCD_STATUS_ROW, buf);
+}
 
 static void handleChangeVent(int val) {
     propSetVent(val);
+    if (val)
+        state_idx = STATE_RUN;
+    else
+        state_idx = STATE_IDLE;
+    updateStatus();
 }
 
 static void handleChangeBps(int val) {
@@ -279,13 +324,6 @@ void CUiNative::initParams()
   }
 }
 
-static const char * st_txt[3] = {
-    (const char *) "idle",
-    (const char *) "run ",
-    (const char *) "Err "
-};
-
-#define PARAM_VAL_START_COL 15
 
 static void handleSave(int val) {
     if (val) {
@@ -395,16 +433,16 @@ void CUiNative::blinkOff(int mask)
     updateParams();
 }
 
-void CUiNative::updateStatus()
-{
-  char buf[LCD_NUM_COLS+1];
-  memset(buf, 0x20, LCD_NUM_COLS);
-  buf[LCD_NUM_COLS] = 0;
-  int len = sprintf(buf, "st=%s Bt=%c", (const char *) st_txt[state_idx], 'X');
+//void CUiNative::updateStatus()
+//{
+//  char buf[LCD_NUM_COLS+1];
+//  memset(buf, 0x20, LCD_NUM_COLS);
+//  buf[LCD_NUM_COLS] = 0;
+//  int len = sprintf(buf, "st=%s", (const char *) st_txt[(int) state_idx]);
 
-  buf[len] = 0x20;
-  halLcdWrite(0, LCD_STATUS_ROW, buf);
-}
+//  buf[len] = 0x20;
+//  halLcdWrite(0, LCD_STATUS_ROW, buf);
+//}
 
 void CUiNative::updateParams()
 {
