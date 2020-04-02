@@ -86,11 +86,11 @@ enum {A0, A1, A2, A3, A4, A5, A6, A7};
 
 //--------- LCD Num Rows ----------
 // Default
-#define LCD_CFG_20_COLS  1
-#define LCD_CFG_16_COLS  0
+#define LCD_CFG_20_COLS  0
+#define LCD_CFG_16_COLS  1
 
-#define LCD_CFG_2_ROWS  0
-#define LCD_CFG_4_ROWS  1
+#define LCD_CFG_2_ROWS  1
+#define LCD_CFG_4_ROWS  0
 
 // Parallel LCD
 #define LCD_CFG_D7              8   // Connector Pin 11 - Digital 8

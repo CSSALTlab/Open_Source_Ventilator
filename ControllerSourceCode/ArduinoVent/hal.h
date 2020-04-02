@@ -39,7 +39,7 @@
 
 
 #if (LCD_CFG_2_ROWS == 1)
-  #define LCD_NUM_ROWS 4
+  #define LCD_NUM_ROWS 2
 #elif (LCD_CFG_4_ROWS == 1)
   #define LCD_NUM_ROWS 4
 #else
