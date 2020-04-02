@@ -23,6 +23,7 @@
 #include "ui_native.h"
 #include "hal.h"
 #include "properties.h"
+#include "pressure.h"
 #include "breather.h"
 #include <stdio.h>
 #include <string.h>
@@ -114,6 +115,7 @@ static float dutyCycle = 0.1f;
 typedef enum {
     PARAM_INT = 1,
     PARAM_TXT_OPTIONS,
+    PARAM_TEXT_GET_VAL,
 
     PARAM_END
 
@@ -121,6 +123,7 @@ typedef enum {
 
 typedef void (*propchancefunc_t)(int);
 typedef int (*propgetfunc_t)();
+typedef char * (*valgetfunc_t)();
 
 typedef struct params_st {
     p_type_t        type;
@@ -132,9 +135,19 @@ typedef struct params_st {
     const char **   options;
     bool            quickUpdate;
     propchancefunc_t handler;
-    propgetfunc_t   propGetter;
+    union {
+      propgetfunc_t   propGetter;
+      valgetfunc_t    valGetter;
+    } getter;
 
 } params_t;
+
+typedef struct display_vals_st {
+    const char *    name;
+    bool            update;
+    valgetfunc_t   valGetter;
+} display_vals_t;
+
 
 static void updateStatus()
 {
@@ -198,6 +211,19 @@ static int handleGetLcdAutoOff() {
 //static void handleChangeBle(int val) {
 //      propSetBle(val);
 //}
+
+static char * getPressure()
+{
+ static char buf[8];
+ buf[sizeof(buf) - 1] = 0;
+ float f = pressGetFloatVal();
+#ifndef VENTSIM
+    dtostrf(pressGetFloatVal(), 2, 2, buf);
+#else
+    snprintf(buf, sizeof(buf) - 1, "%f", f);
+#endif
+    return buf;
+}
 
 static const char * onOffTxt[] = {
      "  off",
@@ -279,6 +305,22 @@ static /* const */ params_t params[] /* PROGMEM */ =  {
 //      &handleGetBle             // propGetter
 //    },
 
+    {  PARAM_TEXT_GET_VAL,        // type
+      "Pressure",           // name
+      0,                        // val
+      1,                        // step
+      0,                        // min
+      1,                        // max
+      0,                 // text array for options
+      false,                    // no dynamic changes
+      0,  // change prop function
+#ifdef VENTSIM
+      .getter.valGetter = &getPressure      // propGetter
+#else
+      &getPressure    // propGetter
+#endif
+    },
+
 
     //---- This Must be the very last parameter ----
     { PARAM_TXT_OPTIONS,        // type
@@ -318,8 +360,8 @@ void CUiNative::initParams()
 {
   int i;
   for (i=0; i<NUM_PARAMS; i++) {
-    if (params[i].propGetter) {
-      params[i].val = params[i].propGetter();
+    if (params[i].getter.propGetter) {
+      params[i].val = params[i].getter.propGetter();
     }
   }
 }
@@ -339,6 +381,8 @@ static void fillValBuf(char * buf, int idx)
         sprintf(buf, "%5d", params[idx].val);
     else if (params[idx].type == PARAM_TXT_OPTIONS)
         strcpy(buf, params[idx].options[ params[idx].val ]);
+    else if (params[idx].type == PARAM_TEXT_GET_VAL)
+        sprintf(buf, "%s", params[idx].getter.valGetter());
     else
         LOG("blinker: Unexpected type");
 }
@@ -361,7 +405,7 @@ void CUiNative::blinker()
     if (halCheckTimerExpired(tm_blink, TM_BLINK)) {
         tm_blink = halStartTimerRef();
 
-        if (blink_mask == 0) return;
+//        if (blink_mask == 0) return;
 
         blink_phase++;
         blink_phase &= 1;
@@ -377,6 +421,10 @@ void CUiNative::blinker()
         //-------- other Blinking... ------------
         //if (blink_mask & WHATEVER) {
         //}
+
+        else {
+            updateParams();
+        }
 
     }
 }

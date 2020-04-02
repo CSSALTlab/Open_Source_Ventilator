@@ -28,6 +28,8 @@
 void pressInit();
 void pressLoop();
 
+float pressGetFloatVal(); // in InchH2O
+int pressGetRawVal();
 
 #endif // PRESSURE_H
 

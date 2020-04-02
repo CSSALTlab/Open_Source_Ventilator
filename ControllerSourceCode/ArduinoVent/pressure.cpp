@@ -58,12 +58,9 @@ static uint8_t tail_idx = 0;
 static uint8_t ready_cnt = 0;
 static uint64_t tm_press;
 
-#ifdef SHOW_VAL
-  static int32_t av;
-  static int16_t rawSensorValue;
-  static float inH2O = 0.0f;
-#endif
-
+static int32_t av;
+static int16_t rawSensorValue;
+static float inH2O = 0.0f;
 
 
 #ifdef SHOW_VAL
@@ -72,12 +69,6 @@ static uint64_t tm_press;
 
 void CalculateAveragePressure()
 {
-#ifndef SHOW_VAL
-  static int32_t av;
-  static int16_t rawSensorValue;
-  static float inH2O = 0.0f;
-#endif
-
     //aV= 12, Pa=174.86... 0~614 --> -3.57~41.08 inches of water
 
 #ifdef VENTSIM
@@ -142,9 +133,22 @@ void pressLoop()
 #endif
 }
 
+float pressGetFloatVal() // in InchH2O
+{
+    return inH2O;
+}
+int pressGetRawVal()
+{
+    return av;
+}
+
+
 //-----------------------------------------------------------------
 #else
 // Stubbs
 void pressInit()   { }
 void pressLoop() {}
+float pressGetFloatVal() { return 0.0; }
+int pressGetRawVal() { return 0; }
+
 #endif //#ifndef PREESURE_ENABLE
