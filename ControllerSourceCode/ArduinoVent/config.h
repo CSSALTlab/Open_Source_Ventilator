@@ -32,7 +32,11 @@
 
 #ifndef VENTSIM
   #define WATCHDOG_ENABLE  // to disable watchdog comment out this line
+#else
+enum {A0, A1, A2, A3, A4, A5, A6, A7};
 #endif
+
+#define PREESURE_ENABLE
 
 /*************************************************
  * 
@@ -45,7 +49,7 @@
 //-------------------------------------------------
 
 
-#if ((HW_VERSION_CSSALT_PROTO_01 == 1) && (HW_VERSION_MV_01 == 1))
+#if ((HW_VERSION_CSSALT_PROTO_01 == 1) && (HW_VERSION_MV_01 == 1) )
   #error "Only one HW_VERSION_xxx must be set to 1 in config.h"
 #endif
 
@@ -60,21 +64,25 @@
  */
 //------------ Input Keys ---------------
 
-#define KEY_DECREMENT_PIN   A0
-#define KEY_INCREMENT_PIN   A1
-#define KEY_SET_PIN         A3
+#define KEY_DECREMENT_PIN       A0
+#define KEY_INCREMENT_PIN       A1
+#define KEY_SET_PIN             A3
 
 //------------ Output Valves -----------
 #define VALVE_ACTIVE_LOW
 
-#define VALVE_IN_PIN  A4
-#define VALVE_OUT_PIN  A5
+#define VALVE_IN_PIN            A4
+#define VALVE_OUT_PIN           A5
 
 #ifndef BLUETOOTH_ENABLE
   #define MONITOR_LED_PIN LED_BUILTIN
 #else
-  #define MONITOR_LED_PIN 13 
+  #define MONITOR_LED_PIN       13
 #endif
+
+//----------- PRESSURE_SENSOR ------------
+#define PREESURE_ENABLE
+#define PRESSURE_SENSOR_PIN     A7
 
 //--------- LCD Num Rows ----------
 // Default
@@ -85,12 +93,12 @@
 #define LCD_CFG_4_ROWS  1
 
 // Parallel LCD
-#define LCD_CFG_D7      8   // Connector Pin 11 - Digital 8
-#define LCD_CFG_D6      9   // Connector Pin 12 - Digital9
-#define LCD_CFG_D5      10  // Connector Pin 13 - Digital10
-#define LCD_CFG_D4      11  // Connector Pin 14 - Digital11
-#define LCD_CFG_E       12  // Connector Pin 15 - Digital12
-#define LCD_CFG_RS      13  // Connector Pin 16 - Digital13
+#define LCD_CFG_D7              8   // Connector Pin 11 - Digital 8
+#define LCD_CFG_D6              9   // Connector Pin 12 - Digital9
+#define LCD_CFG_D5              10  // Connector Pin 13 - Digital10
+#define LCD_CFG_D4              11  // Connector Pin 14 - Digital11
+#define LCD_CFG_E               12  // Connector Pin 15 - Digital12
+#define LCD_CFG_RS              13  // Connector Pin 16 - Digital13
 
 /* LiquidCrystal     (rs, enable, d4, d5, d6, d7)
    LiquidCrystal lcd( LCD_CFG_RS, LCD_CFG_E, LCD_CFG_D4, LCD_CFG_D5, LCD_CFG_D6, LCD_CFG_D7);
@@ -107,21 +115,25 @@
  */
 //------------ Input Keys ---------------
 
-#define KEY_DECREMENT_PIN   3
-#define KEY_INCREMENT_PIN   4
-#define KEY_SET_PIN         5
+#define KEY_DECREMENT_PIN       3
+#define KEY_INCREMENT_PIN       4
+#define KEY_SET_PIN             5
 
 //------------ Output Valves -----------
 #define VALVE_ACTIVE_LOW
 
-#define VALVE_IN_PIN  6
-#define VALVE_OUT_PIN  7
+#define VALVE_IN_PIN            6
+#define VALVE_OUT_PIN           7
 
 #ifndef BLUETOOTH_ENABLE
   #define MONITOR_LED_PIN LED_BUILTIN
 #else
-  #define MONITOR_LED_PIN 13 
+  #define MONITOR_LED_PIN       13
 #endif
+
+//----------- PRESSURE_SENSOR ------------
+#define PREESURE_ENABLE
+#define PRESSURE_SENSOR_PIN     A7
 
 //--------- LCD Num Rows ----------
 // Default
@@ -133,12 +145,12 @@
 #define LCD_CFG_4_ROWS  0
 
 // Parallel LCD
-#define LCD_CFG_D7      8   // Connector Pin 11 - Digital 8
-#define LCD_CFG_D6      9   // Connector Pin 12 - Digital9
-#define LCD_CFG_D5      10  // Connector Pin 13 - Digital10
-#define LCD_CFG_D4      11  // Connector Pin 14 - Digital11
-#define LCD_CFG_E       12  // Connector Pin 15 - Digital12
-#define LCD_CFG_RS      13  // Connector Pin 16 - Digital13
+#define LCD_CFG_D7              8   // Connector Pin 11 - Digital 8
+#define LCD_CFG_D6              9   // Connector Pin 12 - Digital9
+#define LCD_CFG_D5              10  // Connector Pin 13 - Digital10
+#define LCD_CFG_D4              11  // Connector Pin 14 - Digital11
+#define LCD_CFG_E               12  // Connector Pin 15 - Digital12
+#define LCD_CFG_RS              13  // Connector Pin 16 - Digital13
 #endif
 
 

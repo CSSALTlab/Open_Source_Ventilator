@@ -24,6 +24,7 @@
 #include "event.h"
 #include "config.h"
 #include "properties.h"
+#include "pressure.h"
 
 #ifdef VENTSIM
   #include <stdio.h>
@@ -78,6 +79,7 @@ void halInit(QPlainTextEdit * ed) {
   tm_led = halStartTimerRef();
   halLcdClear();
   propInit();
+  pressInit();
 }
 
 uint64_t halStartTimerRef()
@@ -215,6 +217,7 @@ void halInit(uint8_t reset_val) {
 
   tm_key_sampling = halStartTimerRef();
   initWdt(reset_val);
+  pressInit();
 }
 #endif
 
@@ -258,7 +261,7 @@ void halBlinkLED()
 
         
 #ifdef VENTSIM
-        LOG("LED Toggle");
+        //LOG("LED Toggle");
 #else
         if (led_state) {
           led_state = 0;
@@ -499,6 +502,7 @@ void halLoop()
   halBlinkLED();
   processKeys();
   propLoop();
+  pressLoop();
 
 #ifdef WATCHDOG_ENABLE
   loopWdt();

@@ -22,6 +22,7 @@ SOURCES += \
     ../ArduinoVent/event.cpp \
     ../ArduinoVent/hal.cpp \
     ../ArduinoVent/log.cpp \
+    ../ArduinoVent/pressure.cpp \
     ../ArduinoVent/properties.cpp \
     ../ArduinoVent/ui_native.cpp \
     ../ArduinoVent/vent.cpp \
@@ -35,6 +36,7 @@ HEADERS += \
     ../ArduinoVent/event.h \
     ../ArduinoVent/hal.h \
     ../ArduinoVent/log.h \
+    ../ArduinoVent/pressure.h \
     ../ArduinoVent/properties.h \
     ../ArduinoVent/ui_native.h \
     ../ArduinoVent/vent.h \
