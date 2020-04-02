@@ -23,7 +23,6 @@
 
 
 #define AVERAGE_BIN_NUMBER        10        // Number of averaging bins for the averaging routine
-#define VSOURCE                   3.0       //Source voltage for differential pressure sensor
 #define PRESSURE_READ_DELAY       20L       // wait 20 ms between reads
 
 void pressInit();

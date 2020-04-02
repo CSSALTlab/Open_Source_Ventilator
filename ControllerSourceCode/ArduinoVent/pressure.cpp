@@ -45,8 +45,11 @@
 #ifdef PREESURE_ENABLE
 
 #define SHOW_VAL
-#define TM_LOG 1000
+
+#define TM_LOG 2000
 #define P_CONV 4.01463f
+#define MAX_BIN_INPUT   614
+#define MAX_BIN_INPUT_F 614.0
 
 static int16_t tap_array[AVERAGE_BIN_NUMBER];
 static int32_t accumulator = 0;
@@ -55,10 +58,13 @@ static uint8_t tail_idx = 0;
 static uint8_t ready_cnt = 0;
 static uint64_t tm_press;
 
-static int32_t av;
-int16_t rawSensorValue;
+#ifdef SHOW_VAL
+  static int32_t av;
+  static int16_t rawSensorValue;
+  static float inH2O = 0.0f;
+#endif
 
-static float paPressure = 0.0f;
+
 
 #ifdef SHOW_VAL
   static uint64_t tm_log;
@@ -66,15 +72,23 @@ static float paPressure = 0.0f;
 
 void CalculateAveragePressure()
 {
-  //int16_t rawSensorValue;
-  //int32_t av;
+#ifndef SHOW_VAL
+  static int32_t av;
+  static int16_t rawSensorValue;
+  static float inH2O = 0.0f;
+#endif
+
+    //aV= 12, Pa=174.86... 0~614 --> -3.57~41.08 inches of water
 
 #ifdef VENTSIM
   rawSensorValue = QRandomGenerator::global()->bounded(TEST_RAND_MIN, TEST_RAND_MAX);
-  rawSensorValue = 500;
 #else
-  rawSensorValue        = analogRead(PRESSURE_SENSOR_PIN);                          //Raw digital input from pressure sensor
+  rawSensorValue = analogRead(PRESSURE_SENSOR_PIN);  //Raw digital input from pressure sensor
 #endif
+
+  // clamp it to the max (max value provided by the sensor)
+  if (rawSensorValue >= MAX_BIN_INPUT)
+      rawSensorValue = MAX_BIN_INPUT - 1;
 
   if (ready_cnt >= AVERAGE_BIN_NUMBER)  {
     accumulator -= tap_array[tail_idx++] ;
@@ -89,9 +103,7 @@ void CalculateAveragePressure()
   accumulator += rawSensorValue;
 
   av = accumulator/AVERAGE_BIN_NUMBER;
-  paPressure = P_CONV * ((av / VSOURCE) - 0.08) / 0.09; //Convert volts to Pa  Return gaugeP;
-  //paPressure = av;
-
+  inH2O = P_CONV * ((av / MAX_BIN_INPUT_F) - 0.08) / 0.09;
 }
 
 
@@ -119,10 +131,12 @@ void pressLoop()
   char buf[24];
   if (halCheckTimerExpired(tm_log, TM_LOG)) {
     LOGV("av = %d", av);
-    //LOGV("rawSensorValue = %d\n", rawSensorValue);
-    dtostrf(paPressure, 8, 2, buf);
+#ifndef VENTSIM
+    dtostrf(inH2O, 8, 2, buf);
     LOGV("Pa = %s\n", buf);
-    
+#else
+    LOGV("Pa = %f\n", inH2O);
+#endif
     tm_log = halStartTimerRef();
   }
 #endif
