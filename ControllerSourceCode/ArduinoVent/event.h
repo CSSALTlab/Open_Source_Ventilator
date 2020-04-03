@@ -21,13 +21,8 @@
  **************************************************************
 */
 
-//#ifdef VENTSIM
-//  #include "arduino_libs.h"
-//#else
-//  #include <Arduino.h>
-//#endif
-
-#define TEXT_PARAM_SIZE 14
+#include <stdint.h>
+#define TEXT_PARAM_SIZE 21
 
 enum  {
     KEY_DECREMENT,
@@ -54,18 +49,13 @@ typedef  enum {
 
 typedef struct event_st {
     EVENT_TYPE type;
-    int iParam;
-    unsigned long long lParam;
-    char * tParam[TEXT_PARAM_SIZE];
+    union {
+        int iParam;
+        unsigned long long lParam;
+        char tParam[TEXT_PARAM_SIZE];
+    } param;
 } event_t;
 
-void evtPostEx( EVENT_TYPE type,
-                int iParam,
-                unsigned long long lParam,
-                char * tParam);
-
-void evtPost(  EVENT_TYPE type,
-               int iParam);
 
 void evtDispatchAll();
 
@@ -75,8 +65,19 @@ public:
     CEvent();
     ~CEvent();
 
+    static void post( EVENT_TYPE type,
+                      int iParam);
+
+    static void post( EVENT_TYPE type,
+                      uint64_t lParam);
+
+    static void post( EVENT_TYPE type,
+                      char * tParam);
 
     virtual propagate_t onEvent(event_t * event);
+
+private:
+    static void post (event_t * event);
 };
 
 

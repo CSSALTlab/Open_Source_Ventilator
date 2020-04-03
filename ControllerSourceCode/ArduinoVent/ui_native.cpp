@@ -574,7 +574,7 @@ propagate_t CUiNative::onEvent(event_t * event)
     if (ui_state == SHOW_MODE) {
 
         //--------- SET Key -------------
-        if (event->iParam == KEY_SET)  {
+        if (event->param.iParam == KEY_SET)  {
             if (event->type == EVT_KEY_RELEASE)  {
                 if (ignore_release) {
                     ignore_release--;
@@ -594,7 +594,7 @@ propagate_t CUiNative::onEvent(event_t * event)
         }
 
         //------------- Decrement key --------------
-        if (event->iParam == KEY_DECREMENT) {
+        if (event->param.iParam == KEY_DECREMENT) {
             if (event->type == EVT_KEY_PRESS)  {
               scroolParams(false);
               tm_decrement_hold = halStartTimerRef();
@@ -606,7 +606,7 @@ propagate_t CUiNative::onEvent(event_t * event)
         }
 
         //------------- increment key --------------
-        if (event->iParam == KEY_INCREMENT && event->type == EVT_KEY_PRESS)  {
+        if (event->param.iParam == KEY_INCREMENT && event->type == EVT_KEY_PRESS)  {
             scroolParams(true);
         }
     }
@@ -615,7 +615,7 @@ propagate_t CUiNative::onEvent(event_t * event)
     else if (ui_state == ENTER_MODE) {
 
         //--------- Function Key -------------
-        if (event->iParam == KEY_SET && event->type == EVT_KEY_PRESS)  {
+        if (event->param.iParam == KEY_SET && event->type == EVT_KEY_PRESS)  {
             blinkOff(BLINK_PARAMETER_VAL);
             LOG("** SHOW mode");
             ui_state = SHOW_MODE;
@@ -625,13 +625,13 @@ propagate_t CUiNative::onEvent(event_t * event)
         }
 
         //------- Right (UP) Key
-        if (event->iParam == KEY_INCREMENT && event->type == EVT_KEY_PRESS)  {
+        if (event->param.iParam == KEY_INCREMENT && event->type == EVT_KEY_PRESS)  {
           if (params[params_idx].val < params[params_idx].max) {
               params[params_idx].val += params[params_idx].step;
               refreshValue(false);
           }
         }
-        if (event->iParam == KEY_DECREMENT && event->type == EVT_KEY_PRESS)  {
+        if (event->param.iParam == KEY_DECREMENT && event->type == EVT_KEY_PRESS)  {
           if (params[params_idx].val > params[params_idx].min) {
               params[params_idx].val -= params[params_idx].step;
               refreshValue(false);

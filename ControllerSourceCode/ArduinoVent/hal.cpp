@@ -468,7 +468,7 @@ static void processKeys()
               //declare key pressed
               keys[i].count = 0;
               keys[i].state = 1;
-              evtPost(EVT_KEY_PRESS, keys[i].keyCode);
+              CEvent::post(EVT_KEY_PRESS, keys[i].keyCode);
             }
 
           }
@@ -484,7 +484,7 @@ static void processKeys()
               //declare key released
               keys[i].count = 0;
               keys[i].state = 0;
-              evtPost(EVT_KEY_RELEASE, keys[i].keyCode);
+              CEvent::post(EVT_KEY_RELEASE, keys[i].keyCode);
             }
           }
           else {

@@ -57,42 +57,42 @@ MainWindow::~MainWindow()
 
 void MainWindow::onBtFuncPressed()
 {
-    evtPost(EVT_KEY_PRESS, KEY_SET);
+    CEvent::post(EVT_KEY_PRESS, KEY_SET);
 }
 
 void MainWindow::onBtFuncRelease()
 {
-    evtPost(EVT_KEY_RELEASE, KEY_SET);
+    CEvent::post(EVT_KEY_RELEASE, KEY_SET);
 }
 
 void MainWindow::onBtRightPressed()
 {
-    evtPost(EVT_KEY_PRESS, KEY_INCREMENT);
+    CEvent::post(EVT_KEY_PRESS, KEY_INCREMENT);
 }
 
 void MainWindow::onBtRightRelease()
 {
-    evtPost(EVT_KEY_RELEASE, KEY_INCREMENT);
+    CEvent::post(EVT_KEY_RELEASE, KEY_INCREMENT);
 }
 
 void MainWindow::onBtLeftPressed()
 {
-    evtPost(EVT_KEY_PRESS, KEY_DECREMENT);
+    CEvent::post(EVT_KEY_PRESS, KEY_DECREMENT);
 }
 
 void MainWindow::onBtLeftRelease()
 {
-    evtPost(EVT_KEY_RELEASE, KEY_DECREMENT);
+    CEvent::post(EVT_KEY_RELEASE, KEY_DECREMENT);
 }
 
 void MainWindow::onBtEnterPressed()
 {
-    evtPost(EVT_KEY_PRESS, KEY_RESERVE);
+    CEvent::post(EVT_KEY_PRESS, KEY_RESERVE);
 }
 
 void MainWindow::onBtEnterRelease()
 {
-    evtPost(EVT_KEY_RELEASE, KEY_RESERVE);
+    CEvent::post(EVT_KEY_RELEASE, KEY_RESERVE);
 }
 
 void MainWindow::timerEvent(QTimerEvent *event)

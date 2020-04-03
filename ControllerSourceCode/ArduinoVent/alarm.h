@@ -37,8 +37,6 @@ public:
     ~Alarm();
 
     void Loop();
-
-protected:
     virtual propagate_t onEvent(event_t * event);
 
 private:

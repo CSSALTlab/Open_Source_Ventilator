@@ -42,39 +42,6 @@
  static CEvent * lisners[NUM_MAX_LISNERS];
  static int num_lisners = 0;
 
- void evtPostEx(  EVENT_TYPE type,
-                  int iParam,
-                  unsigned long long lParam,
-                  char * tParam)
- {
-     if (eventQIdxCount >= NUM_MAX_LISNERS ) {
-         LOG("critical error: Event queue full");
-         return;
-     }
-     event_t * e = &eventQ[eventQIdxIn++];
-     eventQIdxCount++;
-     if (eventQIdxIn >= QUEUE_SIZE) eventQIdxIn = 0;
-
-     e->type = type;
-     e->iParam = iParam;
-     e->lParam = lParam;
-     if (tParam != 0) {
-         memcpy(e->tParam, tParam, TEXT_PARAM_SIZE);
-     }
-     else {
-         memset(e->tParam, 0, TEXT_PARAM_SIZE);
-     }
- }
-
- void evtPost(  EVENT_TYPE type,
-                int iParam)
- {
-     evtPostEx( type,
-                iParam,
-                0,
-                0);
- }
-
  void evtDispatchAll()
  {
      int i;
@@ -101,6 +68,47 @@
          LOG("critical error, no room for CEvent");
      }
  }
+
+ void CEvent::post( EVENT_TYPE type,
+                    int iParam)
+ {
+    event_t e;
+    e.type = type;
+    e.param.iParam = iParam;
+    post(&e);
+ }
+
+ void CEvent::post( EVENT_TYPE type,
+                    uint64_t lParam)
+ {
+     event_t e;
+     e.type = type;
+     e.param.lParam = lParam;
+     post(&e);
+ }
+
+ void CEvent::post( EVENT_TYPE type,
+                    char * tParam)
+ {
+     event_t e;
+     e.type = type;
+     memcpy(e.param.tParam, tParam, sizeof(e.param.tParam));
+     post(&e);
+ }
+
+ void CEvent::post (event_t * event)
+ {
+     if (eventQIdxCount >= NUM_MAX_LISNERS ) {
+         LOG("critical error: Event queue full");
+         return;
+     }
+     event_t * e = &eventQ[eventQIdxIn++];
+     eventQIdxCount++;
+     if (eventQIdxIn >= QUEUE_SIZE) eventQIdxIn = 0;
+
+    *e = *event;
+ }
+
 
 CEvent::~CEvent()
 {
