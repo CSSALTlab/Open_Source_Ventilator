@@ -22,12 +22,12 @@ SOURCES += \
     ../ArduinoVent/breather.cpp \
     ../ArduinoVent/crc.cpp \
     ../ArduinoVent/event.cpp \
-    ../ArduinoVent/hal.cpp \
     ../ArduinoVent/log.cpp \
     ../ArduinoVent/pressure.cpp \
     ../ArduinoVent/properties.cpp \
     ../ArduinoVent/ui_native.cpp \
     ../ArduinoVent/vent.cpp \
+    hal_sim.cpp \
     main.cpp \
     mainwindow.cpp
 

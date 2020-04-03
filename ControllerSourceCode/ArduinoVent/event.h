@@ -40,6 +40,9 @@ typedef enum  {
     EVT_ALARM_LOW_PRESSURE,
     EVT_ALARM_HIGH_PRESSURE,
 
+    EVT_ALARM_DISPLAY_ON,
+    EVT_ALARM_DISPLAY_OFF,
+
 } EVENT_TYPE;
 
 typedef  enum {

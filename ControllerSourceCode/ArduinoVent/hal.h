@@ -60,6 +60,11 @@
   #error "Only one LCD_CFG_XX_COLS must be set to 1 in config.h"
 #endif
 
+#define TM_MONITOR_LED_NORMAL       500
+#define TM_MONITOR_LED_FAST         50 //
+#define TM_MONITOR_LED_SLOW         2000
+
+#define TM_ALARM_PERIOD 1000
 
 typedef enum {
   MONITOR_LED_NORMAL,

@@ -50,10 +50,6 @@
 
 static MONITOR_LET_T monitor_led_speed = MONITOR_LED_NORMAL;
 
-#define TM_MONITOR_LED_NORMAL       500
-#define TM_MONITOR_LED_FAST         50 //
-#define TM_MONITOR_LED_SLOW         2000
-
 //-------- variables --------
 static uint64_t tm_led;
 

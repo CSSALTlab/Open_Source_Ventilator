@@ -21,9 +21,7 @@
  **************************************************************
 */
 #include "event.h"
-#ifdef VENTSIM
-  #include <QMediaPlayer>
-#endif
+
 
 void alarmInit();
 void alarmLoop();
@@ -40,9 +38,7 @@ public:
     virtual propagate_t onEvent(event_t * event);
 
 private:
-#ifdef VENTSIM
-    QMediaPlayer player;
-#endif
+
     void beep();
 
 

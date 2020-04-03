@@ -31,9 +31,13 @@
 #define ALARM_IDX_HIGH_PRESSURE     0 // index for high pressure alarm in alarms array
 #define ALARM_IDX_LOW_PRESSURE      1 // index for low pressure alarm in alarms array
 
+#define NUM_ALARM_UNTIL_IGNORE 3
+
+#define SIM_HIGH_PRESSURE
+
 typedef enum : uint8_t {
     ST_NO_ALARM,
-    ST_BEEPING,
+    ST_ON,
     ST_MUTED,
     ST_IGNORED
 } state_t;
@@ -51,6 +55,7 @@ typedef struct alarm_st {
     goOffFunc_t goOffAction;
     muteFunc_t  muteAction;
 } alarm_t;
+
 
 
 void muteHighPressureAlarm()
@@ -81,19 +86,9 @@ static alarm_t alarms[] = {
   }
 
 };
-
+#define NUM_ALARMS  sizeof(alarms) / sizeof(alarm_t)
 
 static Alarm * alarm;
-
-void alarmInit()
-{
-    alarm = new Alarm();
-}
-
-void alarmLoop()
-{
-
-}
 
 static void beepOnOff(bool on)
 {
@@ -111,35 +106,97 @@ static void beepOnOff(bool on)
     }
 }
 
+static void setNextAlarmIfAny()
+{
+    int i;
+    alarm_t * a;
+
+    if (activeAlarmIdx >= 0) {
+        // tolerates as there is already an alarm. mute will take care of calling this func once again
+        return;
+    }
+
+    for (i=0; i< NUM_ALARMS; i++) {
+        a = &alarms[i];
+
+        if (a->state == ST_ON) {
+            activeAlarmIdx = i;
+            if (a->goOffAction) { // call an action if a callback was defined
+                a->goOffAction();
+            }
+            CEvent::post(EVT_ALARM_DISPLAY_ON, a->message);
+            beepOnOff(true);
+            return;
+        }
+    }
+}
+
+static void muteAlarmIfOn()
+{
+    if (activeAlarmIdx < 0)
+        return;
+
+    beepOnOff(false);
+
+    alarm_t * a = &alarms[activeAlarmIdx];
+
+    if (a->state != ST_ON) {
+        LOG("muteAlarmIfOn: unexpected state, fix me");
+        return;
+    }
+
+    if (a->muteAction) { // call an action if a callback was defined
+        a->muteAction();
+    }
+    a->state = ST_NO_ALARM;
+    if (++(a->cnt) >= NUM_ALARM_UNTIL_IGNORE)
+        a->state = ST_IGNORED;
+
+    activeAlarmIdx = -1;
+    setNextAlarmIfAny();
+}
+
+
+void alarmInit()
+{
+    alarm = new Alarm();
+}
+
+void alarmLoop()
+{
+
+}
+
 static void processAlarmEvent(alarm_t * a)
 {
-    switch (a->state) {
-      case ST_IGNORED:
-        LOG("ignore alarm");
-        break;
+//    switch (a->state) {
+//      case ST_IGNORED:
+//        LOG("ignore alarm");
+//        break;
 
-      case ST_NO_ALARM:
-        a->state = ST_BEEPING;
-        beepOnOff(true);
-        break;
+//      case ST_NO_ALARM:
+//        a->state = ST_ON;
+//        beepOnOff(true);
+//        break;
 
-      case ST_BEEPING:
-        LOG("already beeping state");
+//      case ST_BEEPING:
+//        LOG("already beeping state");
 
-      case ST_MUTED:
-      default:
-        break;
+//      case ST_MUTED:
+//      default:
+//        break;
 
-    }
+//    }
+  if (a->state != ST_IGNORED) {
+    a->state = ST_ON;
+    setNextAlarmIfAny();
+  }
 }
 
 
 Alarm::Alarm ()
 {
-#ifdef VENTSIM
-    player.setMedia(QUrl("qrc:/sound/Resource/tom_1s.mp3"));
-    player.setVolume(80);
-#endif
+
 }
 
 void Alarm::Loop()
@@ -150,7 +207,7 @@ void Alarm::Loop()
 propagate_t Alarm::onEvent(event_t * event)
 {
     alarm_t * a;
-    // beep();
+
     switch (event->type) {
 
       case EVT_ALARM_LOW_PRESSURE:
@@ -164,6 +221,21 @@ propagate_t Alarm::onEvent(event_t * event)
         break;
 
       case EVT_KEY_PRESS:
+#ifdef SIM_HIGH_PRESSURE
+        if (event->param.iParam == KEY_SET) {
+          LOG("SIM High pressure Alarm event");
+          CEvent::post(EVT_ALARM_HIGH_PRESSURE, 0);
+        }
+        else if (event->param.iParam == KEY_INCREMENT_PIN) {
+          LOG("SIM Low pressure Alarm event");
+          CEvent::post(EVT_ALARM_LOW_PRESSURE, 0);
+        }
+        else {
+          LOG("mute event");
+          muteAlarmIfOn();
+          //return PROPAGATE_STOP;
+        }
+#endif
       case EVT_KEY_RELEASE:
         break;
 
@@ -180,10 +252,3 @@ Alarm::~Alarm()
 
 }
 
-void Alarm::beep()
-{
-#ifdef VENTSIM
-    player.play();
-#endif
-
-}
