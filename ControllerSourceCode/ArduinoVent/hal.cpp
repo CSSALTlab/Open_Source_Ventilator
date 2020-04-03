@@ -71,6 +71,11 @@ static int cursor_col = 0, cursor_row = 0;
 
 #endif
 
+void halBeepAlarmOnOff( bool on)
+{
+
+}
+
 //----------- Locals -------------
 #ifdef VENTSIM
 void halInit(QPlainTextEdit * ed) {

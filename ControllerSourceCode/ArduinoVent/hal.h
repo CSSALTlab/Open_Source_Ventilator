@@ -99,6 +99,8 @@ void halValveInOff();
 void halValveOutOn();
 void halValveOutOff();
 
+void halBeepAlarmOnOff( bool on);
+
 uint8_t EEPROM_read(int addr);
 void EEPROM_write(uint8_t val, int addr);
 
