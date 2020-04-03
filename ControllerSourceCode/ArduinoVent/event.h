@@ -41,6 +41,10 @@ enum  {
 typedef enum  {
     EVT_KEY_PRESS,
     EVT_KEY_RELEASE,
+
+    EVT_ALARM_LOW_PRESSURE,
+    EVT_ALARM_HIGH_PRESSURE,
+
 } EVENT_TYPE;
 
 typedef  enum {

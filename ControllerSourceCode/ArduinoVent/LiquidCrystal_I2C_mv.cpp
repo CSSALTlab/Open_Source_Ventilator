@@ -1,5 +1,9 @@
 // Based on the work by DFRobot
 
+#include "config.h"
+#ifdef LCD_CFG_I2C
+
+
 #include "LiquidCrystal_I2C_mv.h"
 #include <inttypes.h>
 #if defined(ARDUINO) && ARDUINO >= 100
@@ -313,5 +317,8 @@ uint8_t LiquidCrystal_I2C::init_bargraph(uint8_t graphtype){return 0;}
 void LiquidCrystal_I2C::draw_horizontal_graph(uint8_t row, uint8_t column, uint8_t len,  uint8_t pixel_col_end){}
 void LiquidCrystal_I2C::draw_vertical_graph(uint8_t row, uint8_t column, uint8_t len,  uint8_t pixel_row_end){}
 void LiquidCrystal_I2C::setContrast(uint8_t new_val){}
+
+//------------------------------------------
+#endif // #ifdef LCD_CFG_I2C
 
   

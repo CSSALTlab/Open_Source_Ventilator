@@ -26,27 +26,22 @@
 
 #include "vent.h"
 #include "hal.h"
+#include "alarm.h"
 #include "ui_native.h"
 #include "breather.h"
-   
-
-//----------- Locals -------------
-
-
-static CUiNative * uiNative;
-
 
 //------------ Global -----------
  void ventLoop()
  {
     halLoop();
     evtDispatchAll();
-    uiNative->loop();
+    uiNativeLoop();
     breatherLoop();
  }
 
 void ventSetup()
 {
-  uiNative = new CUiNative();
+  alarmInit();     // must be called before uiNativeInit
+  uiNativeInit();
 }
  

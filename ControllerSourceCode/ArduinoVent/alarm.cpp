@@ -1,5 +1,3 @@
-#ifndef UI_NATIVE_H
-#define UI_NATIVE_H
 
 /*************************************************************
  * Open Ventilator
@@ -20,34 +18,52 @@
  *
  **************************************************************
 */
+
+
+#include "alarm.h"
+#include "log.h"
+
+static Alarm * alarm;
+
+void alarmInit()
+{
+    alarm = new Alarm();
+}
+
+void alarmLoop()
+{
+
+}
+
+
+Alarm::Alarm ()
+{
 #ifdef VENTSIM
-#else
-  #include <Arduino.h> 
+    player.setMedia(QUrl("qrc:/sound/Resource/tom_1s.mp3"));
+    player.setVolume(80);
+#endif
+}
+
+void Alarm::Loop()
+{
+
+}
+
+propagate_t Alarm::onEvent(event_t * event)
+{
+    // beep();
+    return PROPAGATE;
+}
+
+Alarm::~Alarm()
+{
+
+}
+
+void Alarm::beep()
+{
+#ifdef VENTSIM
+    player.play();
 #endif
 
-#include "event.h"
-
-void uiNativeInit();
-void uiNativeLoop();
-
-class CUiNative : CEvent {
-public:
-    CUiNative();
-    ~CUiNative();
-    void loop();
-    //void updateStatus();
-    void updateParams();
-    void updateParameterValue();
-    void scroolParams(bool down);
-    void blinker();
-    void blinkOff(int mask);
-    void blinkOn(int mask);
-    void refreshValue(bool force);
-    void checkFuncHold ();
-    void updateProgress();
-    void initParams();
-
-    virtual propagate_t onEvent(event_t * event);
-};
-
-#endif // UI_NATIVE_H
+}

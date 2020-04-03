@@ -148,6 +148,16 @@ typedef struct display_vals_st {
     valgetfunc_t   valGetter;
 } display_vals_t;
 
+static CUiNative * uiNative;
+
+void uiNativeInit()
+{
+  uiNative = new CUiNative();
+}
+void uiNativeLoop()
+{
+  uiNative->loop();
+}
 
 static void updateStatus()
 {

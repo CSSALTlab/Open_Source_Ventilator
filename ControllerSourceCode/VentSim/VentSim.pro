@@ -1,4 +1,5 @@
 QT       += core gui
+QT       += multimedia
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -17,6 +18,7 @@ DEFINES += VENTSIM
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    ../ArduinoVent/alarm.cpp \
     ../ArduinoVent/breather.cpp \
     ../ArduinoVent/crc.cpp \
     ../ArduinoVent/event.cpp \
@@ -30,6 +32,7 @@ SOURCES += \
     mainwindow.cpp
 
 HEADERS += \
+    ../ArduinoVent/alarm.h \
     ../ArduinoVent/breather.h \
     ../ArduinoVent/config.h \
     ../ArduinoVent/crc.h \
@@ -51,3 +54,6 @@ INCLUDEPATH += ../ArduinoVent/
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
+
+RESOURCES += \
+    VentResource.qrc
