@@ -139,7 +139,7 @@ void halBlinkLED()
     }
 }
 
-void alarmToggler()
+static void alarmToggler()
 {
     if (alarm == true)
     if (halCheckTimerExpired(tm_alarm, TM_ALARM_PERIOD)) {

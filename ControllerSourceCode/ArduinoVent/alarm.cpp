@@ -33,7 +33,7 @@
 
 #define NUM_ALARM_UNTIL_IGNORE 3
 
-#define SIM_HIGH_PRESSURE
+//#define SIM_HIGH_PRESSURE
 
 typedef enum : uint8_t {
     ST_NO_ALARM,
@@ -169,24 +169,6 @@ void alarmLoop()
 
 static void processAlarmEvent(alarm_t * a)
 {
-//    switch (a->state) {
-//      case ST_IGNORED:
-//        LOG("ignore alarm");
-//        break;
-
-//      case ST_NO_ALARM:
-//        a->state = ST_ON;
-//        beepOnOff(true);
-//        break;
-
-//      case ST_BEEPING:
-//        LOG("already beeping state");
-
-//      case ST_MUTED:
-//      default:
-//        break;
-
-//    }
   if (a->state != ST_IGNORED) {
     a->state = ST_ON;
     setNextAlarmIfAny();
@@ -251,4 +233,3 @@ Alarm::~Alarm()
 {
 
 }
-

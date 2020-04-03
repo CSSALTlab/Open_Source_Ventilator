@@ -26,13 +26,9 @@
 #include "properties.h"
 #include "pressure.h"
 
-#ifdef VENTSIM
-  #include <stdio.h>
-  #include <QElapsedTimer>
-  static QElapsedTimer milliTimer;
-#else
-  #include "EEPROM.h"
-#endif
+
+#include "EEPROM.h"
+
 
 
 #ifdef WATCHDOG_ENABLE
@@ -46,12 +42,15 @@
 
 //---------- Constants ---------
 
-#define TM_KEY_SAMPLING 5  // 5 ms
 
 static MONITOR_LET_T monitor_led_speed = MONITOR_LED_NORMAL;
 
 //-------- variables --------
 static uint64_t tm_led;
+static bool alarm = false;
+static int alarm_phase = 0;
+static uint64_t tm_alarm;
+
 
 static uint64_t tm_key_sampling;
 
@@ -59,45 +58,32 @@ static char lcdBuffer [LCD_NUM_ROWS][LCD_NUM_COLS];
 static int cursor_col = 0, cursor_row = 0;
 
 
-#ifdef VENTSIM
-  static QPlainTextEdit * lcdObj;
-#else
-  static int led_state = 0;
-  
+static int led_state = 0;
 
-#endif
+#define FREQ1 440
+#define FREQ2 740
+#define FREQ3 880
 
 void halBeepAlarmOnOff( bool on)
 {
+  if (on == true) {
+    alarm = true;
+    alarm_phase = 0;
+    tm_alarm = halStartTimerRef();
+    // turn tone on
+    alarm_phase = 0;
+    tone(ALARM_SOUND_PIN, FREQ1);
 
+  }
+  else {
+    alarm = false;
+    noTone(ALARM_SOUND_PIN);
+    // turn tone off
+  }
 }
 
 //----------- Locals -------------
-#ifdef VENTSIM
-void halInit(QPlainTextEdit * ed) {
-  milliTimer.start();
-  lcdObj = ed;
-  tm_led = halStartTimerRef();
-  halLcdClear();
-  propInit();
-  pressInit();
-}
 
-uint64_t halStartTimerRef()
-{
-    return (uint64_t) milliTimer.elapsed();
-}
-
-bool halCheckTimerExpired(uint64_t timerRef, uint64_t time)
-{
-    uint64_t now = halStartTimerRef();
-    if (timerRef + time < now)
-        return true;
-    return false;
-}
-
-
-#else
   #ifdef LCD_CFG_I2C
     LiquidCrystal_I2C lcd(0x27,4,4);
   #else
@@ -220,9 +206,7 @@ void halInit(uint8_t reset_val) {
   initWdt(reset_val);
   pressInit();
 }
-#endif
 
-#ifndef VENTSIM
 static void testKey()
 {
   #if 1
@@ -232,8 +216,6 @@ static void testKey()
   #endif
   digitalWrite(VALVE_OUT_PIN, digitalRead(KEY_INCREMENT_PIN));
 }
-#endif
-
 
 void halSetMonitorLED (MONITOR_LET_T speed)
 {
@@ -260,10 +242,7 @@ void halBlinkLED()
     if (halCheckTimerExpired(tm_led, tm)) {
         tm_led = halStartTimerRef();
 
-        
-#ifdef VENTSIM
-        //LOG("LED Toggle");
-#else
+
         if (led_state) {
           led_state = 0;
           digitalWrite(MONITOR_LED_PIN, LOW);
@@ -272,13 +251,41 @@ void halBlinkLED()
           led_state = 1;
           digitalWrite(MONITOR_LED_PIN, HIGH);
         }
-#endif
         
     }
 }
 
+static void alarmToggler()
+{
+    if (alarm != true) return;
+    
+    if (halCheckTimerExpired(tm_alarm, TM_ALARM_PERIOD / 5)) {
+      tm_alarm = halStartTimerRef();
+      switch (alarm_phase) {
+        case 0:
+          noTone(ALARM_SOUND_PIN);
+          tone(ALARM_SOUND_PIN, FREQ2);
+          break;
+        case 1:
+          noTone(ALARM_SOUND_PIN);
+          tone(ALARM_SOUND_PIN, FREQ3);
+          break;
+        case 2:
+          noTone(ALARM_SOUND_PIN);
+          break;
+        case 6:
+          tone(ALARM_SOUND_PIN, FREQ1);
+          alarm_phase = 0;
+          return;
+        default:
+          break;
+      }
+      alarm_phase++;
+    }
+}
+
 //-------- EEPROM ----------
-#ifndef VENTSIM
+
 uint8_t EEPROM_read(int addr)
 {
   return EEPROM.read(addr); 
@@ -288,32 +295,9 @@ void EEPROM_write(uint8_t val, int addr)
 {
   EEPROM.update(addr, val); 
 }
-#else
-//---- stubs -----
-uint8_t EEPROM_read(int addr) {}
-void EEPROM_write(uint8_t val, int addr){}
-#endif
-
 
 //-------- display --------
-#ifdef VENTSIM
-static void lcdUpdate()
-{
-    int i,r;
-    char *s, *d;
-    char out[((LCD_NUM_COLS + 1) * LCD_NUM_ROWS) + 1];
-    d = out;
-    for (r=0; r<LCD_NUM_ROWS; r++) {
-        s = &lcdBuffer [r][0];
-        for (i=0; i<LCD_NUM_COLS; i++) {
-            *d++ = *s++;
-        }
-        *d++ = '\n';
-    }
-    *d++ = 0;
-    lcdObj->setPlainText(out);
-}
-#else
+
 static void lcdUpdate()
 {
     int i,r;
@@ -331,7 +315,6 @@ static void lcdUpdate()
         lcd.print(out);
     }
 }
-#endif
 
 void halLcdClear()
 {
@@ -384,7 +367,6 @@ void halLcdWrite(int col, int row, const char * txt)
 }
 
 //---------- valves Real
-#ifndef VENTSIM
 void halValveInOn()
 {
 #ifdef VALVE_ACTIVE_LOW
@@ -417,27 +399,6 @@ void halValveOutOff()
     digitalWrite(VALVE_OUT_PIN, LOW);
 #endif
 }
-#else
-// ----------- sim -------------
-
-
-void halValveInOn()
-{
-  LOG(">>>>>> Valve IN ON");
-}
-void halValveInOff()
-{
-    LOG(">>>>>> Valve IN OFF");
-}
-void halValveOutOn()
-{
-  LOG("<<<<<<<< Valve OUT ON");
-}
-void halValveOutOff()
-{
-  LOG("<<<<<<<< Valve OUT OFF");
-}
-#endif
 
 //---------------- process keys ----------
 #define   DEBOUNCING_N    4
@@ -456,7 +417,6 @@ static keys_t keys[3] = {
 
 static void processKeys()
 {
-#ifndef VENTSIM
     int i;
     if ( halCheckTimerExpired(tm_key_sampling, TM_KEY_SAMPLING)) {
         tm_key_sampling = halStartTimerRef();
@@ -495,7 +455,6 @@ static void processKeys()
       }
         
     }
-#endif
 }
 
 void halLoop()
@@ -504,6 +463,7 @@ void halLoop()
   processKeys();
   propLoop();
   pressLoop();
+  alarmToggler();
 
 #ifdef WATCHDOG_ENABLE
   loopWdt();

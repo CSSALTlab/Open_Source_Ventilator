@@ -80,6 +80,7 @@ enum {A0, A1, A2, A3, A4, A5, A6, A7};
   #define MONITOR_LED_PIN       13
 #endif
 
+#define  ALARM_SOUND_PIN        6
 //----------- PRESSURE_SENSOR ------------
 #define PREESURE_ENABLE
 #define PRESSURE_SENSOR_PIN     A7

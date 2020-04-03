@@ -65,6 +65,7 @@
 #define TM_MONITOR_LED_SLOW         2000
 
 #define TM_ALARM_PERIOD 1000
+#define TM_KEY_SAMPLING 5  // 5 ms
 
 typedef enum {
   MONITOR_LED_NORMAL,
