@@ -42,18 +42,23 @@ typedef enum : uint8_t {
 typedef void (*muteFunc_t)(void);
 typedef void (*goOffFunc_t)(void);
 
-static bool beepIsOn = false;
-static int8_t activeAlarmIdx = -1;
+//static bool beepIsOn = false;
+//static int8_t activeAlarmIdx = -1;
 
 typedef struct alarm_st {
     state_t     state;
     uint8_t     cnt;         // num of times muted by operator (before start ignoring it)
-    char *      message;
+    const char *  message;
     goOffFunc_t goOffAction;
     muteFunc_t  muteAction;
 } alarm_t;
 
+static Alarm * alarm;
 
+void alarmResetAll()
+{
+    alarm->internalAlarmResetAll();
+}
 
 void muteHighPressureAlarm()
 {
@@ -85,9 +90,7 @@ static alarm_t alarms[] = {
 };
 #define NUM_ALARMS  sizeof(alarms) / sizeof(alarm_t)
 
-static Alarm * alarm;
-
-static void beepOnOff(bool on)
+void Alarm::beepOnOff(bool on)
 {
     if (on) {
         if (beepIsOn == false) {
@@ -103,10 +106,10 @@ static void beepOnOff(bool on)
     }
 }
 
-void alarmResetAll()
+void Alarm::internalAlarmResetAll()
 {
-    int i;
-    alarm_t * a;
+    uint8_t i;
+    alarm_t * a = 0;
     activeAlarmIdx = -1;
     for (i=0; i< NUM_ALARMS; i++) {
         a->cnt = 0;
@@ -116,9 +119,9 @@ void alarmResetAll()
     CEvent::post(EVT_ALARM_DISPLAY_OFF,0);
 }
 
-static void setNextAlarmIfAny()
+void Alarm::setNextAlarmIfAny()
 {
-    int i;
+    uint8_t i;
     alarm_t * a;
 
     if (activeAlarmIdx >= 0) {
@@ -134,14 +137,14 @@ static void setNextAlarmIfAny()
             if (a->goOffAction) { // call an action if a callback was defined
                 a->goOffAction();
             }
-            CEvent::post(EVT_ALARM_DISPLAY_ON, a->message);
+            CEvent::post(EVT_ALARM_DISPLAY_ON, (char *) a->message);
             beepOnOff(true);
             return;
         }
     }
 }
 
-static void muteAlarmIfOn()
+void Alarm::muteAlarmIfOn()
 {
     if (activeAlarmIdx < 0)
         return;
@@ -182,7 +185,7 @@ static void processAlarmEvent(alarm_t * a)
 {
   if (a->state != ST_IGNORED) {
     a->state = ST_ON;
-    setNextAlarmIfAny();
+    alarm->setNextAlarmIfAny();
   }
 }
 

@@ -37,7 +37,7 @@ static QMediaPlayer player;
 static bool alarm = false;
 static bool alarm_phase;
 
-//---------- Constants ---------
+//---------- Constants ----------
 
 #define TM_KEY_SAMPLING 5  // 5 ms
 
@@ -159,7 +159,7 @@ static void alarmToggler()
 //-------- EEPROM ----------
 
 //---- stubs -----
-uint8_t EEPROM_read(int addr) {}
+uint8_t EEPROM_read(int addr) {return 0;}
 void EEPROM_write(uint8_t val, int addr){}
 
 

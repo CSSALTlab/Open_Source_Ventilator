@@ -76,7 +76,7 @@ static void setDefaultValues()
 
 static void readRecord(int eeprom_addr, PROPS_T * dst_prop_ptr )
 {
-  int i;
+  unsigned int i;
   uint8_t * eeprom_addr_dst = (uint8_t *) dst_prop_ptr;
   for (i=0; i< sizeof(PROPS_T); i++) {
     *eeprom_addr_dst++ = EEPROM_read(eeprom_addr++);
@@ -85,7 +85,7 @@ static void readRecord(int eeprom_addr, PROPS_T * dst_prop_ptr )
 
 static void writeRecord(int eeprom_addr, PROPS_T * dst_prop_src )
 {
-  int i;
+  unsigned int i;
   uint8_t * eeprom_addr_src = (uint8_t *) dst_prop_src;
   for (i=0; i< sizeof(PROPS_T); i++) {
     EEPROM_write(*eeprom_addr_src++, eeprom_addr++);
@@ -95,7 +95,7 @@ static void writeRecord(int eeprom_addr, PROPS_T * dst_prop_src )
 
 static CHECK_T checkRecord(PROPS_T * prop_ptr)
 {
-  int i;
+  unsigned int i;
   bool is_empty = true; // assume empty
   // ------  check if empty ------
   uint8_t * byte_ptr = (uint8_t *) prop_ptr;

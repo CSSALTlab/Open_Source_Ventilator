@@ -93,6 +93,7 @@ typedef void (*propchancefunc_t)(int);
 typedef int (*propgetfunc_t)();
 typedef char * (*valgetfunc_t)();
 
+
 typedef struct params_st {
     p_type_t        type;
     const char *    name;
@@ -230,8 +231,8 @@ static /* const */ params_t params[] /* PROGMEM */ =  {
       1,                        // max
       onOffTxt ,                // text array for options
       false,                    // no dynamic changes
-      &handleChangeVent,        // change prop function
-      &handleGetVent            // propGetter
+      handleChangeVent,         // change prop function
+      { handleGetVent },        // propGetter
     },
     { PARAM_INT,                // type
       STR_BPM,                  // name
@@ -241,8 +242,8 @@ static /* const */ params_t params[] /* PROGMEM */ =  {
       30,                       // max
       0,                        // text array for options
       true,                     // no dynamic changes
-      &handleChangeBps,          // change prop function
-      &handleGetBps             // propGetter
+      handleChangeBps,          // change prop function
+      { handleGetBps }          // propGetter
     },
 
     { PARAM_TXT_OPTIONS,        // type
@@ -253,8 +254,8 @@ static /* const */ params_t params[] /* PROGMEM */ =  {
       3,                        // max
       propDutyCycleTxt,         // text array for options
       true,                     // no dynamic changes
-      &handleChangeDutyCycle,   // change prop function
-      &handleGetDutyCycle       // propGetter
+      handleChangeDutyCycle,    // change prop function
+      { handleGetDutyCycle }    // propGetter
     },
 
     { PARAM_INT,                // type
@@ -265,8 +266,8 @@ static /* const */ params_t params[] /* PROGMEM */ =  {
       2000,                     // max
       0,                        // text array for options
       true,                     // no dynamic changes
-      &handleChangePause,       // change prop function
-      &handleGetPause           // propGetter
+      handleChangePause,        // change prop function
+      { handleGetPause }        // propGetter
     },
     { PARAM_TXT_OPTIONS,        // type
       STR_LCD_AUTO_OFF,         // name
@@ -276,8 +277,8 @@ static /* const */ params_t params[] /* PROGMEM */ =  {
       1,                        // max
       onOffTxt,                 // text array for options
       false,                    // no dynamic changes
-      &handleChangeLcdAutoOff,  // change prop function
-      &handleGetLcdAutoOff      // propGetter
+      handleChangeLcdAutoOff,   // change prop function
+      { handleGetLcdAutoOff }   // propGetter
     },
 
     {  PARAM_TEXT_GET_VAL,       // type
@@ -292,7 +293,7 @@ static /* const */ params_t params[] /* PROGMEM */ =  {
 #ifdef VENTSIM
       .getter.valGetter = &getPressure      // propGetter
 #else
-      &getPressure    // propGetter
+      { getPressure  }  // propGetter
 #endif
     },
 };
@@ -327,7 +328,7 @@ CUiNative::~CUiNative()
 
 void CUiNative::initParams()
 {
-  int i;
+  unsigned int i;
   for (i=0; i<NUM_PARAMS; i++) {
     if (params[i].getter.propGetter) {
       params[i].val = params[i].getter.propGetter();
@@ -431,7 +432,7 @@ void CUiNative::updateProgress()
     memset(buf, 0x20, sizeof (buf)); // spaces
     buf[sizeof (buf) - 1] = 0;
 
-    B_STATE_t s = breatherGetState();
+    //B_STATE_t s = breatherGetState();
     int p = (breatherGetPropress() * PROGRESS_NUM_CHARS) / 90;
     if (p > PROGRESS_NUM_CHARS) p = PROGRESS_NUM_CHARS;
     if (p == progress)
@@ -462,8 +463,8 @@ void CUiNative::blinkOff(int mask)
 
 void CUiNative::updateParams()
 {
-  int idx = params_idx;
-  int i;
+  unsigned int idx = params_idx;
+  unsigned int i;
   char buf[LCD_NUM_COLS+1];
 
   for (i=0; i < LCD_PARAMS_NUM_ROWS; i++) {
@@ -485,7 +486,7 @@ void CUiNative::scroolParams( bool down)
 {
     if (down) {
       params_idx++;
-      if ( params_idx >= NUM_PARAMS)
+      if ( params_idx >= (int) NUM_PARAMS)
           params_idx = 0;
     }
     else {
@@ -523,7 +524,7 @@ void CUiNative::checkFuncHold()
 
 propagate_t CUiNative::onEvent(event_t * event)
 {
-    char b[64];
+    //char b[64];
     //sprintf(b, "onEvent: type = %d, key = %d\n", event->type, event->iParam);
     //LOG( (char *) b);
 

@@ -27,8 +27,6 @@ void alarmInit();
 void alarmLoop();
 void alarmResetAll();
 
-
-
 class Alarm : CEvent {
 
 public:
@@ -38,10 +36,18 @@ public:
     void Loop();
     virtual propagate_t onEvent(event_t * event);
 
+    void setNextAlarmIfAny();
+    void internalAlarmResetAll();
+
 private:
 
-    void beep();
+    //void beep();
+    void beepOnOff(bool on);
+    void muteAlarmIfOn();
 
+    //--- variables
+    bool beepIsOn = false;
+    int8_t activeAlarmIdx = -1;
 
 
 };

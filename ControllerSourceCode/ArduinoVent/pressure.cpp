@@ -81,7 +81,6 @@ static int32_t av;
 static int16_t rawSensorValue;
 static float inH2O = 0.0f;
 
-
 #ifdef SHOW_VAL
   static uint64_t tm_log;
 #endif

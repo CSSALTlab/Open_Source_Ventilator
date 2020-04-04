@@ -114,7 +114,6 @@ static void fsmIn()
             }
         }
     }
-
     //------ check for high pressure hardcode to 35 InchH2O -> 531 int
     if (pressGetRawVal() > 513) {
       CEvent::post(EVT_ALARM, EVT_ALARM_HIGH_PRESSURE);
