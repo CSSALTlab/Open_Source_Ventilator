@@ -27,7 +27,6 @@
 #include "breather.h"
 #include <stdio.h>
 #include <string.h>
-#include "config.h"
 #include "alarm.h"
 #include "languages.h"
 
@@ -38,7 +37,7 @@
 #define BLINK_PARAMETER_VAL         1
 #define BLINK_SATUS                 2
 
-static int params_idx = 0;
+//static int params_idx = 0;
 
 #define LCD_STATUS_ROW              0
 #define LCD_PARAMS_FIRST_ROW        1
@@ -75,47 +74,11 @@ static int params_idx = 0;
 #define PROGRESS_COL       (LCD_NUM_COLS - PROGRESS_NUM_CHARS)
 #define PROGRESS_CHARACTER '|'
 
-typedef  enum {
-    STATE_IDLE = 0,
-    STATE_RUN,
-    STATE_ERROR
-} RUN_STATE_T;
-
 static const char * st_txt[3] = {
     (const char *) STR_IDLE,
     (const char *) STR_RUN,
     (const char *) STR_ERR
 };
-
-
-static int progress = 0;
-
-typedef enum {
-    SHOW_MODE = 0,
-    ENTER_MODE,
-} UI_STATE_T;
-
-static UI_STATE_T ui_state = SHOW_MODE;
-static unsigned long tm_set_hold;
-static bool check_set_hold = false;
-static unsigned long tm_decrement_hold;
-static bool check_decrement_hold = false;
-static int ignore_release = 0;
-
-//----------- Locals -------------
-
-static RUN_STATE_T state_idx = STATE_IDLE;
-static int blink_mask = 0;
-static unsigned long tm_blink;
-static int blink_phase = 0;
-
-static bool alarm_mode = false;
-static char alarm_msg[LCD_NUM_COLS+1];
-
-
-
-static int bps = 10;
-static float dutyCycle = 0.1f;
 
 typedef enum {
     PARAM_INT = 1,
@@ -164,7 +127,7 @@ void uiNativeLoop()
   uiNative->loop();
 }
 
-static void updateStatus(bool blank)
+void CUiNative::updateStatus(bool blank)
 {
   char buf[LCD_NUM_COLS+1];
   memset(buf, 0x20, LCD_NUM_COLS);
@@ -189,12 +152,12 @@ static void handleChangeVent(int val) {
     propSetVent(val);
     if (val) {
         alarmResetAll();
-        state_idx = STATE_RUN;
+        uiNative->state_idx = STATE_RUN;
     }
     else {
-        state_idx = STATE_IDLE;
+        uiNative->state_idx = STATE_IDLE;
     }
-    updateStatus(false);
+    uiNative->updateStatus(false);
 }
 
 static void handleChangeBps(int val) {
@@ -213,8 +176,7 @@ static void handleChangeLcdAutoOff(int val) {
      propSetLcdAutoOff(val);
 }
 
-static void handleSave(int val); // prototype
-//---------------
+//static void handleSave(int val){}
 
 static int handleGetVent() {
     return propGetVent();
@@ -236,11 +198,7 @@ static int handleGetLcdAutoOff() {
      return propGetLcdAutoOff();
 }
 
-//static void handleChangeBle(int val) {
-//      propSetBle(val);
-//}
-
-static char * getPressure()
+static char *  getPressure()
 {
  static char buf[8];
  buf[sizeof(buf) - 1] = 0;
@@ -344,14 +302,22 @@ static /* const */ params_t params[] /* PROGMEM */ =  {
 //------------ Global -----------
 CUiNative::CUiNative()
 {
+    params_idx = 0;
+    ui_state = SHOW_MODE;
+    check_set_hold = false;
+    check_decrement_hold = false;
+    ignore_release = 0;
+    state_idx = STATE_IDLE;
+    blink_mask = 0;
+    blink_phase = 0;
+    alarm_mode = false;
+    bps = 10;
+    dutyCycle = 0.1f;
+
     initParams();
     tm_blink = halStartTimerRef();
     updateStatus(false);
     updateParams();
-//    char buf[32];
-//    sprintf(buf,"size of tm_blink = %d\n", sizeof(tm_blink));
-//    LOG(buf);
-
 }
 
 CUiNative::~CUiNative()
@@ -367,9 +333,16 @@ void CUiNative::initParams()
       params[i].val = params[i].getter.propGetter();
     }
   }
+
+  if (propGetVent()) {
+      state_idx = STATE_RUN;
+  }
+  else {
+      state_idx = STATE_IDLE;
+  }
 }
 
-static void fillValBuf(char * buf, int idx)
+void CUiNative::fillValBuf(char * buf, int idx)
 {
     if (params[idx].type == PARAM_INT)
         sprintf(buf, "%5d", params[idx].val);
@@ -480,22 +453,12 @@ void CUiNative::blinkOn(int mask)
 {
     blink_mask |= mask;
 }
+
 void CUiNative::blinkOff(int mask)
 {
     blink_mask &= ~mask;
     updateParams();
 }
-
-//void CUiNative::updateStatus()
-//{
-//  char buf[LCD_NUM_COLS+1];
-//  memset(buf, 0x20, LCD_NUM_COLS);
-//  buf[LCD_NUM_COLS] = 0;
-//  int len = sprintf(buf, "st=%s", (const char *) st_txt[(int) state_idx]);
-
-//  buf[len] = 0x20;
-//  halLcdWrite(0, LCD_STATUS_ROW, buf);
-//}
 
 void CUiNative::updateParams()
 {
@@ -572,7 +535,7 @@ propagate_t CUiNative::onEvent(event_t * event)
 
     if (event->type == EVT_ALARM_DISPLAY_OFF) {
         alarm_mode = false;
-        ::updateStatus(false);
+        updateStatus(false);
         return PROPAGATE_STOP;
     }
 

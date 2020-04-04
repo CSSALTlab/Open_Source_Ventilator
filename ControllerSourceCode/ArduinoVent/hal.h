@@ -37,29 +37,6 @@
     #endif
 #endif
 
-
-#if (LCD_CFG_2_ROWS == 1)
-  #define LCD_NUM_ROWS 2
-#elif (LCD_CFG_4_ROWS == 1)
-  #define LCD_NUM_ROWS 4
-#else
-  #error "At least one LCD_CFG_x_ROWS must be set to 1 in config.h"
-#endif
-#if ((LCD_CFG_2_ROWS == 1) && (LCD_CFG_4_ROWS == 1))
-  #error "Only one LCD_CFG_x_ROWS must be set to 1 in config.h"
-#endif
-
-#if (LCD_CFG_20_COLS == 1)
-  #define LCD_NUM_COLS 20
-#elif (LCD_CFG_16_COLS == 1)
-  #define LCD_NUM_COLS 16
-#else
-  #error "At least one LCD_CFG_XX_COLS must be set to 1 in config.h"
-#endif
-#if ((LCD_CFG_20_COLS == 1) && (LCD_NUM_COLS == 1))
-  #error "Only one LCD_CFG_XX_COLS must be set to 1 in config.h"
-#endif
-
 #define TM_MONITOR_LED_NORMAL       500
 #define TM_MONITOR_LED_FAST         50 //
 #define TM_MONITOR_LED_SLOW         2000
@@ -77,12 +54,6 @@ typedef enum {
   void halInit(QPlainTextEdit * ed);
 #else
   void halInit(uint8_t reset_val);
-  //void LOG(const char * c);
-//  #ifdef DEBUG_SERIAL_LOGS
-//    #define LOG(x) Serial.print(F(x))
-//  #else
-//    #define LOG(x) /* dummy */
-//  #endif
 #endif
 
 void halSetMonitorLED (MONITOR_LET_T speed);

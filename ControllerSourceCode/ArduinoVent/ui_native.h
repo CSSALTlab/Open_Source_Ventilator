@@ -25,10 +25,22 @@
   #include <Arduino.h> 
 #endif
 
+#include "config.h"
 #include "event.h"
 
 void uiNativeInit();
 void uiNativeLoop();
+
+typedef enum {
+    SHOW_MODE = 0,
+    ENTER_MODE,
+} UI_STATE_T;
+
+typedef  enum {
+    STATE_IDLE = 0,
+    STATE_RUN,
+    STATE_ERROR
+} RUN_STATE_T;
 
 class CUiNative : CEvent {
 public:
@@ -46,8 +58,35 @@ public:
     void checkFuncHold ();
     void updateProgress();
     void initParams();
+    void fillValBuf(char * buf, int idx);
+    void updateStatus(bool blank);
 
     virtual propagate_t onEvent(event_t * event);
+
+    // --- public var (neede for static function) ---
+    RUN_STATE_T state_idx; // = STATE_IDLE;
+
+ private:
+    int params_idx;
+    int progress;
+
+    UI_STATE_T ui_state; // = SHOW_MODE;
+    unsigned long tm_set_hold;
+    bool check_set_hold; // = false;
+    unsigned long tm_decrement_hold;
+    bool check_decrement_hold; // = false;
+    int ignore_release; // = 0;
+
+    int blink_mask; // = 0;
+    unsigned long tm_blink;
+    int blink_phase; // = 0;
+
+    bool alarm_mode; // = false;
+    char alarm_msg[LCD_NUM_COLS+1];
+
+    int bps; // = 10;
+    float dutyCycle; // = 0.1f;
+
 };
 
 #endif // UI_NATIVE_H

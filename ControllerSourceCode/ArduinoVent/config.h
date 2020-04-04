@@ -176,12 +176,33 @@ enum {A0, A1, A2, A3, A4, A5, A6, A7};
   Note: in case Stored parameters are corrupted or empty
 */
 
-#define  DEFAULT_VENT            0
+#define  DEFAULT_VENT            1
 #define  DEFAULT_BPS             15
 #define  DEFAULT_DUTY_CYCLE      0
 #define  DEFAULT_PAUSE           100
 #define  DEFAULT_LCD_AUTO_OFF    0
 #define  DEFAULT_BLE             0
 
+#if (LCD_CFG_2_ROWS == 1)
+  #define LCD_NUM_ROWS 2
+#elif (LCD_CFG_4_ROWS == 1)
+  #define LCD_NUM_ROWS 4
+#else
+  #error "At least one LCD_CFG_x_ROWS must be set to 1 in config.h"
+#endif
+#if ((LCD_CFG_2_ROWS == 1) && (LCD_CFG_4_ROWS == 1))
+  #error "Only one LCD_CFG_x_ROWS must be set to 1 in config.h"
+#endif
+
+#if (LCD_CFG_20_COLS == 1)
+  #define LCD_NUM_COLS 20
+#elif (LCD_CFG_16_COLS == 1)
+  #define LCD_NUM_COLS 16
+#else
+  #error "At least one LCD_CFG_XX_COLS must be set to 1 in config.h"
+#endif
+#if ((LCD_CFG_20_COLS == 1) && (LCD_NUM_COLS == 1))
+  #error "Only one LCD_CFG_XX_COLS must be set to 1 in config.h"
+#endif
 
 #endif // CONFIG_H
