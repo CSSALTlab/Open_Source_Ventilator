@@ -38,6 +38,7 @@ HEADERS += \
     ../ArduinoVent/crc.h \
     ../ArduinoVent/event.h \
     ../ArduinoVent/hal.h \
+    ../ArduinoVent/languages.h \
     ../ArduinoVent/log.h \
     ../ArduinoVent/pressure.h \
     ../ArduinoVent/properties.h \

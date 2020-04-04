@@ -29,6 +29,7 @@
 #include <string.h>
 #include "config.h"
 #include "alarm.h"
+#include "languages.h"
 
 //#define TEST_WDT // Debug only... it makes Watchdor to trigger reset when Set button is pressed
 
@@ -81,9 +82,9 @@ typedef  enum {
 } RUN_STATE_T;
 
 static const char * st_txt[3] = {
-    (const char *) "idle",
-    (const char *) "run ",
-    (const char *) "Err "
+    (const char *) STR_IDLE,
+    (const char *) STR_RUN,
+    (const char *) STR_ERR
 };
 
 
@@ -253,18 +254,18 @@ static char * getPressure()
 }
 
 static const char * onOffTxt[] = {
-     "  off",
-     "   on",
+    STR_OFF,
+    STR_ON,
 };
 
 static const char * yesNoTxt[] = {
-     "   no",
-     "  yes",
+     STR_NO,
+     STR_YES,
 };
 
 static /* const */ params_t params[] /* PROGMEM */ =  {
     { PARAM_TXT_OPTIONS,        // type
-      "Ventilator",              // name
+      STR_VENTILATOR,           // name
       0,                        // val
       1,                        // step
       0,                        // min
@@ -275,7 +276,7 @@ static /* const */ params_t params[] /* PROGMEM */ =  {
       &handleGetVent            // propGetter
     },
     { PARAM_INT,                // type
-      "BPM",                    // name
+      STR_BPM,                  // name
       10,                       // val
       5,                        // step
       10,                       // min
@@ -287,7 +288,7 @@ static /* const */ params_t params[] /* PROGMEM */ =  {
     },
 
     { PARAM_TXT_OPTIONS,        // type
-      "Duty Cyc.",              // name
+      STR_DUTY_CYCLE,           // name
       0,                        // val
       1,                        // step
       0,                        // min
@@ -299,7 +300,7 @@ static /* const */ params_t params[] /* PROGMEM */ =  {
     },
 
     { PARAM_INT,                // type
-      "Pause (ms)",             // name
+      STR_PAUSE,                // name
       200,                      // val
       50,                       // step
       0,                        // min
@@ -310,7 +311,7 @@ static /* const */ params_t params[] /* PROGMEM */ =  {
       &handleGetPause           // propGetter
     },
     { PARAM_TXT_OPTIONS,        // type
-      "LCD auto-off",           // name
+      STR_LCD_AUTO_OFF,         // name
       0,                        // val
       1,                        // step
       0,                        // min
@@ -320,25 +321,14 @@ static /* const */ params_t params[] /* PROGMEM */ =  {
       &handleChangeLcdAutoOff,  // change prop function
       &handleGetLcdAutoOff      // propGetter
     },
-//    { PARAM_TXT_OPTIONS,        // type
-//      "Bluetooth",              // name
-//      0,                        // val
-//      1,                        // step
-//      0,                        // min
-//      1,                        // max
-//      onOffTxt,                 // text array for options
-//      false,                    // no dynamic changes
-//      &handleChangeBle          // change prop function
-//      &handleGetBle             // propGetter
-//    },
 
-    {  PARAM_TEXT_GET_VAL,        // type
-      "Pressure",           // name
+    {  PARAM_TEXT_GET_VAL,       // type
+      STR_PRESSURE,             // name
       0,                        // val
       1,                        // step
       0,                        // min
       1,                        // max
-      0,                 // text array for options
+      0,                        // text array for options
       false,                    // no dynamic changes
       0,  // change prop function
 #ifdef VENTSIM
@@ -346,20 +336,6 @@ static /* const */ params_t params[] /* PROGMEM */ =  {
 #else
       &getPressure    // propGetter
 #endif
-    },
-
-
-    //---- This Must be the very last parameter ----
-    { PARAM_TXT_OPTIONS,        // type
-      "Save (now)",             // name
-      0,                        // val
-      1,                        // step
-      0,                        // min
-      1,                        // max
-      yesNoTxt,                 // text array for options
-      false,                    // no dynamic changes
-      &handleSave,              // change prop function
-      0
     },
 };
 
@@ -392,15 +368,6 @@ void CUiNative::initParams()
     }
   }
 }
-
-
-static void handleSave(int val) {
-    if (val) {
-        propSave();
-        params[NUM_PARAMS-1].val = 0; // sets back to off
-    }
-}
-
 
 static void fillValBuf(char * buf, int idx)
 {

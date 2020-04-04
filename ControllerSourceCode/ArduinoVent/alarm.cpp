@@ -23,10 +23,7 @@
 #include "alarm.h"
 #include "log.h"
 #include "hal.h"
-
-// TODO: move
-#define ALARM_MSG_LOW_PRESSURE "LOW AIRWAY PRES!"
-#define ALARM_MSG_HIGH_PRESSURE  "OVER PRES ALARM!"
+#include "languages.h"
 
 #define ALARM_IDX_HIGH_PRESSURE     0 // index for high pressure alarm in alarms array
 #define ALARM_IDX_LOW_PRESSURE      1 // index for low pressure alarm in alarms array
@@ -72,7 +69,7 @@ static alarm_t alarms[] = {
   {
         ST_NO_ALARM,
         0,
-        ALARM_MSG_HIGH_PRESSURE,
+        STR_HIGH_PRESSURE,
         0,
         muteHighPressureAlarm
   },
@@ -80,7 +77,7 @@ static alarm_t alarms[] = {
   {
         ST_NO_ALARM,
         0,
-        ALARM_MSG_LOW_PRESSURE,
+        STR_LOW_PRESSURE,
         0,
         muteLowPressureAlarm
   }
