@@ -28,6 +28,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "config.h"
+#include "alarm.h"
 
 //#define TEST_WDT // Debug only... it makes Watchdor to trigger reset when Set button is pressed
 
@@ -107,6 +108,9 @@ static int blink_mask = 0;
 static unsigned long tm_blink;
 static int blink_phase = 0;
 
+static bool alarm_mode = false;
+static char alarm_msg[LCD_NUM_COLS+1];
+
 
 
 static int bps = 10;
@@ -159,24 +163,37 @@ void uiNativeLoop()
   uiNative->loop();
 }
 
-static void updateStatus()
+static void updateStatus(bool blank)
 {
   char buf[LCD_NUM_COLS+1];
   memset(buf, 0x20, LCD_NUM_COLS);
   buf[LCD_NUM_COLS] = 0;
-  int len = sprintf(buf, "st=%s", (const char *) st_txt[(int) state_idx]);
+  int len;
 
+  if (alarm_mode == true) {
+    if (blank == false) {
+      strcpy(buf, alarm_msg);
+      len = strlen(buf);
+    }
+    else len = 0;
+  }
+  else {
+    len = sprintf(buf, "st=%s", (const char *) st_txt[(int) state_idx]);
+  }
   buf[len] = 0x20;
   halLcdWrite(0, LCD_STATUS_ROW, buf);
 }
 
 static void handleChangeVent(int val) {
     propSetVent(val);
-    if (val)
+    if (val) {
+        alarmResetAll();
         state_idx = STATE_RUN;
-    else
+    }
+    else {
         state_idx = STATE_IDLE;
-    updateStatus();
+    }
+    updateStatus(false);
 }
 
 static void handleChangeBps(int val) {
@@ -353,7 +370,7 @@ CUiNative::CUiNative()
 {
     initParams();
     tm_blink = halStartTimerRef();
-    updateStatus();
+    updateStatus(false);
     updateParams();
 //    char buf[32];
 //    sprintf(buf,"size of tm_blink = %d\n", sizeof(tm_blink));
@@ -429,11 +446,20 @@ void CUiNative::blinker()
         }
 
         //-------- other Blinking... ------------
-        //if (blink_mask & WHATEVER) {
-        //}
+
 
         else {
             updateParams();
+        }
+
+        //---------- Alarm blink ------------
+        if (alarm_mode == true) {
+            if (blink_phase) {
+                updateStatus(true);
+            }
+            else {
+                updateStatus(false);
+            }
         }
 
     }
@@ -458,6 +484,8 @@ void CUiNative::refreshValue(bool force)
 
 void CUiNative::updateProgress()
 {
+    if (alarm_mode == true) return;
+
     int i;
     char buf[PROGRESS_NUM_CHARS+1];
     memset(buf, 0x20, sizeof (buf)); // spaces
@@ -569,6 +597,17 @@ propagate_t CUiNative::onEvent(event_t * event)
     //sprintf(b, "onEvent: type = %d, key = %d\n", event->type, event->iParam);
     //LOG( (char *) b);
 
+    if (event->type == EVT_ALARM_DISPLAY_ON) {
+        alarm_mode = true;
+        strcpy(alarm_msg, event->param.tParam);
+        return PROPAGATE_STOP;
+    }
+
+    if (event->type == EVT_ALARM_DISPLAY_OFF) {
+        alarm_mode = false;
+        ::updateStatus(false);
+        return PROPAGATE_STOP;
+    }
 
     //============== SHOW Mode =============
     if (ui_state == SHOW_MODE) {

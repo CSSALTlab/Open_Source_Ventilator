@@ -25,6 +25,7 @@
 
 void alarmInit();
 void alarmLoop();
+void alarmResetAll();
 
 
 

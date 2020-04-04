@@ -25,15 +25,15 @@
 #include "hal.h"
 
 // TODO: move
-#define ALARM_MSG_HIGH_PRESSURE " High Pressure"
-#define ALARM_MSG_LOW_PRESSURE  " Low Pressure"
+#define ALARM_MSG_LOW_PRESSURE "LOW AIRWAY PRES!"
+#define ALARM_MSG_HIGH_PRESSURE  "OVER PRES ALARM!"
 
 #define ALARM_IDX_HIGH_PRESSURE     0 // index for high pressure alarm in alarms array
 #define ALARM_IDX_LOW_PRESSURE      1 // index for low pressure alarm in alarms array
 
 #define NUM_ALARM_UNTIL_IGNORE 3
 
-//#define SIM_HIGH_PRESSURE
+// #define SIM_HIGH_PRESSURE
 
 typedef enum : uint8_t {
     ST_NO_ALARM,
@@ -106,6 +106,19 @@ static void beepOnOff(bool on)
     }
 }
 
+void alarmResetAll()
+{
+    int i;
+    alarm_t * a;
+    activeAlarmIdx = -1;
+    for (i=0; i< NUM_ALARMS; i++) {
+        a->cnt = 0;
+        a->state = ST_NO_ALARM;
+    }
+    beepOnOff(false);
+    CEvent::post(EVT_ALARM_DISPLAY_OFF,0);
+}
+
 static void setNextAlarmIfAny()
 {
     int i;
@@ -153,6 +166,7 @@ static void muteAlarmIfOn()
         a->state = ST_IGNORED;
 
     activeAlarmIdx = -1;
+    CEvent::post(EVT_ALARM_DISPLAY_OFF, 0);
     setNextAlarmIfAny();
 }
 
@@ -189,16 +203,19 @@ void Alarm::Loop()
 propagate_t Alarm::onEvent(event_t * event)
 {
     alarm_t * a;
+    int i;
 
     switch (event->type) {
 
-      case EVT_ALARM_LOW_PRESSURE:
-        a = &alarms[ALARM_IDX_LOW_PRESSURE];
-        processAlarmEvent(a);
-        break;
+      case EVT_ALARM:
+        switch (event->param.iParam)
+        {
+          case EVT_ALARM_HIGH_PRESSURE: i = ALARM_IDX_HIGH_PRESSURE; break;
+          case EVT_ALARM_LOW_PRESSURE: i = ALARM_IDX_LOW_PRESSURE; break;
 
-      case EVT_ALARM_HIGH_PRESSURE:
-        a = &alarms[ALARM_IDX_HIGH_PRESSURE];
+          default: LOG("Alarm::onEvent: fix me"); return PROPAGATE;
+        }
+        a = &alarms[i];
         processAlarmEvent(a);
         break;
 
@@ -206,17 +223,20 @@ propagate_t Alarm::onEvent(event_t * event)
 #ifdef SIM_HIGH_PRESSURE
         if (event->param.iParam == KEY_SET) {
           LOG("SIM High pressure Alarm event");
-          CEvent::post(EVT_ALARM_HIGH_PRESSURE, 0);
+          CEvent::post(EVT_ALARM, EVT_ALARM_HIGH_PRESSURE);
         }
         else if (event->param.iParam == KEY_INCREMENT_PIN) {
           LOG("SIM Low pressure Alarm event");
-          CEvent::post(EVT_ALARM_LOW_PRESSURE, 0);
+          CEvent::post(EVT_ALARM, EVT_ALARM_LOW_PRESSURE);
         }
         else {
           LOG("mute event");
           muteAlarmIfOn();
           //return PROPAGATE_STOP;
         }
+#else
+        muteAlarmIfOn();
+        return PROPAGATE;
 #endif
       case EVT_KEY_RELEASE:
         break;

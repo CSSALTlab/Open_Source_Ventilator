@@ -27,6 +27,25 @@
     Release 1.0   March 30, 2020 by Dr. Bill Schmidt-J68HZ.  This program ws written to interface a MP3V7010xx
                   gauge pressure sensor and will calculate instantaneous average pressures for the
                   Inhale or exhale cycle.  See comments at end for integrating variables to be displayed into the LCD.
+
+LUA code:
+
+int to InchH2O:
+
+function getp(a)
+  local p = 4.01463
+  local d = 614
+  local r = p * ((a / d) - 0.08) / 0.09
+  return r
+end
+
+InchH2O to int
+function geta(v)
+  local p = 4.01463
+  local d = 614
+  local r = (((v * .09) / p) + 0.08 ) * d
+  return r
+end
 */
 
 #include "pressure.h"

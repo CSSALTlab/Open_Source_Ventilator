@@ -24,6 +24,8 @@
 #include "properties.h"
 #include "hal.h"
 #include "log.h"
+#include "pressure.h"
+#include "event.h"
 
 #define MINUTE_MILLI 60000
 #define TM_WAIT_TO_OUT 50 // 50 milliseconds
@@ -60,6 +62,7 @@ void breatherStartCycle()
     b_state = B_ST_IN;
     halValveOutOff();
     halValveInOn();
+
 //#ifdef VENTSIM
 //  char buf[256];
 //  sprintf(buf, "  curr_total_cycle_milli = %d\n  curr_pause = %d\n  curr_in_milli = %d\n  curr_out_milli = %d\n",
@@ -102,6 +105,19 @@ static void fsmIn()
     else {
         curr_progress = ((m - tm_start) * 100)/ curr_in_milli;
         //curr_progress = 100 - (100 * tm_start + curr_in_milli) / m;
+
+        //--------- we check for low pressure at 50% or grater
+        // low pressure hardcode to 3 InchH2O -> 90 int
+        if (tm_start + curr_in_milli/2 < m) {
+            if (pressGetRawVal() < 90) {
+              CEvent::post(EVT_ALARM, EVT_ALARM_LOW_PRESSURE);
+            }
+        }
+    }
+
+    //------ check for high pressure hardcode to 35 InchH2O -> 531 int
+    if (pressGetRawVal() > 513) {
+      CEvent::post(EVT_ALARM, EVT_ALARM_HIGH_PRESSURE);
     }
 }
 
