@@ -89,9 +89,9 @@ typedef enum {
 
 } p_type_t;
 
-typedef void (*propchancefunc_t)(int);
+typedef void (*propchangefunc_t)(int);
 typedef int (*propgetfunc_t)();
-typedef char * (*valgetfunc_t)();
+typedef char * (*txtGetterfunc_t)();
 
 
 typedef struct params_st {
@@ -103,19 +103,13 @@ typedef struct params_st {
     int             max;
     const char **   options;
     bool            quickUpdate;
-    propchancefunc_t handler;
+    propchangefunc_t handler;
     union {
       propgetfunc_t   propGetter;
-      valgetfunc_t    valGetter;
+      txtGetterfunc_t txtGetter;  // valid for PARAM_TEXT_GET_VAL. Value is update periodicly on screen
     } getter;
 
 } params_t;
-
-typedef struct display_vals_st {
-    const char *    name;
-    bool            update;
-    valgetfunc_t   valGetter;
-} display_vals_t;
 
 static CUiNative * uiNative;
 
@@ -251,7 +245,7 @@ static /* const */ params_t params[] /* PROGMEM */ =  {
       0,                        // val
       1,                        // step
       0,                        // min
-      3,                        // max
+      PROT_DUTY_CYCLE_SIZE - 1, // max
       propDutyCycleTxt,         // text array for options
       true,                     // no dynamic changes
       handleChangeDutyCycle,    // change prop function
@@ -290,11 +284,10 @@ static /* const */ params_t params[] /* PROGMEM */ =  {
       0,                        // text array for options
       false,                    // no dynamic changes
       0,  // change prop function
-#ifdef VENTSIM
-      .getter.valGetter = &getPressure      // propGetter
-#else
-      { getPressure  }  // propGetter
-#endif
+      { (propgetfunc_t) getPressure } // despite this is a txtGetter (note that this is a PARAM_TEXT_GET_VAL)
+                                      // different compilers have particular syntax in how to set union. Casting
+                                      // with the first function prototype works for all. Hack but better than add lots of #ifdef's
+
     },
 };
 
@@ -350,7 +343,7 @@ void CUiNative::fillValBuf(char * buf, int idx)
     else if (params[idx].type == PARAM_TXT_OPTIONS)
         strcpy(buf, params[idx].options[ params[idx].val ]);
     else if (params[idx].type == PARAM_TEXT_GET_VAL)
-        sprintf(buf, "%s", params[idx].getter.valGetter());
+        sprintf(buf, "%s", params[idx].getter.txtGetter());
     else
         LOG("blinker: Unexpected type");
 }

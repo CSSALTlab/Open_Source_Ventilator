@@ -85,8 +85,11 @@ void halBeepAlarmOnOff( bool on);
 
 uint16_t halGetAnalogPressure();
 
-uint8_t EEPROM_read(int addr);
-void EEPROM_write(uint8_t val, int addr);
+//uint8_t EEPROM_read(int addr);
+//void EEPROM_write(uint8_t val, int addr);
+
+bool halSaveDataBlock(uint8_t * data, int size);
+bool halRestoreDataBlock(uint8_t * data, int size);
 
 
 

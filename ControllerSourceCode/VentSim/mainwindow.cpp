@@ -46,6 +46,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     ui->PressureSlider->setMaximum(613);
     ui->PressureSlider->setValue(gAnalogPressure);
+    ui->lb_pressure->setNum((int) gAnalogPressure);
     connect(ui->PressureSlider, SIGNAL (valueChanged(int)),this, SLOT (onPressureSliderChange(int)));
 
     ui->lb_input_valve_on->hide();

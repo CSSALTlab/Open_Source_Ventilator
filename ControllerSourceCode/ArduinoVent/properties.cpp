@@ -30,10 +30,13 @@
   #include <EEPROM.h>
 #endif
 
-#define EEPROM_PROPS_BASE_ADDRESS 0
-#define TM_SAVE_TIMEOUT 30000 // save props to EEPROM is UI is "quiet" for longer than 30 seconds
+#define TAG1 0xd8
+#define TAG2 0x34
 
 typedef struct __attribute__ ((packed))  props_st {
+  uint8_t tag1;
+  uint8_t tag2;
+  
   uint8_t propVent;
   uint8_t propBps;
   uint8_t propDutyCycle;
@@ -44,20 +47,13 @@ typedef struct __attribute__ ((packed))  props_st {
   uint8_t crc;
 } PROPS_T;
 
-typedef enum {
-  OK,
-  EMPTY,
-  ZERO,
-  BAD
-} CHECK_T;
-
 static PROPS_T props;
 static bool pendingSave = false;
 static uint64_t tm_save;
 
 // Note: defaults values will takes place in case the stored parameters are corrupted or empty
 
-const char * propDutyCycleTxt[4] = {
+const char * propDutyCycleTxt[PROT_DUTY_CYCLE_SIZE] = {
     "  1:1",
     "  1:2",
     "  1:3",
@@ -66,6 +62,9 @@ const char * propDutyCycleTxt[4] = {
 
 static void setDefaultValues()
 {
+  props.tag1             = TAG1;
+  props.tag2             = TAG2;
+  
   props.propVent         = DEFAULT_VENT;
   props.propBps          = DEFAULT_BPS;
   props.propDutyCycle    = DEFAULT_DUTY_CYCLE;
@@ -74,70 +73,33 @@ static void setDefaultValues()
   props.propBle          = DEFAULT_BLE;
 }
 
-static void readRecord(int eeprom_addr, PROPS_T * dst_prop_ptr )
-{
-  unsigned int i;
-  uint8_t * eeprom_addr_dst = (uint8_t *) dst_prop_ptr;
-  for (i=0; i< sizeof(PROPS_T); i++) {
-    *eeprom_addr_dst++ = EEPROM_read(eeprom_addr++);
-  }
-}
-
-static void writeRecord(int eeprom_addr, PROPS_T * dst_prop_src )
-{
-  unsigned int i;
-  uint8_t * eeprom_addr_src = (uint8_t *) dst_prop_src;
-  for (i=0; i< sizeof(PROPS_T); i++) {
-    EEPROM_write(*eeprom_addr_src++, eeprom_addr++);
-  }
-}
-
-
-static CHECK_T checkRecord(PROPS_T * prop_ptr)
+static bool checkRecord(PROPS_T * prop_ptr)
 {
   unsigned int i;
   bool is_empty = true; // assume empty
-  // ------  check if empty ------
-  uint8_t * byte_ptr = (uint8_t *) prop_ptr;
-  
-  for (i=0; i<sizeof(PROPS_T); i++) {
-    // check if record if empty
-    if ( *byte_ptr != 0xff) {
-      is_empty = false;
-      break;
-    }
-  }
-  if (is_empty)
-    return EMPTY;
 
-  // ------  check if zero ------
-  byte_ptr = (uint8_t *) prop_ptr;
-  is_empty = true; // here use as zero'ed
-  for (i=0; i<sizeof(PROPS_T); i++) {
-    // check if record if empty
-    if ( *byte_ptr != 0) {
-      is_empty = false;
-      break;
-    }
+  if ( (prop_ptr->tag1 != TAG1) || (prop_ptr->tag2 != TAG2) ) {
+    LOG("checkRecord: bad tag");
+    return false;
   }
-  if (is_empty)
-    return ZERO;
-
 
   // -------- check CRC ---------
   uint16_t crc = crc_8( (uint8_t *) prop_ptr, sizeof(PROPS_T) - 1);
-  if (crc == prop_ptr->crc)
-    return OK;
+  if (crc != prop_ptr->crc) {
+    LOG("checkRecord: bad crc");
+    return false;
+  }
 
-  return BAD;
+  return true;
 }
 
 void propInit()
 {
-  readRecord(EEPROM_PROPS_BASE_ADDRESS, &props );
-  if (checkRecord(&props) != OK) {
+  halRestoreDataBlock((uint8_t *) &props, sizeof(PROPS_T) );
+  if (checkRecord(&props) == false) {
     LOG("EEPROM values not valid, loading default parameters");
     setDefaultValues();
+    propSave();
   }
 }
 
@@ -163,7 +125,7 @@ bool propSave()
   // update crc
   uint16_t crc = crc_8( (uint8_t *) &props, sizeof(PROPS_T) - 1);
   props.crc = crc;
-  writeRecord(EEPROM_PROPS_BASE_ADDRESS, &props );
+  halSaveDataBlock((uint8_t *) &props, sizeof(PROPS_T) );
   pendingSave = false;
 }
 

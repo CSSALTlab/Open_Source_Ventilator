@@ -63,7 +63,7 @@ end
 
 #ifdef PREESURE_ENABLE
 
-#define SHOW_VAL
+//#define SHOW_VAL
 
 #define TM_LOG 2000
 #define P_CONV 4.01463f

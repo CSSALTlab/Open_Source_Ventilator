@@ -21,7 +21,8 @@
  **************************************************************
 */
 
-extern const char * propDutyCycleTxt[4];
+#define PROT_DUTY_CYCLE_SIZE        4
+extern const char * propDutyCycleTxt[PROT_DUTY_CYCLE_SIZE];
 
 void propInit();
 void propLoop();

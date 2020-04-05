@@ -283,6 +283,50 @@ uint16_t halGetAnalogPressure()
     return (uint16_t) gAnalogPressure;
 }
 
+#define STORAGE_FILENAME "ventsim_storage.dat"
+//-------- storage ----------
+bool halSaveDataBlock(uint8_t * data, int size)
+{
+  int len;
+  FILE * fh = fopen(STORAGE_FILENAME, "wb");
+  if (fh == NULL) {
+      LOG("halSaveDataBlock: fopen fail.");
+      return false;
+  }
+
+  len = fwrite(data, 1, (size_t) size, fh);
+  if (len != size) {
+      LOG("halSaveDataBlock: write fail.");
+      fclose(fh);
+      return false;
+  }
+  fclose(fh);
+  LOG("halSaveDataBlock: OK.");
+  return true;
+}
+
+bool halRestoreDataBlock(uint8_t * data, int size)
+{
+    int len;
+    FILE * fh = fopen(STORAGE_FILENAME, "rb");
+    if (fh == NULL) {
+        LOG("halSaveDataBlock: fopen fail.");
+        return false;
+    }
+
+    len = fread(data, 1, (size_t) size, fh);
+    if (len != size) {
+        LOG("halRestoreDataBlock: read fail.");
+        fclose(fh);
+        return false;
+    }
+    fclose(fh);
+    LOG("halRestoreDataBlock: read OK.");
+    return true;
+
+}
+
+
 //---------------- process keys ----------
 #define   DEBOUNCING_N    4
 typedef struct keys_st {
