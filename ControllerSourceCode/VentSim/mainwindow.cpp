@@ -52,6 +52,23 @@ MainWindow::MainWindow(QWidget *parent)
     ui->lb_input_valve_on->hide();
     ui->lb_output_valve_on->hide();
 
+#ifdef Q_OS_WIN32
+    QFont font = QFont ("Courier New");
+    font.setPointSize (20);
+    ui->plainTextEdit->setFont(font);
+
+    QFont f = QFont ("Courier New");
+    f.setPointSize (12);
+    ui->lb_press->setFont(f);
+    ui->lb_exhalation->setFont(f);
+    ui->lb_exhalation->setText("Exhalation");
+    ui->lb_inspiration->setFont(f);
+    ui->lb_inspiration->setText("Inspiration");
+    ui->bt_left->setFont(f);
+    ui->bt_right->setFont(f);
+    ui->bt_func->setFont(f);
+#endif
+
     halInit(    ui->plainTextEdit,
                 ui->lb_input_valve_on,
                 ui->lb_input_valve_off,

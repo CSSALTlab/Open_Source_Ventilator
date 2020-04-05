@@ -170,9 +170,9 @@ Duty cycle:      1:1
    <widget class="QSlider" name="PressureSlider">
     <property name="geometry">
      <rect>
-      <x>110</x>
+      <x>130</x>
       <y>380</y>
-      <width>271</width>
+      <width>261</width>
       <height>22</height>
      </rect>
     </property>
@@ -272,7 +272,7 @@ Duty cycle:      1:1
      <bool>true</bool>
     </property>
    </widget>
-   <widget class="QLabel" name="label">
+   <widget class="QLabel" name="lb_inspiration">
     <property name="geometry">
      <rect>
       <x>10</x>
@@ -290,7 +290,7 @@ Duty cycle:      1:1
      <string>Inspitation valve:</string>
     </property>
    </widget>
-   <widget class="QLabel" name="label_2">
+   <widget class="QLabel" name="lb_exhalation">
     <property name="geometry">
      <rect>
       <x>250</x>
@@ -308,12 +308,12 @@ Duty cycle:      1:1
      <string>Exhalation valve:</string>
     </property>
    </widget>
-   <widget class="QLabel" name="label_3">
+   <widget class="QLabel" name="lb_press">
     <property name="geometry">
      <rect>
       <x>10</x>
       <y>380</y>
-      <width>81</width>
+      <width>101</width>
       <height>16</height>
      </rect>
     </property>
@@ -333,7 +333,7 @@ Duty cycle:      1:1
      <x>0</x>
      <y>0</y>
      <width>482</width>
-     <height>22</height>
+     <height>26</height>
     </rect>
    </property>
   </widget>
