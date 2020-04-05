@@ -63,21 +63,13 @@ void breatherStartCycle()
     halValveOutOff();
     halValveInOn();
 
-//#ifdef VENTSIM
-//  char buf[256];
-//  sprintf(buf, "  curr_total_cycle_milli = %d\n  curr_pause = %d\n  curr_in_milli = %d\n  curr_out_milli = %d\n",
-//          curr_total_cycle_milli,
-//          curr_pause,
-//          curr_in_milli,
-//          curr_out_milli);
-//  LOGV(buf);
-//#endif
-
+#if 0
   LOG("Ventilation ON:");
   LOGV(" curr_total_cycle_milli = %d", curr_total_cycle_milli);
   LOGV(" curr_pause = %d", curr_pause);
   LOGV(" curr_in_milli = %d", curr_in_milli);
   LOGV(" curr_out_milli = %d", curr_out_milli);
+#endif
 
 }
 

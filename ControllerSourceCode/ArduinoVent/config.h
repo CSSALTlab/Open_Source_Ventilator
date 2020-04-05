@@ -82,8 +82,8 @@ enum {A0, A1, A2, A3, A4, A5, A6, A7};
 //------------ Output Valves -----------
 #define VALVE_ACTIVE_LOW
 
-#define VALVE_IN_PIN            A4
-#define VALVE_OUT_PIN           A5
+#define VALVE_IN_PIN            2 // D2
+#define VALVE_OUT_PIN           3 // D3
 
 #ifndef BLUETOOTH_ENABLE
   #define MONITOR_LED_PIN LED_BUILTIN
@@ -91,18 +91,18 @@ enum {A0, A1, A2, A3, A4, A5, A6, A7};
   #define MONITOR_LED_PIN       13
 #endif
 
-#define  ALARM_SOUND_PIN        6
+#define  ALARM_SOUND_PIN        6  // D6
 //----------- PRESSURE_SENSOR ------------
 #define PREESURE_ENABLE
 #define PRESSURE_SENSOR_PIN     A7
 
 //--------- LCD Num Rows ----------
 // Default
-#define LCD_CFG_20_COLS  1
-#define LCD_CFG_16_COLS  0
+#define LCD_CFG_20_COLS  0
+#define LCD_CFG_16_COLS  1
 
-#define LCD_CFG_2_ROWS  0
-#define LCD_CFG_4_ROWS  1
+#define LCD_CFG_2_ROWS  1
+#define LCD_CFG_4_ROWS  0
 
 // Parallel LCD
 #define LCD_CFG_D7              8   // Connector Pin 11 - Digital 8
