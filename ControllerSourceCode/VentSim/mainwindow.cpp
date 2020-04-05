@@ -29,6 +29,8 @@
 #include "hal.h"
 #include "event.h"
 
+unsigned int gAnalogPressure = 300;
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -42,7 +44,19 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->bt_left, SIGNAL (pressed()),this, SLOT (onBtLeftPressed()));
     connect(ui->bt_left, SIGNAL (released()),this, SLOT (onBtLeftRelease()));
 
-    halInit(ui->plainTextEdit);
+    ui->PressureSlider->setMaximum(613);
+    ui->PressureSlider->setValue(gAnalogPressure);
+    connect(ui->PressureSlider, SIGNAL (valueChanged(int)),this, SLOT (onPressureSliderChange(int)));
+
+    ui->lb_input_valve_on->hide();
+    ui->lb_output_valve_on->hide();
+
+    halInit(    ui->plainTextEdit,
+                ui->lb_input_valve_on,
+                ui->lb_input_valve_off,
+                ui->lb_output_valve_on,
+                ui->lb_output_valve_off
+                );
     ventSetup();
 
     timerId = startTimer(1);
@@ -53,6 +67,13 @@ MainWindow::~MainWindow()
 {
     killTimer(timerId);
     delete ui;
+}
+
+void MainWindow::onPressureSliderChange(int v)
+{
+    LOGV("Pressure = %d\n", v);
+    gAnalogPressure = v;
+    ui->lb_pressure->setNum(v);
 }
 
 void MainWindow::onBtFuncPressed()

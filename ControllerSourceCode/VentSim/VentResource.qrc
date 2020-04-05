@@ -2,4 +2,8 @@
     <qresource prefix="/sound">
         <file>Resource/tom_1s.mp3</file>
     </qresource>
+    <qresource prefix="/image">
+        <file>Resource/valve_on.png</file>
+        <file>Resource/valve_off.png</file>
+    </qresource>
 </RCC>

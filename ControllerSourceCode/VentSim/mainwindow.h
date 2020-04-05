@@ -49,6 +49,9 @@ public slots:
     void onBtLeftRelease();
     void onBtEnterPressed();
     void onBtEnterRelease();
+
+    void onPressureSliderChange(int v);
+
 protected:
     void timerEvent(QTimerEvent *event);
 };

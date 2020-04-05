@@ -78,7 +78,7 @@ static uint8_t ready_cnt = 0;
 static uint64_t tm_press;
 
 static int32_t av;
-static int16_t rawSensorValue;
+static uint16_t rawSensorValue;
 static float inH2O = 0.0f;
 
 #ifdef SHOW_VAL
@@ -88,12 +88,7 @@ static float inH2O = 0.0f;
 void CalculateAveragePressure()
 {
     //aV= 12, Pa=174.86... 0~614 --> -3.57~41.08 inches of water
-
-#ifdef VENTSIM
-  rawSensorValue = QRandomGenerator::global()->bounded(TEST_RAND_MIN, TEST_RAND_MAX);
-#else
-  rawSensorValue = analogRead(PRESSURE_SENSOR_PIN);  //Raw digital input from pressure sensor
-#endif
+  rawSensorValue = halGetAnalogPressure();
 
   // clamp it to the max (max value provided by the sensor)
   if (rawSensorValue >= MAX_BIN_INPUT)

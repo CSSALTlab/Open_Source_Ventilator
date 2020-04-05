@@ -25,6 +25,7 @@
 
 #ifdef VENTSIM
   #include <QPlainTextEdit>
+  #include <QLabel>
   #define PROGMEM /**/
   #define F /**/
 #else
@@ -51,7 +52,11 @@ typedef enum {
 } MONITOR_LET_T;
 
 #ifdef VENTSIM
-  void halInit(QPlainTextEdit * ed);
+  void halInit(QPlainTextEdit * ed,
+               QLabel * input_valve_on,
+               QLabel * input_valve_off,
+               QLabel * output_valve_on,
+               QLabel * output_valve_off);
 #else
   void halInit(uint8_t reset_val);
 #endif
@@ -77,6 +82,8 @@ void halValveOutOn();
 void halValveOutOff();
 
 void halBeepAlarmOnOff( bool on);
+
+uint16_t halGetAnalogPressure();
 
 uint8_t EEPROM_read(int addr);
 void EEPROM_write(uint8_t val, int addr);

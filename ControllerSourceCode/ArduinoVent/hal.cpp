@@ -400,6 +400,13 @@ void halValveOutOff()
 #endif
 }
 
+//---------- Analog pressure sensor -----------
+uint16_t halGetAnalogPressure()
+{
+  return (uint16_t) analogRead(PRESSURE_SENSOR_PIN);  //Raw digital input from pressure sensor
+}
+
+
 //---------------- process keys ----------
 #define   DEBOUNCING_N    4
 typedef struct keys_st {
