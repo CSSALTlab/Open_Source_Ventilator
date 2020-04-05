@@ -228,6 +228,7 @@ static /* const */ params_t params[] /* PROGMEM */ =  {
       handleChangeVent,         // change prop function
       { handleGetVent },        // propGetter
     },
+
     { PARAM_INT,                // type
       STR_BPM,                  // name
       10,                       // val
@@ -405,7 +406,9 @@ void CUiNative::refreshValue(bool force)
     int len = LCD_NUM_COLS - PARAM_VAL_START_COL;
 
     if (params[params_idx].quickUpdate || force) {
-        params[params_idx].handler(params[params_idx].val);
+        if (params[params_idx].handler) {
+            params[params_idx].handler(params[params_idx].val);
+        }
     }
 
     memset(buf, 0x20, (size_t) len); // spaces
