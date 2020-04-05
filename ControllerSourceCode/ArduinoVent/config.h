@@ -55,15 +55,28 @@ enum {A0, A1, A2, A3, A4, A5, A6, A7};
  *                            
  *************************************************
  */
-#define       HW_VERSION_CSSALT_PROTO_01      1  // CSSALT Board ref 1
-#define       HW_VERSION_MV_01                0  // Marcelo's prototype (Arduino Nano)
+// Note: also add boards defined here in below's "Board check selection" just in case.
+#define       HW_VERSION_CSSALT_PROTO_01        0  // CSSALT Board ref 1
+#define       HW_VERSION_MV_01                  0  // Marcelo's prototype (Arduino Nano)
+#define       HW_VERSION_MV_SIMULATOR           1
 //-------------------------------------------------
 
 
-#if ((HW_VERSION_CSSALT_PROTO_01 == 1) && (HW_VERSION_MV_01 == 1) )
-  #error "Only one HW_VERSION_xxx must be set to 1 in config.h"
+//---- Board check selection -----
+#if ( (HW_VERSION_CSSALT_PROTO_01 + \
+       HW_VERSION_MV_01 + \
+       HW_VERSION_MV_SIMULATOR \
+    ) != 1)
+  #error "At least one and only one HW_VERSION_xxx must be set to 1 in config.h"
 #endif
 
+/*
+                ***********************************************
+                *                                             *
+                *                     BOARDS                  *
+                *                                             *
+                ***********************************************
+*/
 
 #if (HW_VERSION_CSSALT_PROTO_01 == 1)
 /******************************************
@@ -163,13 +176,47 @@ enum {A0, A1, A2, A3, A4, A5, A6, A7};
 #define LCD_CFG_D4              11  // Connector Pin 14 - Digital11
 #define LCD_CFG_E               12  // Connector Pin 15 - Digital12
 #define LCD_CFG_RS              13  // Connector Pin 16 - Digital13
-#endif
 
+#elif (HW_VERSION_MV_SIMULATOR == 1)
+/******************************************
+ *
+ *           S I M U L A T O R
+ *
+ *
+ ******************************************
+ */
+//------------ Input Keys ---------------
+
+#define KEY_DECREMENT_PIN       3
+#define KEY_INCREMENT_PIN       4
+#define KEY_SET_PIN             5
+
+//--------- LCD Num Rows ----------
+
+#define LCD_CFG_20_COLS  1
+#define LCD_CFG_16_COLS  0
+
+#define LCD_CFG_2_ROWS  0
+#define LCD_CFG_4_ROWS  1
+
+
+
+#endif // ----------------- END OF BOARDS DEFINITIONS ----------------------
+
+/*
+                ***********************************************
+                *                                             *
+                *                   Common                    *
+                *                                             *
+                ***********************************************
+*/
+
+#define TM_SAVE_TIMEOUT 30000 // save props to EEPROM is UI is "quiet" for longer than 30 seconds
 
 
 /*======================================
   =                                    =
-  =      Paramater default Values      =
+  =      Properties default Values     =
   =                                    =
   ======================================
 
@@ -183,6 +230,9 @@ enum {A0, A1, A2, A3, A4, A5, A6, A7};
 #define  DEFAULT_LCD_AUTO_OFF    0
 #define  DEFAULT_BLE             0
 
+
+
+//-------------- Checks ---------------
 #if (LCD_CFG_2_ROWS == 1)
   #define LCD_NUM_ROWS 2
 #elif (LCD_CFG_4_ROWS == 1)
@@ -206,7 +256,6 @@ enum {A0, A1, A2, A3, A4, A5, A6, A7};
 #endif
 
 //
-#define TM_SAVE_TIMEOUT 30000 // save props to EEPROM is UI is "quiet" for longer than 30 seconds
 
 
 #endif // CONFIG_H
