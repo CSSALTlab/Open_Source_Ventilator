@@ -109,11 +109,12 @@ void Alarm::beepOnOff(bool on)
 void Alarm::internalAlarmResetAll()
 {
     uint8_t i;
-    alarm_t * a = 0;
+    alarm_t * a = alarms;
     activeAlarmIdx = -1;
     for (i=0; i< NUM_ALARMS; i++) {
         a->cnt = 0;
         a->state = ST_NO_ALARM;
+        a++;
     }
     beepOnOff(false);
     CEvent::post(EVT_ALARM_DISPLAY_OFF,0);

@@ -55,8 +55,8 @@ void breatherStartCycle()
     curr_pause = propGetPause();
     curr_rate = propGetDutyCycle();
     int in_out_t = curr_total_cycle_milli - (curr_rate + TM_WAIT_TO_OUT);
-    curr_out_milli = (in_out_t/2) / rate[curr_rate];
-    curr_in_milli = in_out_t - curr_out_milli;
+    curr_in_milli = (in_out_t/2) / rate[curr_rate];
+    curr_out_milli = in_out_t - curr_in_milli;
     curr_progress = 0;
     tm_start = halStartTimerRef();
     b_state = B_ST_IN;
