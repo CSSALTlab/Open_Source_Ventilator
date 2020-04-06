@@ -56,9 +56,9 @@ enum {A0, A1, A2, A3, A4, A5, A6, A7};
  *************************************************
  */
 // Note: also add boards defined here in below's "Board check selection" just in case.
-#define       HW_VERSION_CSSALT_PROTO_01        0  // CSSALT Board ref 1
+#define       HW_VERSION_CSSALT_PROTO_01        1  // CSSALT Board ref 1
 #define       HW_VERSION_MV_01                  0  // Marcelo's prototype (Arduino Nano)
-#define       HW_VERSION_MV_SIMULATOR           1
+#define       HW_VERSION_MV_SIMULATOR           0
 //-------------------------------------------------
 
 
