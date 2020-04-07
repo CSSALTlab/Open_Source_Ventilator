@@ -56,8 +56,8 @@ enum {A0, A1, A2, A3, A4, A5, A6, A7};
  *************************************************
  */
 // Note: also add boards defined here in below's "Board check selection" just in case.
-#define       HW_VERSION_CSSALT_PROTO_01        1  // CSSALT Board ref 1
-#define       HW_VERSION_MV_01                  0  // Marcelo's prototype (Arduino Nano)
+#define       HW_VERSION_CSSALT_PROTO_01        1  // CSSALT Board ref 1 (Arduino Nano)
+#define       HW_VERSION_MV_01                  0  // Marcelo's prototype (Arduino Uno)
 #define       HW_VERSION_MV_SIMULATOR           0
 //-------------------------------------------------
 
@@ -254,6 +254,10 @@ enum {A0, A1, A2, A3, A4, A5, A6, A7};
 #if ((LCD_CFG_20_COLS == 1) && (LCD_NUM_COLS == 1))
   #error "Only one LCD_CFG_XX_COLS must be set to 1 in config.h"
 #endif
+
+
+//#define LOOP_MONITOR_PIN 5 // D5   this is for debugging only, should be always commented out
+// Profile on April 06th: Main loop taking 180 microseconds to be processed.
 
 //
 
