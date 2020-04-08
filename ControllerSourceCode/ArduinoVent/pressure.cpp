@@ -52,18 +52,18 @@ end
 #include "log.h"
 #include "hal.h"
 #include "config.h"
+#include "bmp280_int.h"
 #include <stdint.h>
 
 #ifdef VENTSIM
     #include<QRandomGenerator>
     #define TEST_RAND_MIN 300
     #define TEST_RAND_MAX 400
-
 #endif
 
 #ifdef PREESURE_ENABLE
 
-//#define SHOW_VAL
+#define SHOW_VAL
 
 #define TM_LOG 2000
 #define P_CONV 4.01463f
@@ -87,8 +87,28 @@ static float inH2O = 0.0f;
 
 void CalculateAveragePressure()
 {
-    //aV= 12, Pa=174.86... 0~614 --> -3.57~41.08 inches of water
+  rawSensorValue = 0;
+  
+#if (USE_Mpxv7002DP_PRESSURE_SENSOR == 1)
+  /*****************************************
+   *
+   *      Analog NXP Mpxv7002DP sensor
+   *
+   *****************************************/
   rawSensorValue = halGetAnalogPressure();
+  
+#elif (USE_BMP280_PRESSURE_SENSOR == 1)
+  /*****************************************
+   *
+   *      BOSH BMP280 sensor
+   *
+   *****************************************/
+  rawSensorValue = bpm280GetPressure();
+  
+#else
+  #warning "No pressure sensor defined in config.h"
+#endif
+  
 
   // clamp it to the max (max value provided by the sensor)
   if (rawSensorValue >= MAX_BIN_INPUT)
@@ -108,14 +128,19 @@ void CalculateAveragePressure()
 
   av = accumulator/AVERAGE_BIN_NUMBER;
   inH2O = P_CONV * ((av / MAX_BIN_INPUT_F) - 0.08) / 0.09;
+  
 }
-
 
 //====================================================================
 void pressInit()   {
-#ifndef VENTSIM
-  analogReference(DEFAULT);
+#if (USE_Mpxv7002DP_PRESSURE_SENSOR == 1)
+  analogReference(DEFAULT); // Arduino function
 #endif
+  
+#if (USE_BMP280_PRESSURE_SENSOR == 1)
+  bpm280Init();
+#endif
+  
   tm_press = halStartTimerRef();
 
 #ifdef SHOW_VAL
@@ -135,12 +160,12 @@ void pressLoop()
   char buf[24];
   if (halCheckTimerExpired(tm_log, TM_LOG)) {
     LOGV("av = %d", av);
-#ifndef VENTSIM
+  #ifndef VENTSIM
     dtostrf(inH2O, 8, 2, buf);
     LOGV("Pa = %s\n", buf);
-#else
+  #else
     LOGV("Pa = %f\n", inH2O);
-#endif
+  #endif
     tm_log = halStartTimerRef();
   }
 #endif
@@ -150,7 +175,7 @@ float pressGetFloatVal() // in InchH2O
 {
     return inH2O;
 }
-int pressGetRawVal()
+int32_t pressGetRawVal()
 {
     return av;
 }
