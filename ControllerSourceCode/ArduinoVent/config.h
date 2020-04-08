@@ -109,9 +109,6 @@ enum {A0, A1, A2, A3, A4, A5, A6, A7};
 #define PREESURE_ENABLE
 #define PRESSURE_SENSOR_PIN     A7
 
-#define USE_Mpxv7002DP_PRESSURE_SENSOR  0
-#define USE_BMP280_PRESSURE_SENSOR      1
-
 //--------- LCD Num Rows ----------
 // Default
 #define LCD_CFG_20_COLS  0

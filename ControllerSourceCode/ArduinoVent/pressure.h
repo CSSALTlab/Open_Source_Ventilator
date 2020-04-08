@@ -20,7 +20,7 @@
  *
  **************************************************************
 */
-#include <stdint.h>
+
 
 #define AVERAGE_BIN_NUMBER        10        // Number of averaging bins for the averaging routine
 #define PRESSURE_READ_DELAY       20L       // wait 20 ms between reads
@@ -29,6 +29,7 @@ void pressInit();
 void pressLoop();
 
 float pressGetFloatVal(); // in InchH2O
-int32_t pressGetRawVal();
+int pressGetRawVal();
 
 #endif // PRESSURE_H
+
