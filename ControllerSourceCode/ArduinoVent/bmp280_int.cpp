@@ -22,12 +22,18 @@
 #include "bmp280_int.h"
 #include <Wire.h>
 #include <sSense-BMx280I2C.h>  // GLG -- for BMP280
+#include "log.h"
+#include "hal.h"
 
 #define I2C_ADDRESS 0x77
 #define TM_LOG 2000
 #define P_CONV 4.01463f
 #define MAX_BIN_INPUT   614
 #define MAX_BIN_INPUT_F 614.0
+
+#define TM_LOG 2000
+
+static uint64_t logTimer;
 
 static BMx280I2C::Settings settings(
    BME280::OSR_X1,
@@ -67,14 +73,61 @@ static uint32_t measure_pressure(){
   // Therefore, we calculate to analog... YES THIS IS STUPID... we fix that later to avoid float math
   
   av = (((fpressure * .09) / P_CONV) + 0.08 ) * MAX_BIN_INPUT_F;
-  
+
+  if (halCheckTimerExpired(logTimer, TM_LOG)) {
+    char buf[8];
+    buf[sizeof(buf) - 1] = 0;
+    dtostrf(fpressure, 2, 2, buf);
+    LOGV("fpressure from sensor = %s", buf); // this is how to log variable format like printf
+
+    logTimer = halStartTimerRef();
+  }
   return av;
   
 }
 
 void bpm280Init()
 {
-  
+
+ //----------------GLG set up the BMP280:
+  BME280::PresUnit presUnit(BME280::PresUnit_Pa);
+  BME280::TempUnit tempUnit(BME280::TempUnit_Celsius);
+  LOG("\n\nAbout to read BMx280   ");
+
+   while(!ssenseBMx280.begin())
+  {
+    // Insert any code you wish to alert you that
+    // the device could not be found. 
+#ifdef BMP280DEBUG
+    LOG("BMx280 not found.");
+    delay(250);
+#endif
+
+  }
+
+  switch(ssenseBMx280.chipModel())
+  {
+     case BME280::ChipModel_BME280:
+       // insert any desired cocde to notify that BME280 with humidity detected.
+#ifdef BMP280DEBUG
+       LOG("BME280(hum) " );
+#endif
+       
+       break;
+     case BME280::ChipModel_BMP280:
+       // insert any desired code to notify that BMP280 (no humidity) detected
+#ifdef  BMP280DEBUG
+       LOG("BMP280(nohum) " );
+#endif       
+       break;
+     default:
+       // insert any code to notify that the unknown sensor found.
+       LOG(" Error \n" );
+        
+       break;
+  }
+
+  logTimer = halStartTimerRef();
 }
 
 uint32_t bpm280GetPressure() // for now we match analog values 0~614 (for -3.57~41.08 Bananas)

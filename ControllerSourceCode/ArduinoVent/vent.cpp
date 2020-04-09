@@ -29,6 +29,7 @@
 #include "alarm.h"
 #include "ui_native.h"
 #include "breather.h"
+#include "bmp280_int.h"
 
 //------------ Global -----------
  void ventLoop()
@@ -37,11 +38,13 @@
     evtDispatchAll();
     uiNativeLoop();
     breatherLoop();
+    bpm280GetPressure();
  }
 
 void ventSetup()
 {
   alarmInit();     // must be called before uiNativeInit
   uiNativeInit();
+  bpm280Init();
 }
  
