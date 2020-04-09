@@ -62,7 +62,7 @@ static int led_state = 0;
 
 //--------- Testing --------
 static bool is_running_test_loop = false;
-static uint64_t test_breather_event_time;
+
 
 void toggleTestLoop()
 {
@@ -70,7 +70,7 @@ void toggleTestLoop()
   Serial.print("currently running?: ");
   Serial.print(is_running_test_loop);
   Serial.println("");
-  is_running_test_loop = !is_running_test_loop
+  is_running_test_loop = !is_running_test_loop;
   Serial.print("toggled to: ");
   Serial.print(is_running_test_loop);
   Serial.println("");

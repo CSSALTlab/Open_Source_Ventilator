@@ -66,6 +66,7 @@ void toggleTestLoop();
 bool checkTestLoopStatus();
 int checkTestVentStatus();
 uint16_t getTestPotentiometerValue();
+static uint64_t test_breather_event_time;
 //----- End Testing ----
 
 void halSetMonitorLED (MONITOR_LET_T speed);

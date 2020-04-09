@@ -166,7 +166,7 @@ void breatherTestLoop()
     if (checkTestLoopStatus()) {
         LOG("Breather test is running!");
         // figure out the breath rate cycle time
-        int cycle_time = round(TEST_BREATHER_CYCLE_TIME_CONSTANT / getTestPotentiometerValue())
+        int cycle_time = round(TEST_BREATHER_CYCLE_TIME_CONSTANT / getTestPotentiometerValue());
         Serial.print("Cycle time: ");
         Serial.print(cycle_time);
         Serial.println("");
