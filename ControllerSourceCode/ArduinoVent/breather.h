@@ -30,6 +30,7 @@ typedef enum {
 } B_STATE_t;
 
 void breatherLoop();
+void breatherTestLoop();
 void breatherStartCycle();
 B_STATE_t breatherGetState();
 int breatherGetPropress();
