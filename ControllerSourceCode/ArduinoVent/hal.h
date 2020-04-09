@@ -61,6 +61,13 @@ typedef enum {
   void halInit(uint8_t reset_val);
 #endif
 
+//----- Testing --------
+void toggleTestLoop();
+bool checkTestLoopStatus();
+int checkTestVentStatus();
+uint16_t getTestPotentiometerValue();
+//----- End Testing ----
+
 void halSetMonitorLED (MONITOR_LET_T speed);
 MONITOR_LET_T halGetMonitorLED ();
 

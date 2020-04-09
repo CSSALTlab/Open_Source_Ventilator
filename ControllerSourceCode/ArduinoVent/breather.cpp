@@ -30,6 +30,9 @@
 #define MINUTE_MILLI 60000
 #define TM_WAIT_TO_OUT 50 // 50 milliseconds
 #define TM_STOPPING 4000 // 4 seconds to stop
+// --- Testing ---
+#define TEST_BREATHER_CYCLE_TIME_CONSTANT 5000 // Base cycle every 5s
+// --- End Testing ---
 
 
 static int curr_pause;
@@ -155,6 +158,41 @@ static void fsmPause()
         breatherStartCycle();
     }
 }
+
+//--------- Testing --------
+void breatherTestLoop()
+{
+    LOG("Breather Test Loop Cycle!");
+    if (checkTestLoopStatus()) {
+        LOG("Breather test is running!");
+        // figure out the breath rate cycle time
+        int cycle_time = round(TEST_BREATHER_CYCLE_TIME_CONSTANT / getTestPotentiometerValue())
+        Serial.print("Cycle time: ");
+        Serial.print(cycle_time);
+        Serial.println("");
+        Serial.print("timer expired?: ");
+        Serial.print(halCheckTimerExpired(test_breather_event_time, cycle_time));
+        Serial.println("");
+        // if the last breather event + cycle time is exceeded, toggle the vent state
+        if (halCheckTimerExpired(test_breather_event_time, cycle_time)) {
+            LOG("Timer expired! change the vent status!");
+            if (checkTestVentStatus()) { // vent is on
+                halValveInOff();
+                LOG("Turned vent off!");
+            } else {
+                halValveInOn();
+                LOG("Turned vent on!");
+            }
+            // reset test breather timer
+            test_breather_event_time = halStartTimerRef();
+        }
+    } else {
+        // turn off the vent
+        LOG("Breather test loop is stopped!");
+        halValveInOff();
+    }
+}
+//--------- End Testing --------
 
 void breatherLoop()
 {

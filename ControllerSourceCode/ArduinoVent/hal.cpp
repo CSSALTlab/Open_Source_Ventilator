@@ -60,6 +60,42 @@ static int cursor_col = 0, cursor_row = 0;
 
 static int led_state = 0;
 
+//--------- Testing --------
+static bool is_running_test_loop = false;
+static uint64_t test_breather_event_time;
+
+void toggleTestLoop()
+{
+  LOG("toggled test loop!");
+  Serial.print("currently running?: ");
+  Serial.print(is_running_test_loop);
+  Serial.println("");
+  is_running_test_loop = !is_running_test_loop
+  Serial.print("toggled to: ");
+  Serial.print(is_running_test_loop);
+  Serial.println("");
+  if (is_running_test_loop){
+    test_breather_event_time = halStartTimerRef(); // loop was turned on, set the event time
+  }
+}
+
+bool checkTestLoopStatus()
+{
+  return is_running_test_loop;
+}
+
+int checkTestVentStatus()
+{
+  return digitalRead(VALVE_IN_PIN);
+}
+
+uint16_t getTestPotentiometerValue()
+{
+  return (uint16_t) analogRead(TEST_POTENTIOMETER_PIN);  //Raw analog input from test potentiometer used for rate
+}
+
+//--------- End Testing --------
+
 #define FREQ1 440
 #define FREQ2 740
 #define FREQ3 880

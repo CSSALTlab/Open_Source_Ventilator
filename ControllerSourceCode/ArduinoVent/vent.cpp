@@ -36,12 +36,16 @@
     halLoop();
     evtDispatchAll();
     uiNativeLoop();
-    breatherLoop();
+    // breatherLoop();
+    //------------ Testing --------
+    breatherTestLoop();
+    //------------ End Testing --------
  }
 
 void ventSetup()
 {
   alarmInit();     // must be called before uiNativeInit
   uiNativeInit();
+  toggleTestLoop();
 }
  
