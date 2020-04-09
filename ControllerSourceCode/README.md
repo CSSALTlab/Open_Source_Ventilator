@@ -4,10 +4,11 @@
 
 * **VentSim** The VentSim purpose is to focus on UI and high level control of the Ventilator. Some particular files will be port to the real Ventilator project and others emulates the native Arduino libraries.
 
-## Very first Prototype (before CSSALT PBC)
-[UI](Docs/proto01.JPG)
+### Very first Prototype (before CSSALT PBC)
+![UI](Docs/proto01.JPG)
 
-## CSSALT PCB Schematic (thanks to Ashhar):
+
+### CSSALT PCB Schematic (thanks to Ashhar):
 [Click here to see the schematic](Docs/schematic.pdf)
 
 ### Concept Video
