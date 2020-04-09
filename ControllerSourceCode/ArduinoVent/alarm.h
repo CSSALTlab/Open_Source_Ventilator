@@ -27,6 +27,16 @@ void alarmInit();
 void alarmLoop();
 void alarmResetAll();
 
+// Note: this enum must follow the exact sequence and reference for the "alarms" array in alarm.cpp
+enum {
+    ALARM_IDX_HIGH_PRESSURE,     // index for high pressure alarm in alarms array
+    ALARM_IDX_LOW_PRESSURE,      // index for low pressure alarm in alarms array
+
+    // Add here new alarm as well as an entry in "alarms" array in alarm.cpp
+
+    ALARM_IDX_END   // must be the very last
+};
+
 class Alarm : CEvent {
 
 public:

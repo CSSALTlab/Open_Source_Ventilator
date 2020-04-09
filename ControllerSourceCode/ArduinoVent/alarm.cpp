@@ -25,8 +25,6 @@
 #include "hal.h"
 #include "languages.h"
 
-#define ALARM_IDX_HIGH_PRESSURE     0 // index for high pressure alarm in alarms array
-#define ALARM_IDX_LOW_PRESSURE      1 // index for low pressure alarm in alarms array
 
 #define MAX_SOUND_ALARM_LOW_PRESSURE        3
 #define MAX_SOUND_ALARM_HIGH_PRESSURE       3
@@ -41,8 +39,6 @@ typedef enum : uint8_t {
 typedef void (*muteFunc_t)(void);
 typedef void (*goOffFunc_t)(void);
 
-//static bool beepIsOn = false;
-//static int8_t activeAlarmIdx = -1;
 
 typedef struct alarm_st {
     state_t     state;
@@ -218,14 +214,12 @@ propagate_t Alarm::onEvent(event_t * event)
     switch (event->type) {
 
       case EVT_ALARM:
-        switch (event->param.iParam)
-        {
-          case EVT_ALARM_HIGH_PRESSURE: i = ALARM_IDX_HIGH_PRESSURE; break;
-          case EVT_ALARM_LOW_PRESSURE: i = ALARM_IDX_LOW_PRESSURE; break;
 
-          default: LOG("Alarm::onEvent: fix me"); return PROPAGATE;
+        if (event->param.iParam < 0 || event->param.iParam >= ALARM_IDX_END) {
+            LOG("Alarm with bad parameter");
+            return PROPAGATE;
         }
-        a = &alarms[i];
+        a = &alarms[event->param.iParam];
         processAlarmEvent(a);
         break;
 

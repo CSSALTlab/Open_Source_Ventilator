@@ -26,6 +26,7 @@
 #include "log.h"
 #include "pressure.h"
 #include "event.h"
+#include "alarm.h"
 
 #define MINUTE_MILLI 60000
 #define TM_WAIT_TO_OUT 50 // 50 milliseconds
@@ -102,13 +103,13 @@ static void fsmIn()
         // low pressure hardcode to 3 InchH2O -> 90 int
         if (tm_start + curr_in_milli/2 < m) {
             if (pressGetRawVal() < 90) {
-              CEvent::post(EVT_ALARM, EVT_ALARM_LOW_PRESSURE);
+              CEvent::post(EVT_ALARM, ALARM_IDX_LOW_PRESSURE);
             }
         }
     }
     //------ check for high pressure hardcode to 35 InchH2O -> 531 int
     if (pressGetRawVal() > 513) {
-      CEvent::post(EVT_ALARM, EVT_ALARM_HIGH_PRESSURE);
+      CEvent::post(EVT_ALARM, ALARM_IDX_HIGH_PRESSURE);
     }
 }
 
