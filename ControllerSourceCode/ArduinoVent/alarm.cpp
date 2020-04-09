@@ -76,16 +76,22 @@ void muteLowPressureAlarm()
 
 static alarm_t alarms[] = {
   {
-        .max_sound = MAX_SOUND_ALARM_HIGH_PRESSURE,
-        .message = STR_HIGH_PRESSURE,
-        .muteAction = muteHighPressureAlarm,
+        ST_ALARM_OFF,
+        0,
+        MAX_SOUND_ALARM_HIGH_PRESSURE,
+        STR_HIGH_PRESSURE,
+        0,
+        muteHighPressureAlarm
   },
 
   {
-        .max_sound = MAX_SOUND_ALARM_LOW_PRESSURE,
-        .message = STR_LOW_PRESSURE,
-        .muteAction = muteLowPressureAlarm,
-  },
+        ST_ALARM_OFF,
+        0,
+        MAX_SOUND_ALARM_LOW_PRESSURE,
+        STR_LOW_PRESSURE,
+        0,
+        muteLowPressureAlarm
+  }
 
 };
 #define NUM_ALARMS  sizeof(alarms) / sizeof(alarm_t)
