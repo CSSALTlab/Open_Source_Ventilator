@@ -36,13 +36,14 @@ public:
     void Loop();
     virtual propagate_t onEvent(event_t * event);
 
-    void setNextAlarmIfAny();
+    void setNextAlarmIfAny(bool fromMute);
     void internalAlarmResetAll();
+    void beepOnOff(bool on);
 
 private:
 
     //void beep();
-    void beepOnOff(bool on);
+
     void muteAlarmIfOn();
 
     //--- variables
