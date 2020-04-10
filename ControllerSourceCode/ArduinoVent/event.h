@@ -32,11 +32,6 @@ enum  {
     KEY_RESERVE
 };
 
-enum {
-    EVT_ALARM_HIGH_PRESSURE,
-    EVT_ALARM_LOW_PRESSURE
-};
-
 
 typedef enum  {
     EVT_KEY_PRESS,

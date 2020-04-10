@@ -13,6 +13,7 @@ See Drawing folder for both drawings and exploded view video
 Models will be coming soon on Onshape
 
 -Build Instructions:
+Full Build assembly for 1.2v CSSALT design as well as MBX localization design
 https://www.opensourceventilation.org/
 
 -Schematic

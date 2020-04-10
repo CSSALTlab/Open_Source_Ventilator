@@ -25,35 +25,39 @@
 #include "hal.h"
 #include "languages.h"
 
-#define ALARM_IDX_HIGH_PRESSURE     0 // index for high pressure alarm in alarms array
-#define ALARM_IDX_LOW_PRESSURE      1 // index for low pressure alarm in alarms array
 
-#define NUM_ALARM_UNTIL_IGNORE 3
+#define MAX_SOUND_ALARM_LOW_PRESSURE        3
+#define MAX_SOUND_ALARM_HIGH_PRESSURE       3
 
 // #define SIM_HIGH_PRESSURE
 
 typedef enum : uint8_t {
-    ST_NO_ALARM,
-    ST_ON,
-    ST_MUTED,
-    ST_IGNORED
+    ST_ALARM_OFF,
+    ST_ALARM_ON,
 } state_t;
 
 typedef void (*muteFunc_t)(void);
 typedef void (*goOffFunc_t)(void);
 
-//static bool beepIsOn = false;
-//static int8_t activeAlarmIdx = -1;
 
 typedef struct alarm_st {
     state_t     state;
-    uint8_t     cnt;         // num of times muted by operator (before start ignoring it)
+    uint8_t     cnt_sound;         // num of times being sounded before become visual only
+    int8_t      max_sound;         // num max to be sounded. if -1 always will have sound alarm
     const char *  message;
     goOffFunc_t goOffAction;
     muteFunc_t  muteAction;
 } alarm_t;
 
 static Alarm * alarm;
+
+inline bool isMuted (alarm_t * a) {
+    if (a->max_sound == -1)
+        return false;
+    if (a->cnt_sound >= a->max_sound)
+        return true;
+    return false;
+}
 
 void alarmResetAll()
 {
@@ -72,16 +76,18 @@ void muteLowPressureAlarm()
 
 static alarm_t alarms[] = {
   {
-        ST_NO_ALARM,
+        ST_ALARM_OFF,
         0,
+        MAX_SOUND_ALARM_HIGH_PRESSURE,
         STR_HIGH_PRESSURE,
         0,
         muteHighPressureAlarm
   },
 
   {
-        ST_NO_ALARM,
+        ST_ALARM_OFF,
         0,
+        MAX_SOUND_ALARM_LOW_PRESSURE,
         STR_LOW_PRESSURE,
         0,
         muteLowPressureAlarm
@@ -112,15 +118,15 @@ void Alarm::internalAlarmResetAll()
     alarm_t * a = alarms;
     activeAlarmIdx = -1;
     for (i=0; i< NUM_ALARMS; i++) {
-        a->cnt = 0;
-        a->state = ST_NO_ALARM;
+        a->cnt_sound = 0;
+        a->state = ST_ALARM_OFF;
         a++;
     }
     beepOnOff(false);
     CEvent::post(EVT_ALARM_DISPLAY_OFF,0);
 }
 
-void Alarm::setNextAlarmIfAny()
+void Alarm::setNextAlarmIfAny(bool fromMute)
 {
     uint8_t i;
     alarm_t * a;
@@ -133,13 +139,16 @@ void Alarm::setNextAlarmIfAny()
     for (i=0; i< NUM_ALARMS; i++) {
         a = &alarms[i];
 
-        if (a->state == ST_ON) {
+        if (a->state == ST_ALARM_ON){
             activeAlarmIdx = i;
             if (a->goOffAction) { // call an action if a callback was defined
                 a->goOffAction();
             }
             CEvent::post(EVT_ALARM_DISPLAY_ON, (char *) a->message);
-            beepOnOff(true);
+            if (isMuted(a) == false) {
+                if (fromMute)
+                  beepOnOff(true);
+            }
             return;
         }
     }
@@ -154,21 +163,16 @@ void Alarm::muteAlarmIfOn()
 
     alarm_t * a = &alarms[activeAlarmIdx];
 
-    if (a->state != ST_ON) {
-        LOG("muteAlarmIfOn: unexpected state, fix me");
-        return;
-    }
-
     if (a->muteAction) { // call an action if a callback was defined
         a->muteAction();
     }
-    a->state = ST_NO_ALARM;
-    if (++(a->cnt) >= NUM_ALARM_UNTIL_IGNORE)
-        a->state = ST_IGNORED;
+    a->state = ST_ALARM_OFF;
+    if ((a->max_sound != -1) && (a->cnt_sound < a->max_sound))
+        a->cnt_sound++;
 
     activeAlarmIdx = -1;
     CEvent::post(EVT_ALARM_DISPLAY_OFF, 0);
-    setNextAlarmIfAny();
+    setNextAlarmIfAny(true);
 }
 
 
@@ -184,10 +188,11 @@ void alarmLoop()
 
 static void processAlarmEvent(alarm_t * a)
 {
-  if (a->state != ST_IGNORED) {
-    a->state = ST_ON;
-    alarm->setNextAlarmIfAny();
+  a->state = ST_ALARM_ON;
+  if (isMuted(a) == false) {
+      alarm->beepOnOff(true);
   }
+  alarm->setNextAlarmIfAny(false);
 }
 
 
@@ -209,14 +214,12 @@ propagate_t Alarm::onEvent(event_t * event)
     switch (event->type) {
 
       case EVT_ALARM:
-        switch (event->param.iParam)
-        {
-          case EVT_ALARM_HIGH_PRESSURE: i = ALARM_IDX_HIGH_PRESSURE; break;
-          case EVT_ALARM_LOW_PRESSURE: i = ALARM_IDX_LOW_PRESSURE; break;
 
-          default: LOG("Alarm::onEvent: fix me"); return PROPAGATE;
+        if (event->param.iParam < 0 || event->param.iParam >= ALARM_IDX_END) {
+            LOG("Alarm with bad parameter");
+            return PROPAGATE;
         }
-        a = &alarms[i];
+        a = &alarms[event->param.iParam];
         processAlarmEvent(a);
         break;
 

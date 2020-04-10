@@ -86,12 +86,6 @@ enum {A0, A1, A2, A3, A4, A5, A6, A7};
  *                  
  ******************************************
  */
-
-//------------ Testing ----------------
-#define TEST_LOOP_BUTTON_PIN    4 // D4
-#define TEST_POTENTIOMETER_PIN  A0
-//------------ End Testing --------
-
 //------------ Input Keys ---------------
 
 #define KEY_DECREMENT_PIN       A0
@@ -144,12 +138,6 @@ enum {A0, A1, A2, A3, A4, A5, A6, A7};
  *                  
  ******************************************
  */
-
-//------------ Testing ----------------
-#define TEST_LOOP_BUTTON_PIN    4 // D4
-#define TEST_POTENTIOMETER_PIN  A0
-//------------ End Testing --------
-
 //------------ Input Keys ---------------
 
 #define KEY_DECREMENT_PIN       3

@@ -26,13 +26,11 @@
 #include "log.h"
 #include "pressure.h"
 #include "event.h"
+#include "alarm.h"
 
 #define MINUTE_MILLI 60000
 #define TM_WAIT_TO_OUT 50 // 50 milliseconds
 #define TM_STOPPING 4000 // 4 seconds to stop
-// --- Testing ---
-#define TEST_BREATHER_CYCLE_TIME_CONSTANT 5000 // Base cycle every 5s
-// --- End Testing ---
 
 
 static int curr_pause;
@@ -105,13 +103,13 @@ static void fsmIn()
         // low pressure hardcode to 3 InchH2O -> 90 int
         if (tm_start + curr_in_milli/2 < m) {
             if (pressGetRawVal() < 90) {
-              CEvent::post(EVT_ALARM, EVT_ALARM_LOW_PRESSURE);
+              CEvent::post(EVT_ALARM, ALARM_IDX_LOW_PRESSURE);
             }
         }
     }
     //------ check for high pressure hardcode to 35 InchH2O -> 531 int
     if (pressGetRawVal() > 513) {
-      CEvent::post(EVT_ALARM, EVT_ALARM_HIGH_PRESSURE);
+      CEvent::post(EVT_ALARM, ALARM_IDX_HIGH_PRESSURE);
     }
 }
 
@@ -158,41 +156,6 @@ static void fsmPause()
         breatherStartCycle();
     }
 }
-
-//--------- Testing --------
-void breatherTestLoop()
-{
-    LOG("Breather Test Loop Cycle!");
-    if (checkTestLoopStatus()) {
-        LOG("Breather test is running!");
-        // figure out the breath rate cycle time
-        int cycle_time = round(TEST_BREATHER_CYCLE_TIME_CONSTANT / getTestPotentiometerValue());
-        Serial.print("Cycle time: ");
-        Serial.print(cycle_time);
-        Serial.println("");
-        Serial.print("timer expired?: ");
-        Serial.print(halCheckTimerExpired(test_breather_event_time, cycle_time));
-        Serial.println("");
-        // if the last breather event + cycle time is exceeded, toggle the vent state
-        if (halCheckTimerExpired(test_breather_event_time, cycle_time)) {
-            LOG("Timer expired! change the vent status!");
-            if (checkTestVentStatus()) { // vent is on
-                halValveInOff();
-                LOG("Turned vent off!");
-            } else {
-                halValveInOn();
-                LOG("Turned vent on!");
-            }
-            // reset test breather timer
-            test_breather_event_time = halStartTimerRef();
-        }
-    } else {
-        // turn off the vent
-        LOG("Breather test loop is stopped!");
-        halValveInOff();
-    }
-}
-//--------- End Testing --------
 
 void breatherLoop()
 {
