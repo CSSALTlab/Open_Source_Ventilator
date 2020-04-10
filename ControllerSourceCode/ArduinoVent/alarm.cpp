@@ -28,6 +28,7 @@
 
 #define MAX_SOUND_ALARM_LOW_PRESSURE        3
 #define MAX_SOUND_ALARM_HIGH_PRESSURE       3
+#define MAX_SOUND_ALARM_UNDER_SPEED         3
 
 // #define SIM_HIGH_PRESSURE
 
@@ -91,6 +92,15 @@ static alarm_t alarms[] = {
         STR_LOW_PRESSURE,
         0,
         muteLowPressureAlarm
+  },
+  
+  {
+        ST_ALARM_OFF,
+        0,
+        MAX_SOUND_ALARM_UNDER_SPEED,
+        STR_UNDER_SPEED,
+        0,
+        0
   }
 
 };

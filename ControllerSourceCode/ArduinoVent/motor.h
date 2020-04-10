@@ -24,5 +24,9 @@
 void motorInit();
 void motorLoop();
 
+void motorStartInspiration(int millisec);
+void motorStartExhalation(int millisec);
+int motorGetProgress();
+
 //---------------------------------------------------------------
 #endif // MOTOR_H

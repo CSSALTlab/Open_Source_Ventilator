@@ -385,7 +385,7 @@ void halLcdWrite(const char * txt)
   }
   n = strlen(txt);
   if (n > ( LCD_NUM_COLS - cursor_col)) {
-      LOG("halLcdWrite: clipping");
+      //LOG("halLcdWrite: clipping");
       n = LCD_NUM_COLS - cursor_col;
   }
   memcpy(&lcdBuffer[cursor_row][cursor_col], txt, n);
