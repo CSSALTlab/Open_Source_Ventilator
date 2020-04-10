@@ -1,3 +1,5 @@
+#ifndef MOTOR_H
+#define MOTOR_H
 
 /*************************************************************
  * Open Ventilator
@@ -19,39 +21,8 @@
  **************************************************************
 */
 
-#ifdef VENTSIM
-#else
-  #include <Arduino.h>
-#endif
+void motorInit();
+void motorLoop();
 
-#include "vent.h"
-#include "hal.h"
-#include "alarm.h"
-#include "ui_native.h"
-#include "breather.h"
-#include "motor.h"
-
-//------------ Global -----------
-void ventLoop()
-{
-  halLoop();
-  evtDispatchAll();
-  uiNativeLoop();
-  breatherLoop();
-   
-#ifdef STEPPER_MOTOR_STEP_PIN
-  motorLoop();
-#endif
-}
-
-void ventSetup()
-{
-  alarmInit();     // must be called before uiNativeInit
-  uiNativeInit();
-  
-#ifdef STEPPER_MOTOR_STEP_PIN
-  motorInit();
-#endif
-
-}
- 
+//---------------------------------------------------------------
+#endif // MOTOR_H
