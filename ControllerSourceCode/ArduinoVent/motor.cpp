@@ -179,7 +179,6 @@ void motorInit()
 
 void motorLoop()
 {
-  updateMicroFreeRunningTimer(); // to be moved to hal
   
   switch (state) {
     case ST_INIT:                   fsmSt_INIT();                   break;
@@ -218,45 +217,6 @@ void motorLoop()
     }
   }  
 }
-
-
-//-------------------------------------------------------  
-//------- microtimer implementation... to be moved to hall
-//-------------------------------------------------------  
-
-  #define OVER_32BITS 4294967296
-static uint64_t   microFreeRunningTimer;
-static uint64_t   lastMicros; // to check overflow
-
-static void updateMicroFreeRunningTimer()
-{
-  uint64_t m = micros();
-  uint64_t elapse;
-  
-  if (m < lastMicros) {
-    LOG("micro overflow"); // happens every 70 minutes
-    elapse = (m + OVER_32BITS) - lastMicros;
-  }
-  else {
-    elapse = m - lastMicros;
-  }
-  
-  microFreeRunningTimer += elapse;
-  lastMicros = m;
-}
-
-uint64_t halStartMicroTimerRef()
-{
-  return microFreeRunningTimer;
-}
-
-bool halCheckMicroTimerExpired(uint64_t microTimerRef, uint64_t time)
-{
-  if ( (microTimerRef + time) < microFreeRunningTimer) // lapseMicroTime in microseconds
-    return true;
-  return false;
-}
-
 
 
 //------------------------------------------------------------
