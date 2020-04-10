@@ -48,6 +48,7 @@
 
 #define     STR_LOW_PRESSURE            "LOW AIRWAY PRES!"      // max 16
 #define     STR_HIGH_PRESSURE           "OVER PRES ALARM!"      // max 16
+#define     STR_UNDER_SPEED             "MOT UNDER SPEED!"      // max 16
 
 #elif (LANGUAGE_PT_BR == 1)
 /************************************************

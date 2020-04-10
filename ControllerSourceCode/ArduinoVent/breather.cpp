@@ -27,6 +27,11 @@
 #include "pressure.h"
 #include "event.h"
 #include "alarm.h"
+#include "motor.h"
+
+#ifdef STEPPER_MOTOR_STEP_PIN
+  #define MOT
+#endif
 
 #define MINUTE_MILLI 60000
 #define TM_WAIT_TO_OUT 50 // 50 milliseconds
@@ -63,6 +68,17 @@ void breatherStartCycle()
     b_state = B_ST_IN;
     halValveOutOff();
     halValveInOn();
+ /*
+
+void motorStartInspiration(int millisec);
+void motorStartExhalation(int millisec);
+int getProgress();
+
+ */ 
+#ifdef MOT
+  motorStartInspiration(curr_in_milli);
+#endif
+  
 
 #if 0
   LOG("Ventilation ON:");
@@ -88,6 +104,7 @@ static void fsmStopped()
 
 static void fsmIn()
 {
+#ifndef MOT
     uint64_t m = halStartTimerRef();
     if (tm_start + curr_in_milli < m) {
         // in valve off
@@ -111,6 +128,32 @@ static void fsmIn()
     if (pressGetRawVal() > 513) {
       CEvent::post(EVT_ALARM, ALARM_IDX_HIGH_PRESSURE);
     }
+#else
+  
+  curr_progress = motorGetProgress();
+  
+  if (curr_progress == 100) {
+    // in valve off
+    halValveInOff();
+    tm_start = halStartTimerRef();
+    b_state = B_ST_WAIT_TO_OUT;    
+  }
+  
+  //--------- we check for low pressure at 50% or grater
+  // low pressure hardcode to 3 InchH2O -> 90 int
+  if (curr_progress < 50) {
+      if (pressGetRawVal() < 90) {
+        CEvent::post(EVT_ALARM, ALARM_IDX_LOW_PRESSURE);
+      }
+  }
+  
+  //------ check for high pressure hardcode to 35 InchH2O -> 531 int
+  if (pressGetRawVal() > 513) {
+    CEvent::post(EVT_ALARM, ALARM_IDX_HIGH_PRESSURE);
+  }
+#endif
+
+
 }
 
 static void fsmWaitToOut()
@@ -120,11 +163,16 @@ static void fsmWaitToOut()
         tm_start = halStartTimerRef();
         b_state = B_ST_OUT;
         halValveOutOn();
+      
+#ifdef MOT
+        motorStartExhalation(curr_out_milli);
+#endif
     }
 }
 
 static void fsmOut()
 {
+#ifndef MOT
     uint64_t m = halStartTimerRef();
     if (tm_start + curr_out_milli < m) {
         // switch valves
@@ -136,7 +184,19 @@ static void fsmOut()
         //curr_progress = 100 - (m - tm_start / curr_out_milli * 100);
         //curr_progress = (100 * tm_start + curr_in_milli) / m;
         curr_progress = 100 - ((m - tm_start) * 100)/ curr_out_milli;
+        if (curr_progress >  100) curr_progress = 100;
     }
+  
+#else
+  int p = motorGetProgress();
+  curr_progress = 100 - p;
+  if (curr_progress >  100) curr_progress = 100;
+  if (p == 100) {
+    tm_start = halStartTimerRef();
+    b_state = B_ST_PAUSE;
+    halValveOutOff();    
+  }
+#endif
 }
 
 static void fsmStopping()

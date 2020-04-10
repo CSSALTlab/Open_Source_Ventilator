@@ -129,7 +129,7 @@ enum {A0, A1, A2, A3, A4, A5, A6, A7};
 #define   STEPPER_MOTOR_STEP_PIN   4 // D4. also, if this is undefined (commented) the motor function if disabled
 #define   STEPPER_MOTOR_DIR_PIN    5 // D5
 #define   STEPPER_MOTOR_EOC_PIN    A6 // A6 Enf-Of-Course sensor (switch) active low.
-//#define   STEPPER_MOTOR_INVERT_DIR  // uncoment/comment this line according to your mechanic orientation
+#define   STEPPER_MOTOR_INVERT_DIR  // uncoment/comment this line according to your mechanic orientation
 
 /* LiquidCrystal     (rs, enable, d4, d5, d6, d7)
    LiquidCrystal lcd( LCD_CFG_RS, LCD_CFG_E, LCD_CFG_D4, LCD_CFG_D5, LCD_CFG_D6, LCD_CFG_D7);

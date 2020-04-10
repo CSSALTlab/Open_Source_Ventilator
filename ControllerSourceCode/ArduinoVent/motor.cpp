@@ -23,6 +23,8 @@
 #include "config.h"
 #include "hal.h"
 #include "log.h"
+#include "event.h"
+#include "alarm.h"
 
 #ifdef STEPPER_MOTOR_STEP_PIN
 
@@ -53,9 +55,9 @@ This code is using bit-bang to generate pulses
         \   /                                                              EOC
 
 */
+#define MIN_STEP_PERIOD 1200 // in microseconds. this is limited by the motor (max RPM)
 
-#define MIN_STEP_PERIOD 1200 // microseconds
-#define MAX_STEP_SPEED (1000000 / MIN_STEP_PERIOD) // steps per second (833 for MIN_STEP_PERIOD = 1200)
+//#define MAX_STEP_SPEED (1000000 / MIN_STEP_PERIOD) // steps per second (833 for MIN_STEP_PERIOD = 1200)
 
 #define     P_MAX       1000
 #define     P_START     0
@@ -95,9 +97,11 @@ static uint16_t   speed; // in steps per second
 static state_t    state;
 static uint64_t   microTimerRef;
 
+static uint32_t   step_periodo = MIN_STEP_PERIOD;  // must be >= MIN_STEP_PERIOD 
 static uint8_t    phase;
 static dir_t      direction;
-static uint16_t   stepCounter;
+static uint32_t   stepCounter;
+static uint32_t   progress;
 
 
 
@@ -172,13 +176,13 @@ static void fsmSt_ERROR()
 //---------------- Global functions ----------------
 void motorInit()
 {
-  speed = MAX_STEP_SPEED;
-  state = ST_INIT;
+  state = ST_AIR_IN_PAUSE; // ST_INIT;
   microTimerRef = halStartTimerRef();
 }
 
 void motorLoop()
 {
+  static int lastProrgress = 0;
   
   switch (state) {
     case ST_INIT:                   fsmSt_INIT();                   break;
@@ -204,19 +208,72 @@ void motorLoop()
     return;
   }
   if (phase == 1) {
-    if (halCheckMicroTimerExpired(microTimerRef, MIN_STEP_PERIOD/10)) {
+    if (halCheckMicroTimerExpired(microTimerRef, step_periodo/10)) {
       halMotorStep (false);      // Step PIN low
       phase++;
     }
     return;
   }
   if (phase == 2) {
-    if (halCheckMicroTimerExpired(microTimerRef, MIN_STEP_PERIOD)) {
+    if (halCheckMicroTimerExpired(microTimerRef, step_periodo)) {
       stepCounter--;
       phase = 0;
+
+      if (stepCounter == 0) {
+        progress = 100;
+      }
+      else {
+        progress = 100 - (stepCounter * 100)/ P_END;
+        if (progress >= 100) progress = 99;
+        if (progress < 0) progress = 0;
+        
+      }
+      if (lastProrgress != progress) {
+        lastProrgress = progress;
+        //LOGV("%d", progress);;
+      }
     }
   }  
 }
+
+
+static int getStepPeriod(uint32_t milli) {
+  int r = (milli * 1000) / P_END;
+  if (r < MIN_STEP_PERIOD) {
+    CEvent::post(EVT_ALARM, ALARM_IDX_UNDER_SPEED_MOTOR);
+    LOG("motor underspeed");
+    return MIN_STEP_PERIOD;
+  }
+  LOGV("Period = %d microsec", r);
+  return r;
+}
+
+void motorStartInspiration(int millisec)
+{
+  LOG(">> motorStartInspiration");
+  progress = 0;
+  direction = FWD;
+  halMotorDir(true);
+  step_periodo = getStepPeriod(millisec);
+  stepCounter = P_END;
+  
+}
+
+void motorStartExhalation(int millisec)
+{
+    LOG("<< motorStartExhalation");
+  progress = 0;
+  direction = BWD;
+  halMotorDir(false);
+  step_periodo = getStepPeriod(millisec);
+  stepCounter = P_END;
+}
+
+int motorGetProgress()
+{
+  return progress;
+}
+
 
 
 //------------------------------------------------------------
