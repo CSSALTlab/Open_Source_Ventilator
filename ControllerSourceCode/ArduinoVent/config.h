@@ -263,6 +263,10 @@ enum {A0, A1, A2, A3, A4, A5, A6, A7};
   #error "Only one LCD_CFG_XX_COLS must be set to 1 in config.h"
 #endif
 
+//------- if motor is enable than we enable the microsecond timer support
+#ifdef STEPPER_MOTOR_STEP_PIN
+  #define ENABLE_MICROSEC_TIMER
+#endif
 
 //#define LOOP_MONITOR_PIN 5 // D5   this is for debugging only, should be always commented out
 // Profile on April 06th: Main loop taking 180 microseconds to be processed.

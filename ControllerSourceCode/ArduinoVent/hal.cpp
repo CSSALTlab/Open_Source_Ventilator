@@ -22,7 +22,6 @@
 
 #include "hal.h"
 #include "event.h"
-#include "config.h"
 #include "properties.h"
 #include "pressure.h"
 
@@ -102,6 +101,10 @@ void halBeepAlarmOnOff( bool on)
 uint64_t tm_wdt = 0;
 static int wdt_st;
 
+//-------------------------------------------------------  
+//-------         Milliseconds Timer
+//-------------------------------------------------------  
+
 uint64_t halStartTimerRef()
 {
     static uint32_t low32, high32 = 0;
@@ -118,6 +121,47 @@ bool halCheckTimerExpired(uint64_t timerRef, uint64_t time)
         return true;
     return false;
 }
+
+//-------------------------------------------------------  
+//------- Microsecond timer implementation (needed for motor support)
+//-------------------------------------------------------  
+#ifdef ENABLE_MICROSEC_TIMER
+
+#define OVER_32BITS 4294967296
+static uint64_t   microFreeRunningTimer;
+static uint64_t   lastMicros; // to check overflow
+
+static void updateMicroFreeRunningTimer()
+{
+  uint64_t m = micros();
+  uint64_t elapse;
+  
+  if (m < lastMicros) {
+    LOG("micro overflow"); // happens every 70 minutes
+    elapse = (m + OVER_32BITS) - lastMicros;
+  }
+  else {
+    elapse = m - lastMicros;
+  }
+  
+  microFreeRunningTimer += elapse;
+  lastMicros = m;
+}
+
+uint64_t halStartMicroTimerRef()
+{
+  return microFreeRunningTimer;
+}
+
+bool halCheckMicroTimerExpired(uint64_t microTimerRef, uint64_t time)
+{
+  if ( (microTimerRef + time) < microFreeRunningTimer) // lapseMicroTime in microseconds
+    return true;
+  return false;
+}
+#endif // ENABLE_MICROSEC_TIMER
+//-------------------------------------------------------  
+
 
 
 static void initWdt(uint8_t reset_val)
@@ -515,6 +559,10 @@ void halLoop()
 
 #ifdef WATCHDOG_ENABLE
   loopWdt();
+#endif
+
+#ifdef ENABLE_MICROSEC_TIMER
+  updateMicroFreeRunningTimer();
 #endif
 
 }

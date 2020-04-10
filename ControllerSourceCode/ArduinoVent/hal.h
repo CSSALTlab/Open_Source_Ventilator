@@ -22,6 +22,7 @@
 */
 #include "log.h"
 #include <stdint.h>
+#include "config.h"
 
 #ifdef VENTSIM
   #include <QPlainTextEdit>
@@ -67,9 +68,10 @@ MONITOR_LET_T halGetMonitorLED ();
 uint64_t halStartTimerRef(); // milliseconds reference
 bool halCheckTimerExpired(uint64_t timerRef, uint64_t lapseTime); // lapseTime in milliseconds
 
-uint64_t halStartMicroTimerRef(); // microseconds reference
-bool halCheckMicroTimerExpired(uint64_t timerRef, uint64_t lapseMicroTime); // lapseMicroTime in microseconds
-
+#ifdef ENABLE_MICROSEC_TIMER
+  uint64_t halStartMicroTimerRef(); // microseconds reference
+  bool halCheckMicroTimerExpired(uint64_t timerRef, uint64_t lapseMicroTime); // lapseMicroTime in microseconds
+#endif
 
 void halWriteSerial(char * s);
 
