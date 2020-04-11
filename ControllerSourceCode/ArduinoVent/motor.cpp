@@ -113,7 +113,7 @@ static void updateMicroFreeRunningTimer();
 
 static void fsmSt_INIT()
 {
-  stepCounter = P_MAX;
+  stepCounter = P_END;
   halMotorDir(FWD);
   state = ST_INIT_MOVING_TO_END;
 }
@@ -122,7 +122,7 @@ static void fsmSt_INIT_MOVING_TO_END()
 {
   if (stepCounter == 0) {
     halMotorDir(BWD);
-    stepCounter = P_MAX;
+    stepCounter = P_END;
     state = ST_INIT_MOVING_OUT_OF_END;
   }
   
