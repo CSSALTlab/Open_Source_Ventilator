@@ -40,7 +40,7 @@ typedef struct __attribute__ ((packed))  props_st {
   uint8_t propVent;
   uint8_t propBps;
   uint8_t propDutyCycle;
-  uint8_t propPause;
+  uint16_t propPause;
   uint8_t propLcdAutoOff;
   uint8_t propBle;
 
@@ -149,7 +149,7 @@ void propSetDutyCycle(int val) {
 
 void propSetPause(int val) {
      //LOG("propSetPause");
-     props.propPause =  (uint8_t) val & 0x000000ff;
+     props.propPause =  (uint16_t) val & 0x0000ffff;
      setSavePending();
 }
 

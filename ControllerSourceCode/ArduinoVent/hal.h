@@ -22,6 +22,7 @@
 */
 #include "log.h"
 #include <stdint.h>
+#include "config.h"
 
 #ifdef VENTSIM
   #include <QPlainTextEdit>
@@ -64,8 +65,13 @@ typedef enum {
 void halSetMonitorLED (MONITOR_LET_T speed);
 MONITOR_LET_T halGetMonitorLED ();
 
-uint64_t halStartTimerRef();
-bool halCheckTimerExpired(uint64_t timerRef, uint64_t lapseTime);
+uint64_t halStartTimerRef(); // milliseconds reference
+bool halCheckTimerExpired(uint64_t timerRef, uint64_t lapseTime); // lapseTime in milliseconds
+
+#ifdef ENABLE_MICROSEC_TIMER
+  uint64_t halStartMicroTimerRef(); // microseconds reference
+  bool halCheckMicroTimerExpired(uint64_t timerRef, uint64_t lapseMicroTime); // lapseMicroTime in microseconds
+#endif
 
 void halWriteSerial(char * s);
 
@@ -91,6 +97,8 @@ uint16_t halGetAnalogPressure();
 bool halSaveDataBlock(uint8_t * data, int size);
 bool halRestoreDataBlock(uint8_t * data, int size);
 
-
+void halMotorStep(bool on);
+void halMotorDir(bool dir);
+bool halMotorEOC();
 
 #endif // HAL_H

@@ -31,6 +31,7 @@ void alarmResetAll();
 enum {
     ALARM_IDX_HIGH_PRESSURE,     // index for high pressure alarm in alarms array
     ALARM_IDX_LOW_PRESSURE,      // index for low pressure alarm in alarms array
+    ALARM_IDX_UNDER_SPEED_MOTOR,
 
     // Add here new alarm as well as an entry in "alarms" array in alarm.cpp
 
