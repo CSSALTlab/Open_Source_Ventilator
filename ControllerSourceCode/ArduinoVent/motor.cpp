@@ -61,7 +61,7 @@ This code is using bit-bang to generate pulses
 
 #define     P_MAX       1000
 #define     P_START     0
-#define     P_END       800
+#define     P_END       1200
 #define     EOC         P_END
 
 // initialization:
@@ -202,19 +202,27 @@ void motorLoop()
   if (stepCounter == 0) return;
   //--------- may move motor if stepCounter > 0 --------
   if (phase == 0) {
-    halMotorStep (true);      // Step PIN high
+    //halMotorStep (true);      // Step PIN high
     microTimerRef = halStartMicroTimerRef();
     phase++;
     return;
   }
   if (phase == 1) {
     if (halCheckMicroTimerExpired(microTimerRef, step_periodo/10)) {
+      halMotorStep (true);      // Step PIN high
+      phase++;
+    }
+    return;
+  }
+
+  if (phase == 2) {
+    if (halCheckMicroTimerExpired(microTimerRef, step_periodo/2)) {
       halMotorStep (false);      // Step PIN low
       phase++;
     }
     return;
   }
-  if (phase == 2) {
+  if (phase == 3) {
     if (halCheckMicroTimerExpired(microTimerRef, step_periodo)) {
       stepCounter--;
       phase = 0;
@@ -256,6 +264,7 @@ void motorStartInspiration(int millisec)
   halMotorDir(true);
   step_periodo = getStepPeriod(millisec);
   stepCounter = P_END;
+  microTimerRef = halStartMicroTimerRef();
   
 }
 
@@ -267,6 +276,7 @@ void motorStartExhalation(int millisec)
   halMotorDir(false);
   step_periodo = getStepPeriod(millisec);
   stepCounter = P_END;
+  microTimerRef = halStartMicroTimerRef();
 }
 
 int motorGetProgress()
