@@ -30,6 +30,7 @@
 #include "ui_native.h"
 #include "breather.h"
 #include "motor.h"
+#include "bmp280_int.h"
 
 //------------ Global -----------
 void ventLoop()
@@ -53,5 +54,6 @@ void ventSetup()
   motorInit();
 #endif
 
+  bpm280Init();
 }
  
