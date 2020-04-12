@@ -133,8 +133,10 @@ void CalculateAveragePressure()
 
 //====================================================================
 void pressInit()   {
-#if (USE_Mpxv7002DP_PRESSURE_SENSOR == 1)
-  analogReference(DEFAULT); // Arduino function
+#ifndef VENTSIM
+  #if (USE_Mpxv7002DP_PRESSURE_SENSOR == 1)
+    analogReference(DEFAULT); // Arduino function
+  #endif
 #endif
   
 #if (USE_BMP280_PRESSURE_SENSOR == 1)

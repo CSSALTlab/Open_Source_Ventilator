@@ -54,6 +54,8 @@ void ventSetup()
   motorInit();
 #endif
 
+#ifndef VENTSIM
   bpm280Init();
+#endif
 }
  

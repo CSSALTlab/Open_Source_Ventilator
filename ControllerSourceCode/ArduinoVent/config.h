@@ -56,10 +56,10 @@ enum {A0, A1, A2, A3, A4, A5, A6, A7};
  *************************************************
  */
 // Note: also add boards defined here in below's "Board check selection" just in case.
-#define       HW_VERSION_CSSALT_PROTO_01        1  // CSSALT Board ref 1 (Arduino Nano)
+#define       HW_VERSION_CSSALT_PROTO_01        0  // CSSALT Board ref 1 (Arduino Nano)
 #define       HW_VERSION_CSSALT_PROTO_02        0  // CSSALT Board ref 1 (Arduino Nano) 20x4 LCD
 #define       HW_VERSION_MV_01                  0  // Marcelo's prototype (Arduino Uno)
-#define       HW_VERSION_MV_SIMULATOR           0
+#define       HW_VERSION_MV_SIMULATOR           1
 //-------------------------------------------------
 
 
@@ -266,6 +266,7 @@ enum {A0, A1, A2, A3, A4, A5, A6, A7};
 #define LCD_CFG_2_ROWS  0
 #define LCD_CFG_4_ROWS  1
 
+#define USE_Mpxv7002DP_PRESSURE_SENSOR 1
 
 
 #endif // ----------------- END OF BOARDS DEFINITIONS ----------------------
