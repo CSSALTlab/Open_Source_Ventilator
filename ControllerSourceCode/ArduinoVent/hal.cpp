@@ -436,29 +436,37 @@ void halValveOutOff()
 //---------- Stepper Motor ---------
 static void motorInit() 
 {
+#ifdef STEPPER_MOTOR_INVERT_DIR
   pinMode(STEPPER_MOTOR_STEP_PIN, OUTPUT);
   pinMode(STEPPER_MOTOR_DIR_PIN, OUTPUT);
   pinMode(STEPPER_MOTOR_EOC_PIN, INPUT_PULLUP);;
   halMotorStep(false);
+#endif
 }
 
 void halMotorStep(bool on)
 {
+#ifdef STEPPER_MOTOR_INVERT_DIR
   digitalWrite(STEPPER_MOTOR_STEP_PIN, on); 
+#endif
 }
 
 void halMotorDir(bool dir)
 {
-#ifndef STEPPER_MOTOR_INVERT_DIR
-  digitalWrite(STEPPER_MOTOR_DIR_PIN, dir);
-#else
-  digitalWrite(STEPPER_MOTOR_DIR_PIN, !dir);
+#ifdef STEPPER_MOTOR_INVERT_DIR
+  #ifndef STEPPER_MOTOR_INVERT_DIR
+    digitalWrite(STEPPER_MOTOR_DIR_PIN, dir);
+  #else
+    digitalWrite(STEPPER_MOTOR_DIR_PIN, !dir);
+  #endif
 #endif
 }
 
 bool halMotorEOC()
 {
+#ifdef STEPPER_MOTOR_INVERT_DIR
   return digitalRead(STEPPER_MOTOR_EOC_PIN);
+#endif
 }
 
 //---------- Analog pressure sensor -----------

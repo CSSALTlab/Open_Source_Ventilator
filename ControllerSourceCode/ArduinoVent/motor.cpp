@@ -61,7 +61,7 @@ This code is using bit-bang to generate pulses
 
 #define     P_MAX       1000
 #define     P_START     0
-#define     P_END       1200
+#define     P_END       600
 #define     EOC         P_END
 
 // initialization:
