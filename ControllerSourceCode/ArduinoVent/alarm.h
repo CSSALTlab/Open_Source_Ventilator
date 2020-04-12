@@ -32,6 +32,9 @@ enum {
     ALARM_IDX_HIGH_PRESSURE,     // index for high pressure alarm in alarms array
     ALARM_IDX_LOW_PRESSURE,      // index for low pressure alarm in alarms array
     ALARM_IDX_UNDER_SPEED_MOTOR,
+    ALARM_IDX_FAST_CALIB_TO_START,
+    ALARM_IDX_FAST_CALIB_DONE,
+
 
     // Add here new alarm as well as an entry in "alarms" array in alarm.cpp
 

@@ -34,6 +34,8 @@
 #define TM_WAIT_TO_OUT 200 //200 milliseconds
 #define TM_STOPPING 4000 // 4 seconds to stop
 
+#define TM_FAST_CALIBRATION 4000 // 4 seconds
+
 
 static int curr_pause;
 static int curr_rate;
@@ -43,9 +45,22 @@ static int curr_total_cycle_milli;
 static int curr_progress;
 static uint64_t tm_start;
 
+static bool fast_calib;
+
 static const int rate[4] = {1,2,3,4} ;
 
 static B_STATE_t b_state = B_ST_STOPPED;
+
+void breatherRequestFastCalibration()
+{
+    if (propGetVent() == 0) {
+        LOG("Ignore Fast Calib.");
+        return;
+    }
+    fast_calib = true;
+    CEvent::post(EVT_ALARM, ALARM_IDX_FAST_CALIB_TO_START);
+
+}
 
 int breatherGetPropress()
 {
@@ -64,7 +79,8 @@ void breatherStartCycle()
     tm_start = halStartTimerRef();
     b_state = B_ST_IN;
     halValveOutOff();
-    halValveInOn();  
+    halValveInOn();
+    fast_calib = false;
 
 #if 0
   LOG("Ventilation ON:");
@@ -130,6 +146,15 @@ static void fsmOut()
 {
     uint64_t m = halStartTimerRef();
     if (tm_start + curr_out_milli < m) {
+
+        //if we have fast calibration request then we keep the valve open
+        if (fast_calib) {
+            fast_calib = false;
+            tm_start = halStartTimerRef();
+            b_state = B_ST_FAST_CALIB;
+            return;
+        }
+
         // switch valves
         tm_start = halStartTimerRef();
         b_state = B_ST_PAUSE;
@@ -140,6 +165,20 @@ static void fsmOut()
         if (curr_progress >  100) curr_progress = 100;
     }
 }
+
+static void fsmFastCalib()
+{
+    uint64_t m = halStartTimerRef();
+    if (halCheckTimerExpired(tm_start, TM_FAST_CALIBRATION)) {
+        // switch valves
+        tm_start = halStartTimerRef();
+        b_state = B_ST_PAUSE;
+        halValveOutOff();
+        CEvent::post(EVT_ALARM, ALARM_IDX_FAST_CALIB_DONE);
+    }
+
+}
+
 
 static void fsmStopping()
 {
@@ -178,6 +217,8 @@ void breatherLoop()
         fsmWaitToOut();
     else if (b_state == B_ST_OUT)
         fsmOut();
+    else if (b_state == B_ST_FAST_CALIB)
+        fsmFastCalib();
     else if (b_state == B_ST_PAUSE)
         fsmPause();
     else if (b_state == B_ST_STOPPING)

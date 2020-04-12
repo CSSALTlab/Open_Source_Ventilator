@@ -113,6 +113,10 @@ typedef struct params_st {
 
 static CUiNative * uiNative;
 
+// -------------  prototypes --------------
+static void handleChangeCalibration(int val);
+
+
 void uiNativeInit()
 {
   uiNative = new CUiNative();
@@ -186,9 +190,6 @@ static void handleChangeHighTidal(int val) {
     propSetHighTidal(val);
 }
 
-static void handleChangeCalibration(int val) {
-
-}
 
 //-------- getters ------
 
@@ -416,8 +417,11 @@ static /* const */ params_t params[] /* PROGMEM */ =  {
       { handleGetHighTidal }  // propGetter
     },
 
-    { PARAM_CHOICES,        // type
-      STR_CALIB_PRESSURES,           // name
+    // *******************************************
+    // NOTE: THIS MUST BE THE VERY LAST PARAMETER
+    // *******************************************
+    { PARAM_CHOICES,            // type
+      STR_CALIB_PRESSURES,      // name
       0,                        // val
       1,                        // step
       0,                        // min
@@ -440,6 +444,12 @@ static /* const */ params_t params[] /* PROGMEM */ =  {
 };
 
 #define NUM_PARAMS (sizeof(params)/sizeof(params_t))
+
+static void handleChangeCalibration(int val) {
+  breatherRequestFastCalibration();
+  params[NUM_PARAMS - 1].val = 0; // reset val
+}
+
 
 //------------ Global -----------
 CUiNative::CUiNative()

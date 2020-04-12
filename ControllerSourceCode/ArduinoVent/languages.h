@@ -56,6 +56,8 @@
 #define     STR_ALARM_LOW_PRESSURE      "LOW AIRWAY PRES!"      // max 16
 #define     STR_ALARM_HIGH_PRESSURE     "OVER PRES ALARM!"      // max 16
 #define     STR_ALARM_UNDER_SPEED       "MOT UNDER SPEED!"      // max 16
+#define  STR_ALARM_FAST_CALIB_TO_START  "STARTING CALIB. "
+#define  STR_ALARM_FAST_CALIB_DONE      " CALIB. ENDDED  "
 
 #elif (LANGUAGE_PT_BR == 1)
 /************************************************
