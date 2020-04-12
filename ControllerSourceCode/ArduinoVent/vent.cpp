@@ -55,7 +55,9 @@ void ventSetup()
 #endif
 
 #ifndef VENTSIM
-  bpm280Init();
+  #if (USE_BMP280_PRESSURE_SENSOR == 1)
+    bpm280Init();
+  #endif
 #endif
 }
  

@@ -475,6 +475,13 @@ uint16_t halGetAnalogPressure()
   return (uint16_t) analogRead(PRESSURE_SENSOR_PIN);  //Raw digital input from pressure sensor
 }
 
+//---------- Analog pressure sensor -----------
+uint16_t halGetAnalogFlow()
+{
+  return (uint16_t) analogRead(FLOW_SENSOR_PIN);  //Raw digital input from pressure sensor
+}
+
+
 //--------- Save/Restore data in non-volatil storage
 bool halSaveDataBlock(uint8_t * data, int _size)
 {

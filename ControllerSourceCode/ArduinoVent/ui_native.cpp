@@ -197,9 +197,9 @@ static char *  getPressure()
 {
  static char buf[8];
  buf[sizeof(buf) - 1] = 0;
- float f = pressGetFloatVal();
+ float f = pressGetFloatVal(PRESSURE);
 #ifndef VENTSIM
-    dtostrf(pressGetFloatVal(), 2, 2, buf);
+    dtostrf(pressGetFloatVal(PRESSURE), 2, 2, buf);
 #else
     snprintf(buf, sizeof(buf) - 1, "%f", f);
 #endif

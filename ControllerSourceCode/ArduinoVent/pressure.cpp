@@ -61,7 +61,7 @@ end
     #define TEST_RAND_MAX 400
 #endif
 
-#ifdef PREESURE_ENABLE
+#if ( (USE_Mpxv7002DP_PRESSURE_SENSOR == 1) || (USE_Mpxv7002DP_FLOW_SENSOR == 1) )
 
 #define SHOW_VAL
 
@@ -70,64 +70,86 @@ end
 #define MAX_BIN_INPUT   614
 #define MAX_BIN_INPUT_F 614.0
 
-static int16_t tap_array[AVERAGE_BIN_NUMBER];
-static int32_t accumulator = 0;
+static int16_t tap_array[NUM_P_SENSORS][AVERAGE_BIN_NUMBER];
+static int32_t accumulator[NUM_P_SENSORS];
 static uint8_t head_idx = 0;
 static uint8_t tail_idx = 0;
 static uint8_t ready_cnt = 0;
 static uint64_t tm_press;
 
-static int32_t av;
-static uint16_t rawSensorValue;
-static float inH2O = 0.0f;
+static int32_t av[NUM_P_SENSORS];
+static float cmH2O[NUM_P_SENSORS];
 
 #ifdef SHOW_VAL
   static uint64_t tm_log;
 #endif
 
-void CalculateAveragePressure()
+void CalculateAveragePressure(psensor_t sensor)
 {
-  rawSensorValue = 0;
+  int i;
+  uint16_t rawSensorValue;
   
-#if (USE_Mpxv7002DP_PRESSURE_SENSOR == 1)
-  /*****************************************
-   *
-   *      Analog NXP Mpxv7002DP sensor
-   *
-   *****************************************/
-  rawSensorValue = halGetAnalogPressure();
-  
-#elif (USE_BMP280_PRESSURE_SENSOR == 1)
-  /*****************************************
-   *
-   *      BOSH BMP280 sensor
-   *
-   *****************************************/
-  rawSensorValue = bpm280GetPressure();
-  
-#else
-  #warning "No pressure sensor defined in config.h"
-#endif
-  
+  for (i=0; i<NUM_P_SENSORS; i++) {
+    rawSensorValue = 0;
+    if (i == 0) {
 
-  // clamp it to the max (max value provided by the sensor)
-  if (rawSensorValue >= MAX_BIN_INPUT)
-      rawSensorValue = MAX_BIN_INPUT - 1;
+      #if (USE_Mpxv7002DP_PRESSURE_SENSOR == 1)
+      /*****************************************
+       *
+       *      Analog NXP Mpxv7002DP pressure sensor
+       *
+       *****************************************/
+        rawSensorValue = halGetAnalogPressure();
 
-  if (ready_cnt >= AVERAGE_BIN_NUMBER)  {
-    accumulator -= tap_array[tail_idx++] ;
+      #elif (USE_BMP280_PRESSURE_SENSOR == 1)
+      /*****************************************
+       *
+       *      BOSH BMP280 pressure sensor
+       *
+       *****************************************/
+        rawSensorValue = bpm280GetPressure();
+
+      #else
+        #warning "No pressure sensor defined in config.h"
+      #endif
+
+    } // if i == 0
+    else {
+      #if (USE_Mpxv7002DP_FLOW_SENSOR == 1)
+      /*****************************************
+       *
+       *      Analog NXP Mpxv7002DP pressure sensor
+       *
+       *****************************************/
+        rawSensorValue = halGetAnalogFlow();
+      #endif
+    }
+    // clamp it to the max (max value provided by the sensor)
+    if (rawSensorValue >= MAX_BIN_INPUT)
+        rawSensorValue = MAX_BIN_INPUT - 1;
+
+    if (ready_cnt >= AVERAGE_BIN_NUMBER)  {
+      accumulator[i] -= tap_array[i][tail_idx] ;
+      
+    }
+    else {
+      ready_cnt++;
+    }
+
+    tap_array[i][head_idx] = rawSensorValue;
+    if (head_idx >= AVERAGE_BIN_NUMBER) head_idx = 0;
+    accumulator[i] += rawSensorValue;
+
+    av[i] = accumulator[i]/AVERAGE_BIN_NUMBER;
+    cmH2O[i] = P_CONV * ((av[i] / MAX_BIN_INPUT_F) - 0.08) / 0.09;
+    
+    
+    tail_idx++;
     if (tail_idx >= AVERAGE_BIN_NUMBER) tail_idx = 0;
-  }
-  else {
-    ready_cnt++;
-  }
-
-  tap_array[head_idx++] = rawSensorValue;
-  if (head_idx >= AVERAGE_BIN_NUMBER) head_idx = 0;
-  accumulator += rawSensorValue;
-
-  av = accumulator/AVERAGE_BIN_NUMBER;
-  inH2O = P_CONV * ((av / MAX_BIN_INPUT_F) - 0.08) / 0.09;
+    head_idx++;
+    if (head_idx >= AVERAGE_BIN_NUMBER) head_idx = 0;
+    
+  } // for loop
   
 }
 
@@ -154,7 +176,7 @@ void pressInit()   {
 void pressLoop()
 {
   if (halCheckTimerExpired(tm_press, PRESSURE_READ_DELAY)) {
-    CalculateAveragePressure();
+    CalculateAveragePressure(PRESSURE);
     tm_press = halStartTimerRef();
   }
 
@@ -163,23 +185,23 @@ void pressLoop()
   if (halCheckTimerExpired(tm_log, TM_LOG)) {
     LOGV("av = %d", av);
   #ifndef VENTSIM
-    dtostrf(inH2O, 8, 2, buf);
+    dtostrf(cmH2O[PRESSURE], 8, 2, buf);
     LOGV("Pa = %s\n", buf);
   #else
-    LOGV("Pa = %f\n", inH2O);
+    LOGV("Pa = %f\n", cmH2O[PRESSURE);
   #endif
     tm_log = halStartTimerRef();
   }
 #endif
 }
 
-float pressGetFloatVal() // in InchH2O
+float pressGetFloatVal(psensor_t sensor) // in InchH2O
 {
-    return inH2O;
+    return cmH2O[sensor];
 }
-int32_t pressGetRawVal()
+int32_t pressGetRawVal(psensor_t sensor)
 {
-    return av;
+    return av[sensor];
 }
 
 
@@ -191,4 +213,4 @@ void pressLoop() {}
 float pressGetFloatVal() { return 0.0; }
 int pressGetRawVal() { return 0; }
 
-#endif //#ifndef PREESURE_ENABLE
+#endif //#if ( (USE_Mpxv7002DP_PRESSURE_SENSOR == 1) || (USE_Mpxv7002DP_FLOW_SENSOR == 1) )

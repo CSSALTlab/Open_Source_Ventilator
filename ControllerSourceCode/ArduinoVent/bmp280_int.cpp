@@ -19,9 +19,12 @@
  *
  **************************************************************
 */
+#include "config.h"
+#if (USE_BMP280_PRESSURE_SENSOR == 1)
+
 #include "bmp280_int.h"
 #include <Wire.h>
-#include <sSense-BMx280I2C.h>  // GLG -- for BMP280
+#include <sSense-BMx280I2C_mv.h>  // GLG -- for BMP280
 #include "log.h"
 #include "hal.h"
 
@@ -134,3 +137,6 @@ uint32_t bpm280GetPressure() // for now we match analog values 0~614 (for -3.57~
 {
   return measure_pressure(); // will clean this later on
 }
+
+//----------------------------------------------------
+#endif // USE_BMP280_PRESSURE_SENSOR
