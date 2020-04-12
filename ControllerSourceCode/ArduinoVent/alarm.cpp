@@ -80,7 +80,7 @@ static alarm_t alarms[] = {
         ST_ALARM_OFF,
         0,
         MAX_SOUND_ALARM_HIGH_PRESSURE,
-        STR_HIGH_PRESSURE,
+        STR_ALARM_HIGH_PRESSURE,
         0,
         muteHighPressureAlarm
   },
@@ -89,7 +89,7 @@ static alarm_t alarms[] = {
         ST_ALARM_OFF,
         0,
         MAX_SOUND_ALARM_LOW_PRESSURE,
-        STR_LOW_PRESSURE,
+        STR_ALARM_LOW_PRESSURE,
         0,
         muteLowPressureAlarm
   },
@@ -98,7 +98,7 @@ static alarm_t alarms[] = {
         ST_ALARM_OFF,
         0,
         MAX_SOUND_ALARM_UNDER_SPEED,
-        STR_UNDER_SPEED,
+        STR_ALARM_UNDER_SPEED,
         0,
         0
   }

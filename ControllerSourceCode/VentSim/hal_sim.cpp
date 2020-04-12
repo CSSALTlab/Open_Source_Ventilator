@@ -283,6 +283,13 @@ uint16_t halGetAnalogPressure()
     return (uint16_t) gAnalogPressure;
 }
 
+extern unsigned int gAnalogFlow;
+uint16_t halGetAnalogFlow()
+{
+    return (uint16_t) gAnalogFlow;
+}
+
+
 #define STORAGE_FILENAME "ventsim_storage.dat"
 //-------- storage ----------
 bool halSaveDataBlock(uint8_t * data, int size)

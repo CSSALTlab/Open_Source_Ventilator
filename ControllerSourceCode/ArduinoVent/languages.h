@@ -45,10 +45,17 @@
 #define     STR_PAUSE                   "Pause (ms)"        // max 10
 #define     STR_LCD_AUTO_OFF            "LCD auto-off"      // max 10
 #define     STR_PRESSURE                "Pressure"          // max 10
+#define     STR_FLOW                    "Flow"
+#define     STR_TIDAL                   "Tidal Vol."
+#define     STR_LOW_PRESSURE            "Low  Press"
+#define     STR_HIGH_PRESSURE           "High Press"
+#define     STR_LOW_TIDAL               "Low  Tidal"
+#define     STR_HIGH_TIDAL              "High Tidal"
+#define     STR_CALIB_PRESSURES         "Cal. Press"
 
-#define     STR_LOW_PRESSURE            "LOW AIRWAY PRES!"      // max 16
-#define     STR_HIGH_PRESSURE           "OVER PRES ALARM!"      // max 16
-#define     STR_UNDER_SPEED             "MOT UNDER SPEED!"      // max 16
+#define     STR_ALARM_LOW_PRESSURE      "LOW AIRWAY PRES!"      // max 16
+#define     STR_ALARM_HIGH_PRESSURE     "OVER PRES ALARM!"      // max 16
+#define     STR_ALARM_UNDER_SPEED       "MOT UNDER SPEED!"      // max 16
 
 #elif (LANGUAGE_PT_BR == 1)
 /************************************************
@@ -73,9 +80,17 @@
 #define     STR_PAUSE                   "Pausa (ms)"        // max 10
 #define     STR_LCD_AUTO_OFF            "LCD L/D"           // max 10
 #define     STR_PRESSURE                "Pressao"           // max 10
+#define     STR_FLOW                    "Flow"
+#define     STR_TIDAL                   "Tidal Vol."
+#define     STR_LOW_PRESSURE            "Low  Press"
+#define     STR_HIGH_PRESSURE           "High Press"
+#define     STR_LOW_TIDAL               "Low  Tidal"
+#define     STR_HIGH_TIDAL              "High Tidal"
+#define     STR_CALIB_PRESSURES         "Cal. Press"
 
-#define     STR_LOW_PRESSURE            " BAIXA PRESSAO! "      // max 16
-#define     STR_HIGH_PRESSURE           "  ALTA PRESSAO! "      // max 16
+#define     STR_ALARM_LOW_PRESSURE      " BAIXA PRESSAO! "      // max 16
+#define     STR_ALARM_HIGH_PRESSURE     "  ALTA PRESSAO! "      // max 16
+#define     STR_ALARM_UNDER_SPEED       "MOT. BAIXA VEL.!"      // max 16
 
 #else
   #error "One Language must be set to 1 in config.h"

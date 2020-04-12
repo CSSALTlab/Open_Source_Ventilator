@@ -30,6 +30,7 @@
 #include "event.h"
 
 unsigned int gAnalogPressure = 300;
+unsigned int gAnalogFlow = 300;
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -49,6 +50,11 @@ MainWindow::MainWindow(QWidget *parent)
     ui->lb_pressure->setNum((int) gAnalogPressure);
     connect(ui->PressureSlider, SIGNAL (valueChanged(int)),this, SLOT (onPressureSliderChange(int)));
 
+    ui->FlowSlider->setMaximum(613);
+    ui->FlowSlider->setValue(gAnalogPressure);
+    ui->lb_flow->setNum((int) gAnalogFlow);
+    connect(ui->FlowSlider, SIGNAL (valueChanged(int)),this, SLOT (onFlowSliderChange(int)));
+
     ui->lb_input_valve_on->hide();
     ui->lb_output_valve_on->hide();
 
@@ -60,6 +66,7 @@ MainWindow::MainWindow(QWidget *parent)
     QFont f = QFont ("Courier New");
     f.setPointSize (12);
     ui->lb_press->setFont(f);
+    ui->lb_static_flow->setFont(f);
     ui->lb_exhalation->setFont(f);
     ui->lb_exhalation->setText("Exhalation");
     ui->lb_inspiration->setFont(f);
@@ -93,6 +100,14 @@ void MainWindow::onPressureSliderChange(int v)
     gAnalogPressure = v;
     ui->lb_pressure->setNum(v);
 }
+
+void MainWindow::onFlowSliderChange(int v)
+{
+    LOGV("Pressure = %d\n", v);
+    gAnalogFlow = v;
+    ui->lb_flow->setNum(v);
+}
+
 
 void MainWindow::onBtFuncPressed()
 {

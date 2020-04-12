@@ -130,11 +130,11 @@ void CalculateAveragePressure(psensor_t sensor)
 
     if (ready_cnt >= AVERAGE_BIN_NUMBER)  {
       accumulator[i] -= tap_array[i][tail_idx] ;
-      
+
     }
-    else {
-      ready_cnt++;
-    }
+//    else {
+//      ready_cnt++;
+//    }
 
     tap_array[i][head_idx] = rawSensorValue;
     if (head_idx >= AVERAGE_BIN_NUMBER) head_idx = 0;
@@ -143,13 +143,16 @@ void CalculateAveragePressure(psensor_t sensor)
     av[i] = accumulator[i]/AVERAGE_BIN_NUMBER;
     cmH2O[i] = P_CONV * ((av[i] / MAX_BIN_INPUT_F) - 0.08) / 0.09;
     
-    
-    tail_idx++;
-    if (tail_idx >= AVERAGE_BIN_NUMBER) tail_idx = 0;
-    head_idx++;
-    if (head_idx >= AVERAGE_BIN_NUMBER) head_idx = 0;
-    
   } // for loop
+
+  tail_idx++;
+  if (tail_idx >= AVERAGE_BIN_NUMBER) tail_idx = 0;
+  head_idx++;
+  if (head_idx >= AVERAGE_BIN_NUMBER) head_idx = 0;
+
+  if (ready_cnt < AVERAGE_BIN_NUMBER) {
+    ready_cnt++;
+  }
   
 }
 
@@ -188,7 +191,7 @@ void pressLoop()
     dtostrf(cmH2O[PRESSURE], 8, 2, buf);
     LOGV("Pa = %s\n", buf);
   #else
-    LOGV("Pa = %f\n", cmH2O[PRESSURE);
+    LOGV("Pa = %f\n", cmH2O[PRESSURE]);
   #endif
     tm_log = halStartTimerRef();
   }

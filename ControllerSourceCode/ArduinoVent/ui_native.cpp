@@ -167,11 +167,28 @@ static void handleChangePause(int val) {
      propSetPause(val);
 }
 
-static void handleChangeLcdAutoOff(int val) {
-     propSetLcdAutoOff(val);
+static int prop(int i) {return i;}
+
+static void handleChangeLowPressure(int val) {
+    prop(val);
 }
 
-//static void handleSave(int val){}
+static void handleChangeHighPressure(int val) {
+    prop(val);
+}
+
+
+static void handleChangeLowTidal(int val) {
+    prop(val);
+}
+
+static void handleChangeHighTidal(int val) {
+    prop(val);
+}
+
+static void handleChangeCalibration(int val) {
+    prop(val);
+}
 
 static int handleGetVent() {
     return propGetVent();
@@ -191,6 +208,49 @@ static int handleGetPause() {
 
 static int handleGetLcdAutoOff() {
      return propGetLcdAutoOff();
+}
+
+static int handleGetLowPressure() {
+    return prop(1);
+}
+
+static int handleGetHighPressure() {
+    return prop(1);
+}
+
+static int handleGetLowTidal() {
+    return prop(1);
+}
+
+static int handleGetHighTidal() {
+    return prop(1);
+}
+
+
+static char *  getFlow ()
+{
+ static char buf[8];
+ buf[sizeof(buf) - 1] = 0;
+ float f = pressGetFloatVal(FLOW);
+#ifndef VENTSIM
+    dtostrf(pressGetFloatVal(FLOW), 2, 2, buf);
+#else
+    snprintf(buf, sizeof(buf) - 1, "%f", f);
+#endif
+    return buf;
+}
+
+static char *  getTidalVolume()
+{
+ static char buf[8];
+ buf[sizeof(buf) - 1] = 0;
+ float f = pressGetFloatVal(PRESSURE);
+#ifndef VENTSIM
+    dtostrf(pressGetFloatVal(PRESSURE), 2, 2, buf);
+#else
+    snprintf(buf, sizeof(buf) - 1, "%f", f);
+#endif
+    return buf;
 }
 
 static char *  getPressure()
@@ -264,17 +324,6 @@ static /* const */ params_t params[] /* PROGMEM */ =  {
       handleChangePause,        // change prop function
       { handleGetPause }        // propGetter
     },
-    { PARAM_CHOICES,        // type
-      STR_LCD_AUTO_OFF,         // name
-      0,                        // val
-      1,                        // step
-      0,                        // min
-      1,                        // max
-      onOffTxt,                 // text array for options
-      false,                    // no dynamic changes
-      handleChangeLcdAutoOff,   // change prop function
-      { handleGetLcdAutoOff }   // propGetter
-    },
 
     {  PARAM_TEXT_GETTER,       // type
       STR_PRESSURE,             // name
@@ -290,6 +339,106 @@ static /* const */ params_t params[] /* PROGMEM */ =  {
                                       // with the first function prototype works for all. Hack but better than add lots of #ifdef's
 
     },
+
+    {  PARAM_TEXT_GETTER,       // type
+      STR_FLOW,                 // name
+      0,                        // val
+      1,                        // step
+      0,                        // min
+      1,                        // max
+      0,                        // text array for options
+      false,                    // no dynamic changes
+      0,  // change prop function
+      { (propgetfunc_t) getFlow } // despite this is a txtGetter (note that this is a PARAM_TEXT_GETTER)
+                                      // different compilers have particular syntax in how to set union. Casting
+                                      // with the first function prototype works for all. Hack but better than add lots of #ifdef's
+
+    },
+
+    {  PARAM_TEXT_GETTER,       // type
+      STR_TIDAL,                // name
+      0,                        // val
+      1,                        // step
+      0,                        // min
+      1,                        // max
+      0,                        // text array for options
+      false,                    // no dynamic changes
+      0,  // change prop function
+      { (propgetfunc_t) getTidalVolume } // despite this is a txtGetter (note that this is a PARAM_TEXT_GETTER)
+                                      // different compilers have particular syntax in how to set union. Casting
+                                      // with the first function prototype works for all. Hack but better than add lots of #ifdef's
+
+    },
+
+    { PARAM_INT,                // type
+      STR_LOW_PRESSURE,         // name
+      4,                        // val
+      1,                        // step
+      1,                        // min
+      15,                       // max
+      0,                        // text array for options
+      true,                     // no dynamic changes
+      handleChangeLowPressure,  // change prop function
+      { handleGetLowPressure }  // propGetter
+    },
+
+    { PARAM_INT,                // type
+      STR_HIGH_PRESSURE,        // name
+      30,                       // val
+      2,                        // step
+      10,                       // min
+      40,                       // max
+      0,                        // text array for options
+      true,                     // no dynamic changes
+      handleChangeHighPressure,  // change prop function
+      { handleGetHighPressure }  // propGetter
+    },
+
+    { PARAM_INT,                // type
+      STR_LOW_TIDAL,            // name
+      100,                       // val
+      100,                        // step
+      0,                       // min
+      1400,                       // max
+      0,                        // text array for options
+      true,                     // no dynamic changes
+      handleChangeLowTidal,  // change prop function
+      { handleGetLowTidal }  // propGetter
+    },
+
+    { PARAM_INT,                // type
+      STR_HIGH_TIDAL,            // name
+      1000,                       // val
+      100,                        // step
+      0,                       // min
+      1400,                       // max
+      0,                        // text array for options
+      true,                     // no dynamic changes
+      handleChangeHighTidal,  // change prop function
+      { handleGetHighTidal }  // propGetter
+    },
+
+    { PARAM_CHOICES,        // type
+      STR_CALIB_PRESSURES,           // name
+      0,                        // val
+      1,                        // step
+      0,                        // min
+      1,                        // max
+      onOffTxt ,                // text array for options
+      false,                    // no dynamic changes
+      handleChangeCalibration,  // change prop function
+      0,        // propGetter
+    },
+
+    /*
+     * #define     STR_LOW_PRESSURE            "Low  Press"
+    #define     STR_HIGH_PRESSURE           "High Press"
+    #define     STR_LOW_TIDAL               "Low  Tidal"
+    #define     STR_HIGH_TIDAL              "High Tidal"
+    #define     STR_CALIB_PRESSURES         "Cal. Press"
+
+     * */
+
 };
 
 #define NUM_PARAMS (sizeof(params)/sizeof(params_t))
