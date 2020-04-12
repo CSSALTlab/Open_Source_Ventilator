@@ -143,6 +143,8 @@ void CUiNative::updateStatus(bool blank)
   halLcdWrite(0, LCD_STATUS_ROW, buf);
 }
 
+//----------- Setters ----------
+
 static void handleChangeVent(int val) {
     propSetVent(val);
     if (val) {
@@ -167,28 +169,28 @@ static void handleChangePause(int val) {
      propSetPause(val);
 }
 
-static int prop(int i) {return i;}
-
 static void handleChangeLowPressure(int val) {
-    prop(val);
+    propSetLowPressure(val);
 }
 
 static void handleChangeHighPressure(int val) {
-    prop(val);
+    propSetHighPressure(val);
 }
 
 
 static void handleChangeLowTidal(int val) {
-    prop(val);
+    propSetLowTidal(val);
 }
 
 static void handleChangeHighTidal(int val) {
-    prop(val);
+    propSetHighTidal(val);
 }
 
 static void handleChangeCalibration(int val) {
-    prop(val);
+
 }
+
+//-------- getters ------
 
 static int handleGetVent() {
     return propGetVent();
@@ -206,24 +208,20 @@ static int handleGetPause() {
      return propGetPause();
 }
 
-static int handleGetLcdAutoOff() {
-     return propGetLcdAutoOff();
-}
-
 static int handleGetLowPressure() {
-    return prop(1);
+    return propGetLowPressure();
 }
 
 static int handleGetHighPressure() {
-    return prop(1);
+    return propGetHighPressure();
 }
 
 static int handleGetLowTidal() {
-    return prop(1);
+    return propGetLowTidal();
 }
 
 static int handleGetHighTidal() {
-    return prop(1);
+    return propGetHighTidal();
 }
 
 

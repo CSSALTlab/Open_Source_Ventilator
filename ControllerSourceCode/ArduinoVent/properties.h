@@ -36,6 +36,10 @@ void propSetDutyCycle(int val);
 void propSetPause(int val);
 void propSetLcdAutoOff(int val);
 void propSetBle(int val);
+void propSetLowPressure(int val) ;
+void propSetHighPressure(int val);
+void propSetLowTidal(int val);
+void propSetHighTidal(int val);
 
 // ---------- Getters ------------
 int propGetVent();
@@ -44,5 +48,9 @@ int propGetDutyCycle();
 int propGetPause();
 int propGetLcdAutoOff();
 int propGetBle();
+int propGetLowPressure();
+int propGetHighPressure();
+int propGetLowTidal();
+int propGetHighTidal();
 
 #endif // PROPS_H
