@@ -97,7 +97,7 @@ typedef char * (*txtGetterfunc_t)();
 typedef struct params_st {
     p_type_t        type;
     const char *    name;
-    int             val;
+    int        *    val;
     int             step;
     int             min;
     int             max;
@@ -147,6 +147,16 @@ void CUiNative::updateStatus(bool blank)
   halLcdWrite(0, LCD_STATUS_ROW, buf);
 }
 
+//------ parameter values holders -------
+static int valVent;
+static int valBpm;
+static int valDutyCycle;
+static int valPause;
+static int valLowPressure;
+static int valHighPressure;
+static int valLowTidal;
+static int valHighTidal;
+static int valCalibration;
 //----------- Setters ----------
 
 static void handleChangeVent(int val) {
@@ -161,8 +171,8 @@ static void handleChangeVent(int val) {
     uiNative->updateStatus(false);
 }
 
-static void handleChangeBps(int val) {
-    propSetBps(val);
+static void handleChangeBpm(int val) {
+    propSetBpm(val);
 }
 
 static void handleChangeDutyCycle(int val) {
@@ -197,8 +207,8 @@ static int handleGetVent() {
     return propGetVent();
 }
 
-static int handleGetBps() {
-    return propGetBps();
+static int handleGetBpm() {
+    return propGetBpm();
 }
 
 static int handleGetDutyCycle() {
@@ -278,7 +288,7 @@ static const char * yesNoTxt[] = {
 static /* const */ params_t params[] /* PROGMEM */ =  {
     { PARAM_CHOICES,        // type
       STR_VENTILATOR,           // name
-      0,                        // val
+      &valVent,                 // val
       1,                        // step
       0,                        // min
       1,                        // max
@@ -290,19 +300,19 @@ static /* const */ params_t params[] /* PROGMEM */ =  {
 
     { PARAM_INT,                // type
       STR_BPM,                  // name
-      10,                       // val
+      &valBpm,                  // val
       5,                        // step
       10,                       // min
       30,                       // max
       0,                        // text array for options
       true,                     // no dynamic changes
-      handleChangeBps,          // change prop function
-      { handleGetBps }          // propGetter
+      handleChangeBpm,          // change prop function
+      { handleGetBpm }          // propGetter
     },
 
     { PARAM_CHOICES,        // type
       STR_DUTY_CYCLE,           // name
-      0,                        // val
+      &valDutyCycle,            // val
       1,                        // step
       0,                        // min
       PROT_DUTY_CYCLE_SIZE - 1, // max
@@ -314,7 +324,7 @@ static /* const */ params_t params[] /* PROGMEM */ =  {
 
     { PARAM_INT,                // type
       STR_PAUSE,                // name
-      200,                      // val
+      &valPause,                // val
       50,                       // step
       0,                        // min
       2000,                     // max
@@ -371,7 +381,7 @@ static /* const */ params_t params[] /* PROGMEM */ =  {
 
     { PARAM_INT,                // type
       STR_LOW_PRESSURE,         // name
-      4,                        // val
+      &valLowPressure,          // val
       1,                        // step
       1,                        // min
       15,                       // max
@@ -383,7 +393,7 @@ static /* const */ params_t params[] /* PROGMEM */ =  {
 
     { PARAM_INT,                // type
       STR_HIGH_PRESSURE,        // name
-      30,                       // val
+      &valHighPressure,         // val
       2,                        // step
       10,                       // min
       40,                       // max
@@ -395,26 +405,26 @@ static /* const */ params_t params[] /* PROGMEM */ =  {
 
     { PARAM_INT,                // type
       STR_LOW_TIDAL,            // name
-      100,                       // val
-      100,                        // step
-      0,                       // min
-      1400,                       // max
+      &valLowTidal,             // val
+      100,                      // step
+      0,                        // min
+      1400,                     // max
       0,                        // text array for options
       true,                     // no dynamic changes
-      handleChangeLowTidal,  // change prop function
-      { handleGetLowTidal }  // propGetter
+      handleChangeLowTidal,     // change prop function
+      { handleGetLowTidal }     // propGetter
     },
 
     { PARAM_INT,                // type
-      STR_HIGH_TIDAL,            // name
-      1000,                       // val
-      100,                        // step
-      0,                       // min
-      1400,                       // max
+      STR_HIGH_TIDAL,           // name
+      &valHighTidal,            // val
+      100,                      // step
+      0,                        // min
+      1400,                     // max
       0,                        // text array for options
       true,                     // no dynamic changes
-      handleChangeHighTidal,  // change prop function
-      { handleGetHighTidal }  // propGetter
+      handleChangeHighTidal,    // change prop function
+      { handleGetHighTidal }    // propGetter
     },
 
     // *******************************************
@@ -422,7 +432,7 @@ static /* const */ params_t params[] /* PROGMEM */ =  {
     // *******************************************
     { PARAM_CHOICES,            // type
       STR_CALIB_PRESSURES,      // name
-      0,                        // val
+      &valCalibration,          // val
       1,                        // step
       0,                        // min
       1,                        // max
@@ -447,7 +457,7 @@ static /* const */ params_t params[] /* PROGMEM */ =  {
 
 static void handleChangeCalibration(int val) {
   breatherRequestFastCalibration();
-  params[NUM_PARAMS - 1].val = 0; // reset val
+  *params[NUM_PARAMS - 1].val = 0; // reset val
 }
 
 
@@ -482,8 +492,9 @@ void CUiNative::initParams()
 {
   unsigned int i;
   for (i=0; i<NUM_PARAMS; i++) {
+    if (params[i].type == PARAM_TEXT_GETTER) continue;
     if (params[i].getter.propGetter) {
-      params[i].val = params[i].getter.propGetter();
+      *params[i].val = params[i].getter.propGetter();
     }
   }
 
@@ -498,9 +509,9 @@ void CUiNative::initParams()
 void CUiNative::fillValBuf(char * buf, int idx)
 {
     if (params[idx].type == PARAM_INT)
-        sprintf(buf, "%5d", params[idx].val);
+        sprintf(buf, "%5d", *params[idx].val);
     else if (params[idx].type == PARAM_CHOICES)
-        strcpy(buf, params[idx].options[ params[idx].val ]);
+        strcpy(buf, params[idx].options[ *params[idx].val ]);
     else if (params[idx].type == PARAM_TEXT_GETTER)
         sprintf(buf, "%s", params[idx].getter.txtGetter());
     else
@@ -565,7 +576,7 @@ void CUiNative::refreshValue(bool force)
 
     if (params[params_idx].quickUpdate || force) {
         if (params[params_idx].handler) {
-            params[params_idx].handler(params[params_idx].val);
+            params[params_idx].handler(*params[params_idx].val);
         }
     }
 
@@ -752,14 +763,14 @@ propagate_t CUiNative::onEvent(event_t * event)
 
         //------- Right (UP) Key
         if (event->param.iParam == KEY_INCREMENT && event->type == EVT_KEY_PRESS)  {
-          if (params[params_idx].val < params[params_idx].max) {
-              params[params_idx].val += params[params_idx].step;
+          if (*params[params_idx].val < params[params_idx].max) {
+              *params[params_idx].val += params[params_idx].step;
               refreshValue(false);
           }
         }
         if (event->param.iParam == KEY_DECREMENT && event->type == EVT_KEY_PRESS)  {
-          if (params[params_idx].val > params[params_idx].min) {
-              params[params_idx].val -= params[params_idx].step;
+          if (*params[params_idx].val > params[params_idx].min) {
+              *params[params_idx].val -= params[params_idx].step;
               refreshValue(false);
           }
         }

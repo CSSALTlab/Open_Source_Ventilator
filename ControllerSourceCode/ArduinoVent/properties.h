@@ -31,7 +31,7 @@ bool propSave();
 
 // ---------- Setters ------------
 void propSetVent(int val);
-void propSetBps(int val);
+void propSetBpm(int val);
 void propSetDutyCycle(int val);
 void propSetPause(int val);
 void propSetLcdAutoOff(int val);
@@ -43,7 +43,7 @@ void propSetHighTidal(int val);
 
 // ---------- Getters ------------
 int propGetVent();
-int propGetBps();
+int propGetBpm();
 int propGetDutyCycle();
 int propGetPause();
 int propGetLcdAutoOff();

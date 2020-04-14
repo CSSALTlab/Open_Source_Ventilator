@@ -38,7 +38,7 @@ typedef struct __attribute__ ((packed))  props_st {
   uint8_t tag2;
   
   uint8_t propVent;
-  uint8_t propBps;
+  uint8_t propBpm;
   uint8_t propDutyCycle;
   uint16_t propPause;
   uint8_t propLcdAutoOff;
@@ -71,7 +71,7 @@ static void setDefaultValues()
   props.tag2             = TAG2;
   
   props.propVent         = DEFAULT_VENT;
-  props.propBps          = DEFAULT_BPS;
+  props.propBpm          = DEFAULT_BPS;
   props.propDutyCycle    = DEFAULT_DUTY_CYCLE;
   props.propPause        = DEFAULT_PAUSE;
   props.propLcdAutoOff   = DEFAULT_LCD_AUTO_OFF;
@@ -147,9 +147,9 @@ void propSetVent(int val) {
     setSavePending();
 }
 
-void propSetBps(int val) {
-    //LOG("propSetBps");
-    props.propBps = (uint8_t) val & 0x000000ff;
+void propSetBpm(int val) {
+    //LOG("propSetBpm");
+    props.propBpm = (uint8_t) val & 0x000000ff;
     setSavePending();
 }
 
@@ -207,9 +207,9 @@ int propGetVent() {
     return props.propVent;
 }
 
-int propGetBps() {
-    //LOG("propGetBps");
-    return props.propBps;
+int propGetBpm() {
+    //LOG("propGetBpm");
+    return props.propBpm;
 }
 
 int propGetDutyCycle() {
