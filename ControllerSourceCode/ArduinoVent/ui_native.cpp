@@ -458,6 +458,7 @@ CUiNative::CUiNative()
     ui_state = SHOW_MODE;
     check_set_hold = false;
     check_decrement_hold = false;
+    shortcut_to_top_done = false;
     ignore_release = 0;
     state_idx = STATE_IDLE;
     blink_mask = 0;
@@ -667,10 +668,11 @@ void CUiNative::checkFuncHold()
     }
 
     //-------- process KEY_DECREMENT hold ------
-    if (check_decrement_hold) {
+    if (check_decrement_hold && (shortcut_to_top_done == false) ) {
       if (halCheckTimerExpired(tm_decrement_hold, TM_FUNC_HOLD)) {
         params_idx = -1;
         scroolParams(true);
+        shortcut_to_top_done = true;
       }
     }
 }
@@ -725,6 +727,7 @@ propagate_t CUiNative::onEvent(event_t * event)
             }
             else {
                 check_decrement_hold = false;
+                shortcut_to_top_done = false;
             }
         }
 
