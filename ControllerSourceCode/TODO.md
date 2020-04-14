@@ -18,6 +18,14 @@ Following are things in my TODO list (other than adding features):
 
 * Optimize RAM as much as we can: check all bool’s and int’s and replace by int8_t declarations. this is to save RAM.
 
+* separate the config for each board in a dedicated header file (board_xxxx.h). config.h will just include a single board_xxxx.h file.
+
+* get rid of most (if not all) floating point computations.
+
+* better abstract pressure sensor options (NXP 7002 and BMP280)
+
+* create a separated "discover" program to help guys integrating stepper motor with their mechanism: allow operator to move motor using buttons to extract parameters to be read and later written in the real controller code.
+
 We may have more features coming as well.
 
 At this point, while we do not have PCB's available for everyone, you would need a Arduino Nano to test your code. Even better if you have the same LCD we are using.
