@@ -11,17 +11,11 @@
 ### CSSALT PCB Schematic (thanks to Ashhar):
 [Click here to see the schematic](Docs/schematic.pdf)
 
-### Concept Video
-[click here for Concept Video](https://youtu.be/OPbaNoG-sxQ)
-
-### UI Update
-[click here for UI Update 1 Video](https://youtu.be/SgtlYgqE2HE)
-
-### UI Update
-[click here for UI Update 2 Video](https://youtu.be/RzNPGvQ2CpA)
+### Demos and Tutorials Videos
+[click here for playlist with demo videos and tutorials](https://www.youtube.com/watch?v=gKr-EH8vHxM&list=PLtBsFN3o4c54h5fr7lDnGuZhvKIA5Fhd3)
 
 ## Controller
-At this point the team building the Ventilator only needs a timer to control breath rate via two valves: inhalation/exhalation valves. Later on we will add a step motor to drive a machanism to squeese a rubber bad/bottle in order to provide positive pressure.
+Main function: Provides control for inhalation/exhalation valves and/or stepper motor; monitors pressure and tidal volume. alarms in case of unexpected parameters (unexpected pressure, A/C power down, reset and etc). UI operated by LCD (20x4 20X2 or 16x2) and 3 buttons. Main settings: BPM, duty-cycle, pressure and tidal volume threshoulds.
 
 ## UI Options
 Whoever is producing the Ventilator can opt to use LCD's: 16X2, 20X2 or 20X4. Interface can be I2C or Parallel. 
@@ -40,6 +34,6 @@ Where the rows represent the following tokes:
  * **The other rows** are scrollable and show parameters. In "Normal" mode the **"-"** and **"+"** buttons are use to scroll the parameter list. Pressing and hold the **"-"** button scrolls the list up to the top.
  To change a parameter the user needs to press and hold the **"Set"** button for half+ second; it enters in "Enter" mode; then the selected row starts flashing indicating that the parameter can be changed; the The **"-"** and **"+"** buttons increment or decrement the value; Pressing the **"Set"** button commits the change (and so if times-out) and return the unit to "Normal" mode. 
 
-### Android UI
-TBD
+### To Do List
+Click [here](TODO.md) to access the TODO list
 
