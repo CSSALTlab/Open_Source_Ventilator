@@ -213,7 +213,7 @@ int32_t pressGetRawVal(psensor_t sensor)
 // Stubbs
 void pressInit()   { }
 void pressLoop() {}
-float pressGetFloatVal() { return 0.0; }
-int pressGetRawVal() { return 0; }
+float pressGetFloatVal(psensor_t sensor) { return 0.0; }
+int32_t pressGetRawVal(psensor_t sensor) { return 0; }
 
 #endif //#if ( (USE_Mpxv7002DP_PRESSURE_SENSOR == 1) || (USE_Mpxv7002DP_FLOW_SENSOR == 1) )
