@@ -446,7 +446,7 @@ static /* const */ params_t params[] /* PROGMEM */ =  {
 #define NUM_PARAMS (sizeof(params)/sizeof(params_t))
 
 static void handleChangeCalibration(int val) {
-  //breatherRequestFastCalibration();
+  breatherRequestFastCalibration();
   params[NUM_PARAMS - 1].val = 0; // reset val
 }
 
