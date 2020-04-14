@@ -55,10 +55,10 @@ enum {A0, A1, A2, A3, A4, A5, A6, A7};
  *************************************************
  */
 // Note: also add boards defined here in below's "Board check selection" just in case.
-#define       HW_VERSION_CSSALT_PROTO_01        0  // CSSALT Board ref 1 (Arduino Nano)
+#define       HW_VERSION_CSSALT_PROTO_01        1  // CSSALT Board ref 1 (Arduino Nano)
 #define       HW_VERSION_CSSALT_PROTO_02        0  // CSSALT Board ref 1 (Arduino Nano) 20x4 LCD and Motor
 #define       HW_VERSION_MV_01                  0  // Marcelo's prototype (Arduino Uno)
-#define       HW_VERSION_MV_SIMULATOR           1
+#define       HW_VERSION_MV_SIMULATOR           0
 //-------------------------------------------------
 
 
@@ -130,7 +130,8 @@ enum {A0, A1, A2, A3, A4, A5, A6, A7};
 // stepper motor
 //#define   STEPPER_MOTOR_STEP_PIN   4 // D4. also, if this is undefined (commented) the motor function if disabled
 //#define   STEPPER_MOTOR_DIR_PIN    5 // D5
-//#define   STEPPER_MOTOR_EOC_PIN    A7 // A6 Enf-Of-Course sensor (switch) active low.
+//#define   STEPPER_MOTOR_EOC_PIN    // TBD... Enf-Of-Course sensor (switch) active low.
+                                        
 //#define   STEPPER_MOTOR_INVERT_DIR  // uncoment/comment this line according to your mechanic orientation
 
 /* LiquidCrystal     (rs, enable, d4, d5, d6, d7)
@@ -171,6 +172,10 @@ enum {A0, A1, A2, A3, A4, A5, A6, A7};
 #define USE_Mpxv7002DP_PRESSURE_SENSOR  1
 #define USE_BMP280_PRESSURE_SENSOR      0
 
+//---------- FLOW SENSOR ----------
+#define USE_Mpxv7002DP_FLOW_SENSOR      1
+#define FLOW_SENSOR_PIN         A6
+
 //--------- LCD Num Rows ----------
 // Default
 #define LCD_CFG_20_COLS  1
@@ -190,7 +195,7 @@ enum {A0, A1, A2, A3, A4, A5, A6, A7};
 // stepper motor
 #define   STEPPER_MOTOR_STEP_PIN   4 // D4. also, if this is undefined (commented) the motor function if disabled
 #define   STEPPER_MOTOR_DIR_PIN    5 // D5
-#define   STEPPER_MOTOR_EOC_PIN    A7 // A7 Enf-Of-Course sensor (switch) active low.
+//#define   STEPPER_MOTOR_EOC_PIN    // TBD... Enf-Of-Course sensor (switch) active low.
 #define   STEPPER_MOTOR_INVERT_DIR  // uncoment/comment this line according to your mechanic orientation
 
 //-------------------------------------------------------------------
@@ -330,7 +335,8 @@ enum {A0, A1, A2, A3, A4, A5, A6, A7};
   #define ENABLE_MICROSEC_TIMER
 #endif
 
-//#define LOOP_MONITOR_PIN 5 // D5   this is for debugging only, should be always commented out
+#define LOOP_MONITOR_PIN A2 // A2   this is for debugging only, should be always commented out
+                            // Also connected to SW3
 // Profile on April 06th: Main loop taking 180 microseconds to be processed.
 
 //
