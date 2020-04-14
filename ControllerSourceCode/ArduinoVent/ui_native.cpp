@@ -285,8 +285,12 @@ static const char * yesNoTxt[] = {
      STR_YES,
 };
 
-static /* const */ params_t params[] /* PROGMEM */ =  {
-    { PARAM_CHOICES,        // type
+#ifndef VENTSIM
+  static const params_t params[]  PROGMEM =  {
+#else
+  static params_t params[]  =  {
+#endif
+    { PARAM_CHOICES,            // type
       STR_VENTILATOR,           // name
       &valVent,                 // val
       1,                        // step
@@ -310,7 +314,7 @@ static /* const */ params_t params[] /* PROGMEM */ =  {
       { handleGetBpm }          // propGetter
     },
 
-    { PARAM_CHOICES,        // type
+    { PARAM_CHOICES,            // type
       STR_DUTY_CYCLE,           // name
       &valDutyCycle,            // val
       1,                        // step
@@ -442,22 +446,36 @@ static /* const */ params_t params[] /* PROGMEM */ =  {
       0,        // propGetter
     },
 
-    /*
-     * #define     STR_LOW_PRESSURE            "Low  Press"
-    #define     STR_HIGH_PRESSURE           "High Press"
-    #define     STR_LOW_TIDAL               "Low  Tidal"
-    #define     STR_HIGH_TIDAL              "High Tidal"
-    #define     STR_CALIB_PRESSURES         "Cal. Press"
-
-     * */
-
 };
 
 #define NUM_PARAMS (sizeof(params)/sizeof(params_t))
 
+#ifndef VENTSIM
+params_t * loadParamRecord(int idx) {
+    static params_t par;
+    int i;
+    uint8_t * srcPtr = (uint8_t *) &params[idx];
+    uint8_t * dstPtr = (uint8_t *) &par;
+
+    for (i=0; i<sizeof(params_t); i++) {
+        *dstPtr = pgm_read_byte_near(srcPtr);
+        srcPtr++;
+        dstPtr++;
+    }
+    return &par;
+}
+#else
+params_t * loadParamRecord(int idx) {
+    static params_t par;
+    par = params[idx];
+    return &par;
+}
+#endif
+
 static void handleChangeCalibration(int val) {
   breatherRequestFastCalibration();
-  *params[NUM_PARAMS - 1].val = 0; // reset val
+  params_t * par = loadParamRecord(NUM_PARAMS - 1);
+  *par->val = 0; // reset val
 }
 
 
@@ -491,10 +509,12 @@ CUiNative::~CUiNative()
 void CUiNative::initParams()
 {
   unsigned int i;
+  params_t * par;
   for (i=0; i<NUM_PARAMS; i++) {
-    if (params[i].type == PARAM_TEXT_GETTER) continue;
-    if (params[i].getter.propGetter) {
-      *params[i].val = params[i].getter.propGetter();
+    par = loadParamRecord(i);
+    if (par->type == PARAM_TEXT_GETTER) continue;
+    if (par->getter.propGetter) {
+      *par->val = par->getter.propGetter();
     }
   }
 
@@ -508,12 +528,14 @@ void CUiNative::initParams()
 
 void CUiNative::fillValBuf(char * buf, int idx)
 {
-    if (params[idx].type == PARAM_INT)
-        sprintf(buf, "%5d", *params[idx].val);
-    else if (params[idx].type == PARAM_CHOICES)
-        strcpy(buf, params[idx].options[ *params[idx].val ]);
-    else if (params[idx].type == PARAM_TEXT_GETTER)
-        sprintf(buf, "%s", params[idx].getter.txtGetter());
+    params_t * par = loadParamRecord(params_idx);
+
+    if (par->type == PARAM_INT)
+        sprintf(buf, "%5d", *par->val);
+    else if (par->type == PARAM_CHOICES)
+        strcpy(buf, par->options[ *par->val ]);
+    else if (par->type == PARAM_TEXT_GETTER)
+        sprintf(buf, "%s", par->getter.txtGetter());
     else
         LOG("blinker: Unexpected type");
 }
@@ -574,9 +596,11 @@ void CUiNative::refreshValue(bool force)
     char buf[(LCD_NUM_COLS - PARAM_VAL_START_COL) + 1];
     int len = LCD_NUM_COLS - PARAM_VAL_START_COL;
 
-    if (params[params_idx].quickUpdate || force) {
-        if (params[params_idx].handler) {
-            params[params_idx].handler(*params[params_idx].val);
+    params_t * par = loadParamRecord(params_idx);
+
+    if (par->quickUpdate || force) {
+        if (par->handler) {
+            par->handler(*par->val);
         }
     }
 
@@ -631,14 +655,17 @@ void CUiNative::updateParams()
   unsigned int idx = params_idx;
   unsigned int i;
   char buf[LCD_NUM_COLS+1];
+  params_t * par;
+
 
   for (i=0; i < LCD_PARAMS_NUM_ROWS; i++) {
+      par = loadParamRecord(idx);
       memset(buf, 0x20, LCD_NUM_COLS);
       buf[LCD_NUM_COLS] = 0;
       if (i == 0) {
         buf[0] = '>';
       }
-      memcpy(&buf[1], params[idx].name, strlen(params[idx].name));
+      memcpy(&buf[1], par->name, strlen(par->name));
       fillValBuf(&buf[PARAM_VAL_START_COL], idx);
       halLcdWrite(0, LCD_PARAMS_FIRST_ROW + i, buf);
 
@@ -761,16 +788,18 @@ propagate_t CUiNative::onEvent(event_t * event)
             refreshValue(true);
         }
 
+        params_t * par = loadParamRecord(params_idx);
+
         //------- Right (UP) Key
         if (event->param.iParam == KEY_INCREMENT && event->type == EVT_KEY_PRESS)  {
-          if (*params[params_idx].val < params[params_idx].max) {
-              *params[params_idx].val += params[params_idx].step;
+          if (*par->val < par->max) {
+              *par->val += par->step;
               refreshValue(false);
           }
         }
         if (event->param.iParam == KEY_DECREMENT && event->type == EVT_KEY_PRESS)  {
-          if (*params[params_idx].val > params[params_idx].min) {
-              *params[params_idx].val -= params[params_idx].step;
+          if (*par->val > par->min) {
+              *par->val -= par->step;
               refreshValue(false);
           }
         }
