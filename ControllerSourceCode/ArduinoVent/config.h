@@ -230,6 +230,7 @@ enum {A0, A1, A2, A3, A4, A5, A6, A7};
 
 //----------- PRESSURE_SENSOR ------------
 #define PRESSURE_SENSOR_PIN     A7
+#define FLOW_SENSOR_PIN         A0
 
 //--------- LCD Num Rows ----------
 // Default
