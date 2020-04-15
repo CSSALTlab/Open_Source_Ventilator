@@ -20,7 +20,7 @@
 */
 #include "config.h"
 
-#ifndef STEPPER_MOTOR_STEP_PIN // compile this file only if not using Motor Stepper (squeezer)
+#ifdef STEPPER_MOTOR_STEP_PIN // compile this file only when using Motor Stepper (squeezer)
 
 #include "breather.h"
 #include "properties.h"
@@ -29,6 +29,7 @@
 #include "pressure.h"
 #include "event.h"
 #include "alarm.h"
+#include "motor.h"
 
 #define MINUTE_MILLI 60000
 #define TM_WAIT_TO_OUT 200 //200 milliseconds
@@ -69,7 +70,7 @@ int breatherGetPropress()
 
 void breatherStartCycle()
 {
-    curr_total_cycle_milli = MINUTE_MILLI / propGetBpm();
+    curr_total_cycle_milli = MINUTE_MILLI / propGetBps();
     curr_pause = propGetPause();
     curr_rate = propGetDutyCycle();
     int in_out_t = curr_total_cycle_milli - (curr_rate + TM_WAIT_TO_OUT);
@@ -81,6 +82,9 @@ void breatherStartCycle()
     halValveOutOff();
     halValveInOn();
     fast_calib = false;
+
+  motorStartInspiration(curr_in_milli);
+  
 
 #if 0
   LOG("Ventilation ON:");
@@ -105,30 +109,28 @@ static void fsmStopped()
 }
 
 static void fsmIn()
-{
-    uint64_t m = halStartTimerRef();
-    if (tm_start + curr_in_milli < m) {
-        // in valve off
-        halValveInOff();
-        tm_start = halStartTimerRef();
-        b_state = B_ST_WAIT_TO_OUT;
-    }
-    else {
-        curr_progress = ((m - tm_start) * 100)/ curr_in_milli;
-        //curr_progress = 100 - (100 * tm_start + curr_in_milli) / m;
-
-        //--------- we check for low pressure at 50% or grater
-        // low pressure hardcode to 3 InchH2O -> 90 int
-        if (tm_start + curr_in_milli/2 < m) {
-            if (pressGetRawVal(PRESSURE) < 90) {
-              CEvent::post(EVT_ALARM, ALARM_IDX_LOW_PRESSURE);
-            }
-        }
-    }
-    //------ check for high pressure hardcode to 35 InchH2O -> 531 int
-    if (pressGetRawVal(PRESSURE) > 513) {
-      CEvent::post(EVT_ALARM, ALARM_IDX_HIGH_PRESSURE);
-    }
+{  
+  curr_progress = motorGetProgress();
+  
+  if (curr_progress == 100) {
+    // in valve off
+    halValveInOff();
+    tm_start = halStartTimerRef();
+    b_state = B_ST_WAIT_TO_OUT;    
+  }
+  
+  //--------- we check for low pressure at 50% or grater
+  // low pressure hardcode to 3 InchH2O -> 90 int
+  if (curr_progress < 50) {
+      if (pressGetRawVal(PRESSURE) < 90) {
+        CEvent::post(EVT_ALARM, ALARM_IDX_LOW_PRESSURE);
+      }
+  }
+  
+  //------ check for high pressure hardcode to 35 InchH2O -> 531 int
+  if (pressGetRawVal(PRESSURE) > 513) {
+    CEvent::post(EVT_ALARM, ALARM_IDX_HIGH_PRESSURE);
+  }
 
 }
 
@@ -139,13 +141,16 @@ static void fsmWaitToOut()
         tm_start = halStartTimerRef();
         b_state = B_ST_OUT;
         halValveOutOn();
+        motorStartExhalation(curr_out_milli);
     }
 }
 
 static void fsmOut()
 {
-    uint64_t m = halStartTimerRef();
-    if (tm_start + curr_out_milli < m) {
+  int p = motorGetProgress();
+  curr_progress = 100 - p;
+  if (curr_progress >  100) curr_progress = 100;
+  if (p == 100) {
 
         //if we have fast calibration request then we keep the valve open
         if (fast_calib) {
@@ -154,16 +159,10 @@ static void fsmOut()
             b_state = B_ST_FAST_CALIB;
             return;
         }
-
-        // switch valves
-        tm_start = halStartTimerRef();
-        b_state = B_ST_PAUSE;
-        halValveOutOff();
-    }
-    else {
-        curr_progress = 100 - ((m - tm_start) * 100)/ curr_out_milli;
-        if (curr_progress >  100) curr_progress = 100;
-    }
+    tm_start = halStartTimerRef();
+    b_state = B_ST_PAUSE;
+    halValveOutOff();    
+  }
 }
 
 static void fsmFastCalib()
@@ -178,7 +177,6 @@ static void fsmFastCalib()
     }
 
 }
-
 
 static void fsmStopping()
 {
@@ -227,5 +225,6 @@ void breatherLoop()
         LOG("breatherLoop: unexpected state");
     }
 }
+
 //---------------------------------------------------------
 #endif //#ifndef STEPPER_MOTOR_STEP_PIN

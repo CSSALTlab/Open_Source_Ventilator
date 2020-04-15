@@ -47,7 +47,6 @@
 enum {A0, A1, A2, A3, A4, A5, A6, A7};
 #endif
 
-#define PREESURE_ENABLE
 
 /*************************************************
  * 
@@ -57,20 +56,14 @@ enum {A0, A1, A2, A3, A4, A5, A6, A7};
  */
 // Note: also add boards defined here in below's "Board check selection" just in case.
 #define       HW_VERSION_CSSALT_PROTO_01        1  // CSSALT Board ref 1 (Arduino Nano)
-#define       HW_VERSION_CSSALT_PROTO_02        0  // CSSALT Board ref 1 (Arduino Nano) 20x4 LCD
+#define       HW_VERSION_CSSALT_PROTO_02        0  // CSSALT Board ref 1 (Arduino Nano) 20x4 LCD and Motor
 #define       HW_VERSION_MV_01                  0  // Marcelo's prototype (Arduino Uno)
 #define       HW_VERSION_MV_SIMULATOR           0
 //-------------------------------------------------
 
 
-//---- Board check selection -----
-#if ( (HW_VERSION_CSSALT_PROTO_01 + \
-       HW_VERSION_CSSALT_PROTO_02 + \
-       HW_VERSION_MV_01 + \
-       HW_VERSION_MV_SIMULATOR \
-    ) != 1)
-  #error "At least one and only one HW_VERSION_xxx must be set to 1 in config.h"
-#endif
+
+
 
 /*
                 ***********************************************
@@ -107,12 +100,16 @@ enum {A0, A1, A2, A3, A4, A5, A6, A7};
 #endif
 
 #define  ALARM_SOUND_PIN        6  // D6
+
 //----------- PRESSURE_SENSOR ------------
-#define PREESURE_ENABLE
 #define PRESSURE_SENSOR_PIN     A7
 
-#define USE_Mpxv7002DP_PRESSURE_SENSOR  0
-#define USE_BMP280_PRESSURE_SENSOR      1
+#define USE_Mpxv7002DP_PRESSURE_SENSOR  1
+#define USE_BMP280_PRESSURE_SENSOR      0
+
+//---------- FLOW SENSOR ----------
+#define USE_Mpxv7002DP_FLOW_SENSOR      1
+#define FLOW_SENSOR_PIN         A6
 
 //--------- LCD Num Rows ----------
 // Default
@@ -133,7 +130,8 @@ enum {A0, A1, A2, A3, A4, A5, A6, A7};
 // stepper motor
 //#define   STEPPER_MOTOR_STEP_PIN   4 // D4. also, if this is undefined (commented) the motor function if disabled
 //#define   STEPPER_MOTOR_DIR_PIN    5 // D5
-//#define   STEPPER_MOTOR_EOC_PIN    A6 // A6 Enf-Of-Course sensor (switch) active low.
+//#define   STEPPER_MOTOR_EOC_PIN    // TBD... Enf-Of-Course sensor (switch) active low.
+                                        
 //#define   STEPPER_MOTOR_INVERT_DIR  // uncoment/comment this line according to your mechanic orientation
 
 /* LiquidCrystal     (rs, enable, d4, d5, d6, d7)
@@ -167,9 +165,16 @@ enum {A0, A1, A2, A3, A4, A5, A6, A7};
 #endif
 
 #define  ALARM_SOUND_PIN        6  // D6
+
 //----------- PRESSURE_SENSOR ------------
-#define PREESURE_ENABLE
 #define PRESSURE_SENSOR_PIN     A7
+
+#define USE_Mpxv7002DP_PRESSURE_SENSOR  1
+#define USE_BMP280_PRESSURE_SENSOR      0
+
+//---------- FLOW SENSOR ----------
+#define USE_Mpxv7002DP_FLOW_SENSOR      1
+#define FLOW_SENSOR_PIN         A6
 
 //--------- LCD Num Rows ----------
 // Default
@@ -190,7 +195,7 @@ enum {A0, A1, A2, A3, A4, A5, A6, A7};
 // stepper motor
 #define   STEPPER_MOTOR_STEP_PIN   4 // D4. also, if this is undefined (commented) the motor function if disabled
 #define   STEPPER_MOTOR_DIR_PIN    5 // D5
-#define   STEPPER_MOTOR_EOC_PIN    A6 // A6 Enf-Of-Course sensor (switch) active low.
+//#define   STEPPER_MOTOR_EOC_PIN    // TBD... Enf-Of-Course sensor (switch) active low.
 #define   STEPPER_MOTOR_INVERT_DIR  // uncoment/comment this line according to your mechanic orientation
 
 //-------------------------------------------------------------------
@@ -224,8 +229,8 @@ enum {A0, A1, A2, A3, A4, A5, A6, A7};
 #endif
 
 //----------- PRESSURE_SENSOR ------------
-#define PREESURE_ENABLE
 #define PRESSURE_SENSOR_PIN     A7
+#define FLOW_SENSOR_PIN         A0
 
 //--------- LCD Num Rows ----------
 // Default
@@ -266,6 +271,7 @@ enum {A0, A1, A2, A3, A4, A5, A6, A7};
 #define LCD_CFG_2_ROWS  0
 #define LCD_CFG_4_ROWS  1
 
+#define USE_Mpxv7002DP_PRESSURE_SENSOR 1
 
 
 #endif // ----------------- END OF BOARDS DEFINITIONS ----------------------
@@ -297,7 +303,10 @@ enum {A0, A1, A2, A3, A4, A5, A6, A7};
 #define  DEFAULT_LCD_AUTO_OFF    0
 #define  DEFAULT_BLE             0
 
-
+#define  DEFAULT_LOW_PRESSURE    4
+#define  DEFAULT_HIGH_PRESSURE   35
+#define  DEFAULT_LOW_TIDAL       100
+#define  DEFAULT_HIGH_TIDAL      1200
 
 //-------------- Checks ---------------
 #if (LCD_CFG_2_ROWS == 1)
@@ -327,7 +336,8 @@ enum {A0, A1, A2, A3, A4, A5, A6, A7};
   #define ENABLE_MICROSEC_TIMER
 #endif
 
-//#define LOOP_MONITOR_PIN 5 // D5   this is for debugging only, should be always commented out
+#define LOOP_MONITOR_PIN A2 // A2   this is for debugging only, should be always commented out
+                            // Also connected to SW3
 // Profile on April 06th: Main loop taking 180 microseconds to be processed.
 
 //

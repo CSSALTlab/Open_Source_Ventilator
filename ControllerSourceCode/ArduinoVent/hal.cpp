@@ -25,6 +25,10 @@
 #include "properties.h"
 #include "pressure.h"
 
+#ifndef LCD_CFG_I2C
+  #include "LcdMv.h"
+#endif
+
 
 #include "EEPROM.h"
 
@@ -89,7 +93,7 @@ void halBeepAlarmOnOff( bool on)
   #ifdef LCD_CFG_I2C
     LiquidCrystal_I2C lcd(0x27,4,4);
   #else
-    LiquidCrystal lcd(  LCD_CFG_RS, 
+    LcdMv         lcd(  LCD_CFG_RS, 
                         LCD_CFG_E, LCD_CFG_D4, 
                         LCD_CFG_D5, 
                         LCD_CFG_D6, 
@@ -207,6 +211,7 @@ static void loopWdt()
 
   
 void halInit(uint8_t reset_val) {
+  int r,c;
 #ifdef DEBUG_SERIAL_LOGS
   Serial.begin(9600);
   LOG("Starting...");
@@ -220,18 +225,22 @@ void halInit(uint8_t reset_val) {
   lcd.backlight();
 #else
   #if (LCD_CFG_4_ROWS == 1)
+    r = 4;
     #if (LCD_CFG_20_COLS == 1)
-        lcd.begin(20, 4);
+        c = 20;
     #else
-        lcd.begin(16, 4);
+        c = 16;
     #endif
   #else
+    r = 2;
     #if (LCD_CFG_20_COLS == 1)
-        lcd.begin(20, 2);
+        c = 20;
     #else
-        lcd.begin(16, 2);
+        c = 16;
     #endif
   #endif
+  lcd.begin(c, r);
+  lcd.setFrameBuffer( (uint8_t *) lcdBuffer, r, c);
 #endif
   halLcdClear();
 
@@ -344,8 +353,12 @@ static void lcdUpdate()
             *d++ = *s++;
         }
         *d++ = 0;
+      
+#ifdef LCD_CFG_I2C          // only for I2C as LcdMv updates by refresh
         lcd.setCursor(0,r);
         lcd.print(out);
+#endif
+      
     }
 }
 
@@ -436,24 +449,26 @@ void halValveOutOff()
 //---------- Stepper Motor ---------
 static void motorInit() 
 {
-#ifdef STEPPER_MOTOR_INVERT_DIR
+#ifdef STEPPER_MOTOR_STEP_PIN
   pinMode(STEPPER_MOTOR_STEP_PIN, OUTPUT);
   pinMode(STEPPER_MOTOR_DIR_PIN, OUTPUT);
-  pinMode(STEPPER_MOTOR_EOC_PIN, INPUT_PULLUP);;
+#ifdef STEPPER_MOTOR_EOC_PIN
+  pinMode(STEPPER_MOTOR_EOC_PIN, INPUT_PULLUP);
+#endif
   halMotorStep(false);
 #endif
 }
 
 void halMotorStep(bool on)
 {
-#ifdef STEPPER_MOTOR_INVERT_DIR
+#ifdef STEPPER_MOTOR_STEP_PIN
   digitalWrite(STEPPER_MOTOR_STEP_PIN, on); 
 #endif
 }
 
 void halMotorDir(bool dir)
 {
-#ifdef STEPPER_MOTOR_INVERT_DIR
+#ifdef STEPPER_MOTOR_STEP_PIN
   #ifndef STEPPER_MOTOR_INVERT_DIR
     digitalWrite(STEPPER_MOTOR_DIR_PIN, dir);
   #else
@@ -464,8 +479,12 @@ void halMotorDir(bool dir)
 
 bool halMotorEOC()
 {
-#ifdef STEPPER_MOTOR_INVERT_DIR
-  return digitalRead(STEPPER_MOTOR_EOC_PIN);
+#ifdef STEPPER_MOTOR_STEP_PIN
+  #ifdef STEPPER_MOTOR_EOC_PIN
+    return digitalRead(STEPPER_MOTOR_EOC_PIN);
+  #else
+    return false;
+  #endif
 #endif
 }
 
@@ -474,6 +493,13 @@ uint16_t halGetAnalogPressure()
 {
   return (uint16_t) analogRead(PRESSURE_SENSOR_PIN);  //Raw digital input from pressure sensor
 }
+
+//---------- Analog pressure sensor -----------
+uint16_t halGetAnalogFlow()
+{
+  return (uint16_t) analogRead(FLOW_SENSOR_PIN);  //Raw digital input from pressure sensor
+}
+
 
 //--------- Save/Restore data in non-volatil storage
 bool halSaveDataBlock(uint8_t * data, int _size)
@@ -571,6 +597,11 @@ void halLoop()
 
 #ifdef ENABLE_MICROSEC_TIMER
   updateMicroFreeRunningTimer();
+#endif
+  
+  
+#ifndef LCD_CFG_I2C
+  lcd.stepRefresh();
 #endif
 
 }

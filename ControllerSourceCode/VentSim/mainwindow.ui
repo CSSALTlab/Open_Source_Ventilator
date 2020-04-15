@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>482</width>
-    <height>468</height>
+    <height>552</height>
    </rect>
   </property>
   <property name="palette">
@@ -326,6 +326,53 @@ Duty cycle:      1:1
      <string>Pressure:</string>
     </property>
    </widget>
+   <widget class="QSlider" name="FlowSlider">
+    <property name="geometry">
+     <rect>
+      <x>130</x>
+      <y>430</y>
+      <width>261</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Horizontal</enum>
+    </property>
+   </widget>
+   <widget class="QLabel" name="lb_flow">
+    <property name="geometry">
+     <rect>
+      <x>397</x>
+      <y>430</y>
+      <width>51</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>0.0</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+    </property>
+   </widget>
+   <widget class="QLabel" name="lb_static_flow">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>430</y>
+      <width>101</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>18</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>Flow:</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
@@ -333,7 +380,7 @@ Duty cycle:      1:1
      <x>0</x>
      <y>0</y>
      <width>482</width>
-     <height>26</height>
+     <height>22</height>
     </rect>
    </property>
   </widget>

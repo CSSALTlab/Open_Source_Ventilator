@@ -97,7 +97,7 @@ typedef char * (*txtGetterfunc_t)();
 typedef struct params_st {
     p_type_t        type;
     const char *    name;
-    int             val;
+    int        *    val;
     int             step;
     int             min;
     int             max;
@@ -112,6 +112,10 @@ typedef struct params_st {
 } params_t;
 
 static CUiNative * uiNative;
+
+// -------------  prototypes --------------
+static void handleChangeCalibration(int val);
+
 
 void uiNativeInit()
 {
@@ -143,6 +147,18 @@ void CUiNative::updateStatus(bool blank)
   halLcdWrite(0, LCD_STATUS_ROW, buf);
 }
 
+//------ parameter values holders -------
+static int valVent;
+static int valBpm;
+static int valDutyCycle;
+static int valPause;
+static int valLowPressure;
+static int valHighPressure;
+static int valLowTidal;
+static int valHighTidal;
+static int valCalibration;
+//----------- Setters ----------
+
 static void handleChangeVent(int val) {
     propSetVent(val);
     if (val) {
@@ -155,8 +171,8 @@ static void handleChangeVent(int val) {
     uiNative->updateStatus(false);
 }
 
-static void handleChangeBps(int val) {
-    propSetBps(val);
+static void handleChangeBpm(int val) {
+    propSetBpm(val);
 }
 
 static void handleChangeDutyCycle(int val) {
@@ -167,18 +183,32 @@ static void handleChangePause(int val) {
      propSetPause(val);
 }
 
-static void handleChangeLcdAutoOff(int val) {
-     propSetLcdAutoOff(val);
+static void handleChangeLowPressure(int val) {
+    propSetLowPressure(val);
 }
 
-//static void handleSave(int val){}
+static void handleChangeHighPressure(int val) {
+    propSetHighPressure(val);
+}
+
+
+static void handleChangeLowTidal(int val) {
+    propSetLowTidal(val);
+}
+
+static void handleChangeHighTidal(int val) {
+    propSetHighTidal(val);
+}
+
+
+//-------- getters ------
 
 static int handleGetVent() {
     return propGetVent();
 }
 
-static int handleGetBps() {
-    return propGetBps();
+static int handleGetBpm() {
+    return propGetBpm();
 }
 
 static int handleGetDutyCycle() {
@@ -189,17 +219,56 @@ static int handleGetPause() {
      return propGetPause();
 }
 
-static int handleGetLcdAutoOff() {
-     return propGetLcdAutoOff();
+static int handleGetLowPressure() {
+    return propGetLowPressure();
+}
+
+static int handleGetHighPressure() {
+    return propGetHighPressure();
+}
+
+static int handleGetLowTidal() {
+    return propGetLowTidal();
+}
+
+static int handleGetHighTidal() {
+    return propGetHighTidal();
+}
+
+
+static char *  getFlow ()
+{
+ static char buf[8];
+ buf[sizeof(buf) - 1] = 0;
+ float f = pressGetFloatVal(FLOW);
+#ifndef VENTSIM
+    dtostrf(pressGetFloatVal(FLOW), 2, 2, buf);
+#else
+    snprintf(buf, sizeof(buf) - 1, "%f", f);
+#endif
+    return buf;
+}
+
+static char *  getTidalVolume()
+{
+ static char buf[8];
+ buf[sizeof(buf) - 1] = 0;
+ float f = pressGetFloatVal(PRESSURE);
+#ifndef VENTSIM
+    dtostrf(pressGetFloatVal(PRESSURE), 2, 2, buf);
+#else
+    snprintf(buf, sizeof(buf) - 1, "%f", f);
+#endif
+    return buf;
 }
 
 static char *  getPressure()
 {
  static char buf[8];
  buf[sizeof(buf) - 1] = 0;
- float f = pressGetFloatVal();
+ float f = pressGetFloatVal(PRESSURE);
 #ifndef VENTSIM
-    dtostrf(pressGetFloatVal(), 2, 2, buf);
+    dtostrf(pressGetFloatVal(PRESSURE), 2, 2, buf);
 #else
     snprintf(buf, sizeof(buf) - 1, "%f", f);
 #endif
@@ -216,10 +285,14 @@ static const char * yesNoTxt[] = {
      STR_YES,
 };
 
-static /* const */ params_t params[] /* PROGMEM */ =  {
-    { PARAM_CHOICES,        // type
+#ifndef VENTSIM
+  static const params_t params[]  PROGMEM =  {
+#else
+  static params_t params[]  =  {
+#endif
+    { PARAM_CHOICES,            // type
       STR_VENTILATOR,           // name
-      0,                        // val
+      &valVent,                 // val
       1,                        // step
       0,                        // min
       1,                        // max
@@ -231,19 +304,19 @@ static /* const */ params_t params[] /* PROGMEM */ =  {
 
     { PARAM_INT,                // type
       STR_BPM,                  // name
-      10,                       // val
+      &valBpm,                  // val
       5,                        // step
       10,                       // min
       30,                       // max
       0,                        // text array for options
       true,                     // no dynamic changes
-      handleChangeBps,          // change prop function
-      { handleGetBps }          // propGetter
+      handleChangeBpm,          // change prop function
+      { handleGetBpm }          // propGetter
     },
 
-    { PARAM_CHOICES,        // type
+    { PARAM_CHOICES,            // type
       STR_DUTY_CYCLE,           // name
-      0,                        // val
+      &valDutyCycle,            // val
       1,                        // step
       0,                        // min
       PROT_DUTY_CYCLE_SIZE - 1, // max
@@ -255,7 +328,7 @@ static /* const */ params_t params[] /* PROGMEM */ =  {
 
     { PARAM_INT,                // type
       STR_PAUSE,                // name
-      200,                      // val
+      &valPause,                // val
       50,                       // step
       0,                        // min
       2000,                     // max
@@ -263,17 +336,6 @@ static /* const */ params_t params[] /* PROGMEM */ =  {
       true,                     // no dynamic changes
       handleChangePause,        // change prop function
       { handleGetPause }        // propGetter
-    },
-    { PARAM_CHOICES,        // type
-      STR_LCD_AUTO_OFF,         // name
-      0,                        // val
-      1,                        // step
-      0,                        // min
-      1,                        // max
-      onOffTxt,                 // text array for options
-      false,                    // no dynamic changes
-      handleChangeLcdAutoOff,   // change prop function
-      { handleGetLcdAutoOff }   // propGetter
     },
 
     {  PARAM_TEXT_GETTER,       // type
@@ -290,9 +352,132 @@ static /* const */ params_t params[] /* PROGMEM */ =  {
                                       // with the first function prototype works for all. Hack but better than add lots of #ifdef's
 
     },
+
+    {  PARAM_TEXT_GETTER,       // type
+      STR_FLOW,                 // name
+      0,                        // val
+      1,                        // step
+      0,                        // min
+      1,                        // max
+      0,                        // text array for options
+      false,                    // no dynamic changes
+      0,  // change prop function
+      { (propgetfunc_t) getFlow } // despite this is a txtGetter (note that this is a PARAM_TEXT_GETTER)
+                                      // different compilers have particular syntax in how to set union. Casting
+                                      // with the first function prototype works for all. Hack but better than add lots of #ifdef's
+
+    },
+
+    {  PARAM_TEXT_GETTER,       // type
+      STR_TIDAL,                // name
+      0,                        // val
+      1,                        // step
+      0,                        // min
+      1,                        // max
+      0,                        // text array for options
+      false,                    // no dynamic changes
+      0,  // change prop function
+      { (propgetfunc_t) getTidalVolume } // despite this is a txtGetter (note that this is a PARAM_TEXT_GETTER)
+                                      // different compilers have particular syntax in how to set union. Casting
+                                      // with the first function prototype works for all. Hack but better than add lots of #ifdef's
+
+    },
+
+    { PARAM_INT,                // type
+      STR_LOW_PRESSURE,         // name
+      &valLowPressure,          // val
+      1,                        // step
+      1,                        // min
+      15,                       // max
+      0,                        // text array for options
+      true,                     // no dynamic changes
+      handleChangeLowPressure,  // change prop function
+      { handleGetLowPressure }  // propGetter
+    },
+
+    { PARAM_INT,                // type
+      STR_HIGH_PRESSURE,        // name
+      &valHighPressure,         // val
+      2,                        // step
+      10,                       // min
+      40,                       // max
+      0,                        // text array for options
+      true,                     // no dynamic changes
+      handleChangeHighPressure,  // change prop function
+      { handleGetHighPressure }  // propGetter
+    },
+
+    { PARAM_INT,                // type
+      STR_LOW_TIDAL,            // name
+      &valLowTidal,             // val
+      100,                      // step
+      0,                        // min
+      1400,                     // max
+      0,                        // text array for options
+      true,                     // no dynamic changes
+      handleChangeLowTidal,     // change prop function
+      { handleGetLowTidal }     // propGetter
+    },
+
+    { PARAM_INT,                // type
+      STR_HIGH_TIDAL,           // name
+      &valHighTidal,            // val
+      100,                      // step
+      0,                        // min
+      1400,                     // max
+      0,                        // text array for options
+      true,                     // no dynamic changes
+      handleChangeHighTidal,    // change prop function
+      { handleGetHighTidal }    // propGetter
+    },
+
+    // *******************************************
+    // NOTE: THIS MUST BE THE VERY LAST PARAMETER
+    // *******************************************
+    { PARAM_CHOICES,            // type
+      STR_CALIB_PRESSURES,      // name
+      &valCalibration,          // val
+      1,                        // step
+      0,                        // min
+      1,                        // max
+      onOffTxt ,                // text array for options
+      false,                    // no dynamic changes
+      handleChangeCalibration,  // change prop function
+      0,        // propGetter
+    },
+
 };
 
 #define NUM_PARAMS (sizeof(params)/sizeof(params_t))
+
+#ifndef VENTSIM
+params_t * loadParamRecord(int idx) {
+    static params_t par;
+    int i;
+    uint8_t * srcPtr = (uint8_t *) &params[idx];
+    uint8_t * dstPtr = (uint8_t *) &par;
+
+    for (i=0; i<sizeof(params_t); i++) {
+        *dstPtr = pgm_read_byte_near(srcPtr);
+        srcPtr++;
+        dstPtr++;
+    }
+    return &par;
+}
+#else
+params_t * loadParamRecord(int idx) {
+    static params_t par;
+    par = params[idx];
+    return &par;
+}
+#endif
+
+static void handleChangeCalibration(int val) {
+  breatherRequestFastCalibration();
+  params_t * par = loadParamRecord(NUM_PARAMS - 1);
+  *par->val = 0; // reset val
+}
+
 
 //------------ Global -----------
 CUiNative::CUiNative()
@@ -301,6 +486,7 @@ CUiNative::CUiNative()
     ui_state = SHOW_MODE;
     check_set_hold = false;
     check_decrement_hold = false;
+    shortcut_to_top_done = false;
     ignore_release = 0;
     state_idx = STATE_IDLE;
     blink_mask = 0;
@@ -323,9 +509,12 @@ CUiNative::~CUiNative()
 void CUiNative::initParams()
 {
   unsigned int i;
+  params_t * par;
   for (i=0; i<NUM_PARAMS; i++) {
-    if (params[i].getter.propGetter) {
-      params[i].val = params[i].getter.propGetter();
+    par = loadParamRecord(i);
+    if (par->type == PARAM_TEXT_GETTER) continue;
+    if (par->getter.propGetter) {
+      *par->val = par->getter.propGetter();
     }
   }
 
@@ -339,12 +528,14 @@ void CUiNative::initParams()
 
 void CUiNative::fillValBuf(char * buf, int idx)
 {
-    if (params[idx].type == PARAM_INT)
-        sprintf(buf, "%5d", params[idx].val);
-    else if (params[idx].type == PARAM_CHOICES)
-        strcpy(buf, params[idx].options[ params[idx].val ]);
-    else if (params[idx].type == PARAM_TEXT_GETTER)
-        sprintf(buf, "%s", params[idx].getter.txtGetter());
+    params_t * par = loadParamRecord(params_idx);
+
+    if (par->type == PARAM_INT)
+        sprintf(buf, "%5d", *par->val);
+    else if (par->type == PARAM_CHOICES)
+        strcpy(buf, par->options[ *par->val ]);
+    else if (par->type == PARAM_TEXT_GETTER)
+        sprintf(buf, "%s", par->getter.txtGetter());
     else
         LOG("blinker: Unexpected type");
 }
@@ -405,9 +596,11 @@ void CUiNative::refreshValue(bool force)
     char buf[(LCD_NUM_COLS - PARAM_VAL_START_COL) + 1];
     int len = LCD_NUM_COLS - PARAM_VAL_START_COL;
 
-    if (params[params_idx].quickUpdate || force) {
-        if (params[params_idx].handler) {
-            params[params_idx].handler(params[params_idx].val);
+    params_t * par = loadParamRecord(params_idx);
+
+    if (par->quickUpdate || force) {
+        if (par->handler) {
+            par->handler(*par->val);
         }
     }
 
@@ -462,14 +655,17 @@ void CUiNative::updateParams()
   unsigned int idx = params_idx;
   unsigned int i;
   char buf[LCD_NUM_COLS+1];
+  params_t * par;
+
 
   for (i=0; i < LCD_PARAMS_NUM_ROWS; i++) {
+      par = loadParamRecord(idx);
       memset(buf, 0x20, LCD_NUM_COLS);
       buf[LCD_NUM_COLS] = 0;
       if (i == 0) {
         buf[0] = '>';
       }
-      memcpy(&buf[1], params[idx].name, strlen(params[idx].name));
+      memcpy(&buf[1], par->name, strlen(par->name));
       fillValBuf(&buf[PARAM_VAL_START_COL], idx);
       halLcdWrite(0, LCD_PARAMS_FIRST_ROW + i, buf);
 
@@ -510,10 +706,11 @@ void CUiNative::checkFuncHold()
     }
 
     //-------- process KEY_DECREMENT hold ------
-    if (check_decrement_hold) {
+    if (check_decrement_hold && (shortcut_to_top_done == false) ) {
       if (halCheckTimerExpired(tm_decrement_hold, TM_FUNC_HOLD)) {
         params_idx = -1;
         scroolParams(true);
+        shortcut_to_top_done = true;
       }
     }
 }
@@ -568,6 +765,7 @@ propagate_t CUiNative::onEvent(event_t * event)
             }
             else {
                 check_decrement_hold = false;
+                shortcut_to_top_done = false;
             }
         }
 
@@ -590,16 +788,18 @@ propagate_t CUiNative::onEvent(event_t * event)
             refreshValue(true);
         }
 
+        params_t * par = loadParamRecord(params_idx);
+
         //------- Right (UP) Key
         if (event->param.iParam == KEY_INCREMENT && event->type == EVT_KEY_PRESS)  {
-          if (params[params_idx].val < params[params_idx].max) {
-              params[params_idx].val += params[params_idx].step;
+          if (*par->val < par->max) {
+              *par->val += par->step;
               refreshValue(false);
           }
         }
         if (event->param.iParam == KEY_DECREMENT && event->type == EVT_KEY_PRESS)  {
-          if (params[params_idx].val > params[params_idx].min) {
-              params[params_idx].val -= params[params_idx].step;
+          if (*par->val > par->min) {
+              *par->val -= par->step;
               refreshValue(false);
           }
         }

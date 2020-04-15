@@ -75,6 +75,7 @@ public:
     bool check_set_hold; // = false;
     unsigned long tm_decrement_hold;
     bool check_decrement_hold; // = false;
+    bool shortcut_to_top_done;
     int ignore_release; // = 0;
 
     int blink_mask; // = 0;

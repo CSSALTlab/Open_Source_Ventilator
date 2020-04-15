@@ -38,11 +38,16 @@ typedef struct __attribute__ ((packed))  props_st {
   uint8_t tag2;
   
   uint8_t propVent;
-  uint8_t propBps;
+  uint8_t propBpm;
   uint8_t propDutyCycle;
   uint16_t propPause;
   uint8_t propLcdAutoOff;
   uint8_t propBle;
+
+  uint8_t propLowPressure;
+  uint8_t propHighPressure;
+  uint16_t propLowTidal;
+  uint16_t propHighTidal;
 
   uint8_t crc;
 } PROPS_T;
@@ -66,11 +71,18 @@ static void setDefaultValues()
   props.tag2             = TAG2;
   
   props.propVent         = DEFAULT_VENT;
-  props.propBps          = DEFAULT_BPS;
+  props.propBpm          = DEFAULT_BPS;
   props.propDutyCycle    = DEFAULT_DUTY_CYCLE;
   props.propPause        = DEFAULT_PAUSE;
   props.propLcdAutoOff   = DEFAULT_LCD_AUTO_OFF;
   props.propBle          = DEFAULT_BLE;
+
+  props.propLowPressure        = DEFAULT_LOW_PRESSURE;
+  props.propHighPressure       = DEFAULT_HIGH_PRESSURE;
+  props.propLowTidal           = DEFAULT_LOW_TIDAL;
+  props.propHighTidal          = DEFAULT_HIGH_TIDAL;
+
+
 }
 
 static bool checkRecord(PROPS_T * prop_ptr)
@@ -135,9 +147,9 @@ void propSetVent(int val) {
     setSavePending();
 }
 
-void propSetBps(int val) {
-    //LOG("propSetBps");
-    props.propBps = (uint8_t) val & 0x000000ff;
+void propSetBpm(int val) {
+    //LOG("propSetBpm");
+    props.propBpm = (uint8_t) val & 0x000000ff;
     setSavePending();
 }
 
@@ -165,6 +177,29 @@ void propSetBle(int val) {
       setSavePending();
 }
 
+void propSetLowPressure(int val) {
+      //LOG("propSetBle");
+      props.propLowPressure =  (uint8_t) val & 0x000000ff;
+      setSavePending();
+}
+
+void propSetHighPressure(int val) {
+      //LOG("propSetBle");
+      props.propHighPressure =  (uint8_t) val & 0x000000ff;
+      setSavePending();
+}
+
+void propSetLowTidal(int val) {
+      //LOG("propSetBle");
+      props.propLowTidal =  (uint16_t) val & 0x0000ffff;
+      setSavePending();
+}
+
+void propSetHighTidal(int val) {
+      //LOG("propSetBle");
+      props.propHighTidal =  (uint16_t) val & 0x0000ffff;
+      setSavePending();
+}
 
 // ---------- Getters ------------
 int propGetVent() {
@@ -172,9 +207,9 @@ int propGetVent() {
     return props.propVent;
 }
 
-int propGetBps() {
-    //LOG("propGetBps");
-    return props.propBps;
+int propGetBpm() {
+    //LOG("propGetBpm");
+    return props.propBpm;
 }
 
 int propGetDutyCycle() {
@@ -197,6 +232,22 @@ int propGetBle() {
       return props.propBle;
 }
 
+int propGetLowPressure() {
+      //LOG("propLowPressure");
+      return props.propLowPressure;
+}
+int propGetHighPressure() {
+      //LOG("propHighPressure");
+      return props.propHighPressure;
+}
+int propGetLowTidal() {
+      //LOG("propLowTidal");
+      return props.propLowTidal;
+}
+int propGetHighTidal() {
+      //LOG("propHighTidal");
+      return props.propHighTidal;
+}
 
 
 
