@@ -70,7 +70,7 @@ int breatherGetPropress()
 
 void breatherStartCycle()
 {
-    curr_total_cycle_milli = MINUTE_MILLI / propGetBps();
+    curr_total_cycle_milli = MINUTE_MILLI / propGetBpm();
     curr_pause = propGetPause();
     curr_rate = propGetDutyCycle();
     int in_out_t = curr_total_cycle_milli - (curr_rate + TM_WAIT_TO_OUT);

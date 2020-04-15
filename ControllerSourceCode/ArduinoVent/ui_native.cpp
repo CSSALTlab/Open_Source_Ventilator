@@ -528,7 +528,7 @@ void CUiNative::initParams()
 
 void CUiNative::fillValBuf(char * buf, int idx)
 {
-    params_t * par = loadParamRecord(params_idx);
+    params_t * par = loadParamRecord(idx);
 
     if (par->type == PARAM_INT)
         sprintf(buf, "%5d", *par->val);
