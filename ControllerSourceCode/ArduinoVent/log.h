@@ -33,7 +33,7 @@ void logv(const char *fmt, ...);
     #define LOGV(...) logv(__VA_ARGS__)
   #else
     #define LOG(x) /* dummy */
-    #define LOGV(x) /* dummy */
+    #define LOGV(...) /* dummy */
   #endif
 #else
   void LOG(const char * txt); // goes to flash memory in Arduino
