@@ -57,8 +57,6 @@ static BMx280I2C::Settings settings(
 static uint64_t tm;
 static uint8_t state; // 0~3 starting... 4 is error... >=10 is OK
 
-static float temp;
-static float hum;
 static float fPressurePa;
 static float fReferencePa;
 static float gaugeCmH2O;
@@ -77,9 +75,7 @@ static void checkInit() {
       LOGV("Model 0x%x", ssenseBMx280.chipModel() );
 
       // prerform a first read for reference
-      BME280::PresUnit presUnit(BME280::PresUnit_Pa); // check if we can move this tinit
-      BME280::TempUnit tempUnit(BME280::TempUnit_Celsius);   
-      ssenseBMx280.read(fPressurePa, temp, hum, tempUnit, presUnit); // TODO: protect this method in the library
+      ssenseBMx280.readPressure(fPressurePa); // TODO: protect this method in the library
       bmp280SetReference();
       
       tm = halStartTimerRef();
@@ -102,9 +98,7 @@ float bpm280GetPressure() {
 
   if ( halCheckTimerExpired(tm, TM_READ_MIN_PERIOD) ) {
     tm = halStartTimerRef();
-    BME280::PresUnit presUnit(BME280::PresUnit_Pa); // check if we can move this tinit
-    BME280::TempUnit tempUnit(BME280::TempUnit_Celsius);   
-    ssenseBMx280.read(fPressurePa, temp, hum, tempUnit, presUnit); // TODO: protect this method in the library
+    ssenseBMx280.readPressure(fPressurePa);
     gaugeCmH2O = (fPressurePa - fReferencePa) * 0.0101972;
 
   }
@@ -135,6 +129,7 @@ float bpm280GetPressure() {
 
 void bmp280SetReference()
 {
+  LOG("Set Press Ref.");
   fReferencePa = fPressurePa;
 }
 

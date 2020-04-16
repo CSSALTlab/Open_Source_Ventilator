@@ -94,7 +94,8 @@ enum {A0, A1, A2, A3, A4, A5, A6, A7};
 #define KEY_SET_PIN             A3
 
 //------------ Output Valves -----------
-#define VALVE_ACTIVE_LOW
+#define VALVE_IN_ACTIVE_LOW
+//#define VALVE_OUT_ACTIVE_LOW
 
 #define VALVE_IN_PIN            2 // D2
 #define VALVE_OUT_PIN           3 // D3
@@ -162,7 +163,7 @@ enum {A0, A1, A2, A3, A4, A5, A6, A7};
 #define KEY_SET_PIN             A3
 
 //------------ Output Valves -----------
-#define VALVE_ACTIVE_LOW
+#define VALVE_IN_ACTIVE_LOW
 
 #define VALVE_IN_PIN            2 // D2
 #define VALVE_OUT_PIN           3 // D3
@@ -180,6 +181,9 @@ enum {A0, A1, A2, A3, A4, A5, A6, A7};
 
 #define USE_Mpxv7002DP_PRESSURE_SENSOR  0
 #define USE_BMP280_PRESSURE_SENSOR      1
+
+// BMP sensor connetcted to   SDA -> A4
+//                            SCL -> A5
 
 //---------- FLOW SENSOR ----------
 #define USE_Mpxv7002DP_FLOW_SENSOR      1
@@ -226,7 +230,7 @@ enum {A0, A1, A2, A3, A4, A5, A6, A7};
 #define  ALARM_SOUND_PIN        8  // D8
 
 //------------ Output Valves -----------
-#define VALVE_ACTIVE_LOW
+#define VALVE_IN_ACTIVE_LOW
 
 #define VALVE_IN_PIN            6
 #define VALVE_OUT_PIN           7

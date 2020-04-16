@@ -25,6 +25,7 @@ typedef enum {
     B_ST_IN,
     B_ST_WAIT_TO_OUT,
     B_ST_OUT,
+    B_ST_INITIAL_FAST_CALIB,
     B_ST_FAST_CALIB,
     B_ST_PAUSE,
     B_ST_STOPPING,

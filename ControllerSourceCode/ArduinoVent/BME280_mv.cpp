@@ -302,29 +302,33 @@ float BME280::CalculatePressure
 
    final = ((uint32_t)pressure)/256.0;
 
-   // Conversion units courtesy of www.endmemo.com.
-   switch(unit){
-      case PresUnit_hPa: /* hPa */
-         final /= 100.0;
-         break;
-      case PresUnit_inHg: /* inHg */
-         final /= 3386.3752577878;          /* final pa * 1inHg/3386.3752577878Pa */
-         break;
-      case PresUnit_atm: /* atm */
-         final /= 101324.99766353; /* final pa * 1 atm/101324.99766353Pa */
-         break;
-      case PresUnit_bar: /* bar */
-         final /= 100000.0;               /* final pa * 1 bar/100kPa */
-         break;
-      case PresUnit_torr: /* torr */
-         final /= 133.32236534674;            /* final pa * 1 torr/133.32236534674Pa */
-         break;
-      case PresUnit_psi: /* psi */
-         final /= 6894.744825494;   /* final pa * 1psi/6894.744825494Pa */
-         break;
-      default: /* Pa (case: 0) */
-         break;
-   }
+
+/* MV: we do not care about convertions as we only expect Pa */
+
+//   // Conversion units courtesy of www.endmemo.com.
+//   switch(unit){
+//      case PresUnit_hPa: /* hPa */
+//         final /= 100.0;
+//         break;
+//      case PresUnit_inHg: /* inHg */
+//         final /= 3386.3752577878;          /* final pa * 1inHg/3386.3752577878Pa */
+//         break;
+//      case PresUnit_atm: /* atm */
+//         final /= 101324.99766353; /* final pa * 1 atm/101324.99766353Pa */
+//         break;
+//      case PresUnit_bar: /* bar */
+//         final /= 100000.0;               /* final pa * 1 bar/100kPa */
+//         break;
+//      case PresUnit_torr: /* torr */
+//         final /= 133.32236534674;            /* final pa * 1 torr/133.32236534674Pa */
+//         break;
+//      case PresUnit_psi: /* psi */
+//         final /= 6894.744825494;   /* final pa * 1psi/6894.744825494Pa */
+//         break;
+//      default: /* Pa (case: 0) */
+//         break;
+//   }
+   
    return final;
 }
 
@@ -394,6 +398,27 @@ void BME280::read
    temp = CalculateTemperature(rawTemp, t_fine, tempUnit);
    pressure = CalculatePressure(rawPressure, t_fine, presUnit);
    humidity = CalculateHumidity(rawHumidity, t_fine);
+}
+
+/****************************************************************/
+// MV: read pressure only
+void BME280::readPressure
+(
+   float& pressure
+)
+{
+   int32_t data[8];
+   int32_t t_fine;
+   if(!ReadData(data)){
+      pressure = NAN;
+      return;
+   }
+   uint32_t rawPressure = (data[0] << 12) | (data[1] << 4) | (data[2] >> 4);
+//   uint32_t rawTemp = (data[3] << 12) | (data[4] << 4) | (data[5] >> 4);
+//   uint32_t rawHumidity = (data[6] << 8) | data[7];
+//   temp = CalculateTemperature(rawTemp, t_fine, tempUnit);
+   pressure = CalculatePressure(rawPressure, t_fine, (PresUnit) 0);
+//   humidity = CalculateHumidity(rawHumidity, t_fine);
 }
 
 

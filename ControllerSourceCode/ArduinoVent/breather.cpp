@@ -81,8 +81,8 @@ void breatherStartCycle()
     curr_progress = 0;
     tm_start = halStartTimerRef();
     b_state = B_ST_IN;
-    halValveOutOff();
-    halValveInOn();
+    halValveOutClose();
+    halValveInOpen();
     fast_calib = false;
   
     highPressure = propGetHighPressure();
@@ -107,7 +107,13 @@ B_STATE_t breatherGetState()
 static void fsmStopped()
 {
   if (propGetVent() ) {
-      breatherStartCycle();
+      //breatherStartCycle();
+      // lets do a fast calibration 
+      fast_calib = false;
+      tm_start = halStartTimerRef();
+      b_state = B_ST_INITIAL_FAST_CALIB;
+      halValveOutOpen();
+
   }
 }
 
@@ -116,7 +122,7 @@ static void fsmIn()
     uint64_t m = halStartTimerRef();
     if (tm_start + curr_in_milli < m) {
         // in valve off
-        halValveInOff();
+        halValveInClose();
         tm_start = halStartTimerRef();
         b_state = B_ST_WAIT_TO_OUT;
     }
@@ -145,7 +151,7 @@ static void fsmWaitToOut()
         // switch valves
         tm_start = halStartTimerRef();
         b_state = B_ST_OUT;
-        halValveOutOn();
+        halValveOutOpen();
     }
 }
 
@@ -165,7 +171,7 @@ static void fsmOut()
         // switch valves
         tm_start = halStartTimerRef();
         b_state = B_ST_PAUSE;
-        halValveOutOff();
+        halValveOutClose();
     }
     else {
         curr_progress = 100 - ((m - tm_start) * 100)/ curr_out_milli;
@@ -180,8 +186,22 @@ static void fsmFastCalib()
         // switch valves
         tm_start = halStartTimerRef();
         b_state = B_ST_PAUSE;
-        halValveOutOff();
+        bmp280SetReference();
+        halValveOutClose();
         CEvent::post(EVT_ALARM, ALARM_IDX_FAST_CALIB_DONE);
+    }
+
+}
+
+static void fsmInitialFastCalib()
+{
+    uint64_t m = halStartTimerRef();
+    if (halCheckTimerExpired(tm_start, TM_FAST_CALIBRATION)) {
+        // switch valves
+        tm_start = halStartTimerRef();
+        b_state = B_ST_PAUSE;
+        bmp280SetReference();
+        halValveOutClose();
     }
 
 }
@@ -193,8 +213,8 @@ static void fsmStopping()
         // switch valves
         tm_start = halStartTimerRef();
         b_state = B_ST_STOPPED;
-        halValveOutOff();
-        halValveInOff();
+        halValveOutOpen();
+        halValveInClose();
     }
 }
 
@@ -212,8 +232,8 @@ void breatherLoop()
         tm_start = halStartTimerRef();
         b_state = B_ST_STOPPING;
         curr_progress = 0;
-        halValveInOff();
-        halValveOutOn();
+        halValveInClose();
+        halValveOutOpen();
     }
 
     if (b_state == B_ST_STOPPED)
@@ -224,7 +244,9 @@ void breatherLoop()
         fsmWaitToOut();
     else if (b_state == B_ST_OUT)
         fsmOut();
-    else if (b_state == B_ST_FAST_CALIB)
+    else if (b_state == B_ST_INITIAL_FAST_CALIB) 
+        fsmInitialFastCalib(); 
+    else if (b_state == B_ST_FAST_CALIB) 
         fsmFastCalib();
     else if (b_state == B_ST_PAUSE)
         fsmPause();

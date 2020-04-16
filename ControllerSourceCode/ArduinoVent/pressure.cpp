@@ -63,7 +63,7 @@ end
 
 #if ( (USE_Mpxv7002DP_PRESSURE_SENSOR == 1) || (USE_Mpxv7002DP_FLOW_SENSOR == 1) )
 
-#define SHOW_VAL
+//#define SHOW_VAL
 
 #define TM_LOG 2000
 #define P_CONV 4.01463f

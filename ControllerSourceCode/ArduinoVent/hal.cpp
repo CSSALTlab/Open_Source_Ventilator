@@ -256,8 +256,8 @@ void halInit(uint8_t reset_val) {
 // ------ valves -------
   pinMode(VALVE_IN_PIN, OUTPUT);           // set pin to input
   pinMode(VALVE_OUT_PIN, OUTPUT);           // set pin to input
-  halValveInOff();
-  halValveOutOff();
+  halValveInClose();
+  halValveOutOpen();
 
   tm_key_sampling = halStartTimerRef();
   initWdt(reset_val);
@@ -417,33 +417,33 @@ void halLcdWrite(int col, int row, const char * txt)
 }
 
 //---------- valves Real
-void halValveInOn()
+void halValveInOpen()
 {
-#ifdef VALVE_ACTIVE_LOW
+#ifdef VALVE_IN_ACTIVE_LOW
     digitalWrite(VALVE_IN_PIN, LOW);
 #else
     digitalWrite(VALVE_IN_PIN, HIGH);
 #endif
 }
-void halValveInOff()
+void halValveInClose()
 {
-#ifdef VALVE_ACTIVE_LOW
+#ifdef VALVE_IN_ACTIVE_LOW
     digitalWrite(VALVE_IN_PIN, HIGH);
 #else
     digitalWrite(VALVE_IN_PIN, LOW);
 #endif
 }
-void halValveOutOn()
+void halValveOutOpen()
 {
-#ifdef VALVE_ACTIVE_LOW
+#ifdef VALVE_OUT_ACTIVE_LOW
     digitalWrite(VALVE_OUT_PIN, LOW);
 #else
     digitalWrite(VALVE_OUT_PIN, HIGH);
 #endif
 }
-void halValveOutOff()
+void halValveOutClose()
 {
-#ifdef VALVE_ACTIVE_LOW
+#ifdef VALVE_OUT_ACTIVE_LOW
     digitalWrite(VALVE_OUT_PIN, HIGH);
 #else
     digitalWrite(VALVE_OUT_PIN, LOW);

@@ -251,26 +251,26 @@ void halLcdWrite(int col, int row, const char * txt)
 //---------- valves -------------
 
 
-void halValveInOn()
+void halValveInOpen()
 {
   //LOG(">>>>>> Valve IN ON");
   input_valve_off->hide();
   input_valve_on->show();
 }
-void halValveInOff()
+void halValveInClose()
 {
     //LOG(">>>>>> Valve IN OFF");
     input_valve_on->hide();
     input_valve_off->show();
 
 }
-void halValveOutOn()
+void halValveOutOpen()
 {
   //LOG("<<<<<<<< Valve OUT ON");
   output_valve_off->hide();
   output_valve_on->show();
 }
-void halValveOutOff()
+void halValveOutClose()
 {
   //LOG("<<<<<<<< Valve OUT OFF");
   output_valve_on->hide();

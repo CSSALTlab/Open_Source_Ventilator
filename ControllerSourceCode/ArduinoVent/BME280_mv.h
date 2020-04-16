@@ -174,6 +174,11 @@ struct Settings {
       TempUnit  tempUnit    = TempUnit_Celsius,
       PresUnit  presUnit    = PresUnit_Pa);
 
+   /////////////////////////////////////////////////////////////////
+   /// MV: Read the pressure from the BME280 in the specified unit.
+   void   readPressure(
+      float&    pressure);
+
 
 /*****************************************************************/
 /* ACCESSOR FUNCTIONS                                            */
