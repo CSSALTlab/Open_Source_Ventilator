@@ -31,6 +31,10 @@
 #define LANGUAGE_EN_US      1           // English
 #define LANGUAGE_PT_BR      0           // Portuguese
 
+//#define NO_ALARM_SOUND // development only... must be commente out for production
+#ifdef NO_ALARM_SOUND
+  #warning "Alarm Sound is MUTED"
+#endif
 
 /*======================================
   =                                    =
@@ -81,6 +85,8 @@ enum {A0, A1, A2, A3, A4, A5, A6, A7};
  *                  
  ******************************************
  */
+
+
 //------------ Input Keys ---------------
 
 #define KEY_DECREMENT_PIN       A0
@@ -104,8 +110,11 @@ enum {A0, A1, A2, A3, A4, A5, A6, A7};
 //----------- PRESSURE_SENSOR ------------
 #define PRESSURE_SENSOR_PIN     A7
 
-#define USE_Mpxv7002DP_PRESSURE_SENSOR  1
-#define USE_BMP280_PRESSURE_SENSOR      0
+#define USE_Mpxv7002DP_PRESSURE_SENSOR  0
+#define USE_BMP280_PRESSURE_SENSOR      1
+
+// BMP sensor connetcted to   SDA -> A4
+//                            SCL -> A5
 
 //---------- FLOW SENSOR ----------
 #define USE_Mpxv7002DP_FLOW_SENSOR      1
@@ -169,8 +178,8 @@ enum {A0, A1, A2, A3, A4, A5, A6, A7};
 //----------- PRESSURE_SENSOR ------------
 #define PRESSURE_SENSOR_PIN     A7
 
-#define USE_Mpxv7002DP_PRESSURE_SENSOR  1
-#define USE_BMP280_PRESSURE_SENSOR      0
+#define USE_Mpxv7002DP_PRESSURE_SENSOR  0
+#define USE_BMP280_PRESSURE_SENSOR      1
 
 //---------- FLOW SENSOR ----------
 #define USE_Mpxv7002DP_FLOW_SENSOR      1

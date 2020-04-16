@@ -120,6 +120,15 @@ static alarm_t alarms[] = {
           0,
           0
     },
+  
+    {
+          ST_ALARM_OFF,
+          0,
+          MAX_SOUND_DEFAULT,
+          STR_ALARM_BAD_PRESS_SENSOR,
+          0,
+          0
+    },
 
 
 };

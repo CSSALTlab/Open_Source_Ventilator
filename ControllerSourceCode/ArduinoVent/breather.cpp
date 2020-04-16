@@ -24,9 +24,10 @@
 
 #include "breather.h"
 #include "properties.h"
+#include "bmp280_int.h"
 #include "hal.h"
 #include "log.h"
-#include "pressure.h"
+//#include "pressure.h"
 #include "event.h"
 #include "alarm.h"
 
@@ -44,6 +45,8 @@ static int curr_out_milli;
 static int curr_total_cycle_milli;
 static int curr_progress;
 static uint64_t tm_start;
+static int16_t highPressure;
+static int16_t lowPressure;
 
 static bool fast_calib;
 
@@ -81,6 +84,10 @@ void breatherStartCycle()
     halValveOutOff();
     halValveInOn();
     fast_calib = false;
+  
+    highPressure = propGetHighPressure();
+    lowPressure = propGetLowPressure();
+
 
 #if 0
   LOG("Ventilation ON:");
@@ -120,13 +127,13 @@ static void fsmIn()
         //--------- we check for low pressure at 50% or grater
         // low pressure hardcode to 3 InchH2O -> 90 int
         if (tm_start + curr_in_milli/2 < m) {
-            if (pressGetRawVal(PRESSURE) < 90) {
+            if (getCmH2OGauge() < lowPressure) {
               CEvent::post(EVT_ALARM, ALARM_IDX_LOW_PRESSURE);
             }
         }
     }
     //------ check for high pressure hardcode to 35 InchH2O -> 531 int
-    if (pressGetRawVal(PRESSURE) > 513) {
+    if (getCmH2OGauge() > highPressure) {
       CEvent::post(EVT_ALARM, ALARM_IDX_HIGH_PRESSURE);
     }
 

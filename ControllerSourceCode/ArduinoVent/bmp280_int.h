@@ -23,8 +23,15 @@
 #include "config.h"
 #include <stdint.h>
 
-void bpm280Init();
-uint32_t bpm280GetPressure();
+//--------- special return values for bpm280GetPressure and getCmH2OGauge
+#define BMP_ST__INITIALIZING   -100.0f  // initializing
+#define BMP_ST__NOT_FOUND      -200.0f  // could not get initialized
+#define BMP_ST__READ_ERROR     -300.0f  // was initialized but fail to read at some point
 
+
+void  bpm280Init();
+float bpm280GetPressure();  // absolute pressure in Pa, ex:  101982.90
+void  bmp280SetReference();
+float getCmH2OGauge();
 
 #endif // BMP280_INT_H
