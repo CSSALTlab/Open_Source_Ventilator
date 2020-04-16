@@ -23,7 +23,7 @@
 #include "ui_native.h"
 #include "hal.h"
 #include "properties.h"
-#include "pressure.h"
+#include "bmp280_int.h"
 #include "breather.h"
 #include <stdio.h>
 #include <string.h>
@@ -240,9 +240,9 @@ static char *  getFlow ()
 {
  static char buf[8];
  buf[sizeof(buf) - 1] = 0;
- float f = pressGetFloatVal(FLOW);
+ float f = getCmH2OGauge(); // pressGetFloatVal(FLOW);
 #ifndef VENTSIM
-    dtostrf(pressGetFloatVal(FLOW), 2, 2, buf);
+    dtostrf(f, 2, 2, buf);
 #else
     snprintf(buf, sizeof(buf) - 1, "%f", f);
 #endif
@@ -253,9 +253,9 @@ static char *  getTidalVolume()
 {
  static char buf[8];
  buf[sizeof(buf) - 1] = 0;
- float f = pressGetFloatVal(PRESSURE);
+ float f = 0.0; // pressGetFloatVal(PRESSURE);
 #ifndef VENTSIM
-    dtostrf(pressGetFloatVal(PRESSURE), 2, 2, buf);
+    dtostrf(f, 2, 2, buf);
 #else
     snprintf(buf, sizeof(buf) - 1, "%f", f);
 #endif
@@ -266,9 +266,9 @@ static char *  getPressure()
 {
  static char buf[8];
  buf[sizeof(buf) - 1] = 0;
- float f = pressGetFloatVal(PRESSURE);
+ float f = getCmH2OGauge(); //pressGetFloatVal(PRESSURE);
 #ifndef VENTSIM
-    dtostrf(pressGetFloatVal(PRESSURE), 2, 2, buf);
+    dtostrf(f, 2, 2, buf);
 #else
     snprintf(buf, sizeof(buf) - 1, "%f", f);
 #endif
