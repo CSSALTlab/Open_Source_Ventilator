@@ -31,6 +31,10 @@
 #define LANGUAGE_EN_US      1           // English
 #define LANGUAGE_PT_BR      0           // Portuguese
 
+//#define NO_ALARM_SOUND // development only... must be commente out for production
+#ifdef NO_ALARM_SOUND
+  #warning "Alarm Sound is MUTED"
+#endif
 
 /*======================================
   =                                    =

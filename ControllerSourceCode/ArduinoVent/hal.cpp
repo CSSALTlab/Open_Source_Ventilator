@@ -72,6 +72,8 @@ static void motorInit();
 
 void halBeepAlarmOnOff( bool on)
 {
+#ifndef  NO_ALARM_SOUND
+
   if (on == true) {
     alarm = true;
     alarm_phase = 0;
@@ -86,6 +88,8 @@ void halBeepAlarmOnOff( bool on)
     noTone(ALARM_SOUND_PIN);
     // turn tone off
   }
+
+#endif
 }
 
 //----------- Locals -------------

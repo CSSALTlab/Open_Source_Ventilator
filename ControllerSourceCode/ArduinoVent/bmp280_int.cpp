@@ -21,6 +21,7 @@
 */
 
 #include "hal.h"
+#include "alarm.h"
 #if (USE_BMP280_PRESSURE_SENSOR == 1)
 
 #include "bmp280_int.h"
@@ -87,7 +88,7 @@ static void checkInit() {
     }
     state++;
     if (state == 4) {
-      //CEvent::post(EVT_ALARM, xxxx);
+      CEvent::post(EVT_ALARM, ALARM_IDX_BAD_PRESS_SENSOR);
     }
     tm = halStartTimerRef();
   }

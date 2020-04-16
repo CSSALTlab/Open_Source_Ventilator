@@ -34,7 +34,7 @@ enum {
     ALARM_IDX_UNDER_SPEED_MOTOR,
     ALARM_IDX_FAST_CALIB_TO_START,
     ALARM_IDX_FAST_CALIB_DONE,
-
+    ALARM_IDX_BAD_PRESS_SENSOR,
 
     // Add here new alarm as well as an entry in "alarms" array in alarm.cpp
 
