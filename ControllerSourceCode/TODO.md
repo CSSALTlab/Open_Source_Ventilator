@@ -16,8 +16,6 @@ Following are things in my TODO list (other than adding features):
 
 * Non initialized variable in RAM: we would like to have some variable stored in RAM that would survive resets. However, just by following the suggested procedures,  it does not work. My guess is that the linker scripts were changed in the toolchain and need to be hacked.
 
-* Remove non used code. For example, I just changed LiquidCrystal library to be real-time and it is working great. We need to remove all functions that we do not need.
-
 * Optimize RAM as much as we can: check all bool’s and int’s and replace by int8_t declarations. this is to save RAM.
 
 * separate the config for each board in a dedicated header file (board_xxxx.h). config.h will just include a single board_xxxx.h file.
