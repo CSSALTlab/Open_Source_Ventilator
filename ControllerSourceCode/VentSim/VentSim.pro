@@ -27,6 +27,7 @@ SOURCES += \
     ../ArduinoVent/properties.cpp \
     ../ArduinoVent/ui_native.cpp \
     ../ArduinoVent/vent.cpp \
+    bmp280_int_sim.cpp \
     hal_sim.cpp \
     main.cpp \
     mainwindow.cpp
