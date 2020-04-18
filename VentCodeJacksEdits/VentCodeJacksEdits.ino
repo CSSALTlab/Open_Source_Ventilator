@@ -105,8 +105,18 @@ bool exhale;                              //Boolean to indicate if on the exhale
 bool lastMode;                            //Boolean for switching from Inhale to exhale
 
 int alarm_status            = ALARM_OFF;
+char alarm_array[6];          // allows to keep track of 6 different alarms 
+                    //  Each is 0  if no alarm there
+                    //  Each is 0x01 if an alarm.
+                    //  Get updated with each breath so transitory existence
+                    //  alarm_array[0] refers to LOW PRESS
+                    //  alarm_array[1] refers to HI PRESS
+                    //  alarm_array[2] refers to LOW VOL
+                    //  alarm_array[3] refers to HI VOL
+                    //  others are undefined at the moment
+
 int atmospheric_pressure    = 0;          // in cmH2O
-int bargraph[MAX_PHASES];
+int bargraph[MAX_PHASES];  // bargraph deprecated 
 int beats_per_minute        = 10;
 int current_phase           = 0;
 int current_pressure        = 0;
@@ -144,13 +154,13 @@ long pressure_total         = 0L;
 long pressure_peak          = 0L;
 long randomNumber;                        // Use for testing
 
-float averageInstantFlowValue;            // Average Flow Rate
-float averageStoredFlowValues;            // Stored Instantaneous flow Values for averaging
-float exAverageFlowRate;                  // exhale flow rate in Liters/min
+
+
+
 float exLitersPerCycle;                   // Liters Per exhale Cycle
 float fpressure;                          // ambient pressure
 float hum;                                // Humidity 
-float inAverageFlowRate;                  // Inhale flow rate in Liters/min
+
 float inLitersPerCycle;                   // Liters Per Inhale Cycle
 float instantFlowValue;                   // Instantaneous Flow
 float pressurecmH2O;
@@ -273,88 +283,7 @@ float CalculateInstantFlow()
   return instantFlowValue;
 }
 
-/*****
-  Purpose: Calculate the change in pressure, delP, from the sensor-generated voltage
 
-  Argument list:
-    void
-
-  Return value:
-    void
-
-  CAUTION:
-*****/
-
-/* ----------------Code never used ------------------
-  void CalculateAverageFlowRate()
-  {
-  averageInstantFlowValue = 0.0;
-  averageStoredFlowValues = 0.0;
-  for (j = 0; j < AVERAGEBINNUMBER; j++) {
-    averageStoredFlowValues += ReadFlowPressureSensor();
-    averageInstantFlowValue += CalculateInstantFlow();
-    MyDelay(PRESSUREREADDELAY);
-  }
-  averageStoredFlowValues /= (float) AVERAGEBINNUMBER;
-  averageInstantFlowValue /= (float) AVERAGEBINNUMBER;
-  exhale = true;
-  if (averageInstantFlowValue > 0.0) {
-    exhale = false;
-  }
-  #ifdef DEBUG
-  Serial.print("CalculateAverageFlowRate");
-  Serial.print("exhale = ");
-  Serial.print(exhale);
-  Serial.print("     averageStoredFlowValues = ");
-  Serial.print(averageStoredFlowValues);
-  Serial.print("   averageInstantFlowValue = ");
-  Serial.println(averageInstantFlowValue);
-  #endif
-  }
-**********************************/
-
-
-/*****
-  Purpose: Calculate the flow rate in liters
-
-  Argument list:
-    void
-
-  Return value:
-    void
-
-  CAUTION:
-*****/
-void CalculateTotalLiters()
-{
-  float tempC, nowTime, dTime;
-
-  tempC = 0.0;
-  nowTime = (float) millis();
-  dTime = nowTime - cTime;    //Time in milliseconds since the last integration step
-  if (dTime <= 0.0) {
-    dTime = 1.0;
-  }
-  cTime = nowTime;
-  tempC = averageInstantFlowValue * dTime / 1000000.0;  // this is flowrate in Liters per min * ms /(1000000ms/min)
-  if (exhale) {
-    exLitersPerCycle = exLitersPerCycle - tempC;
-  }
-  else {
-    inLitersPerCycle = inLitersPerCycle + tempC;
-  }
-#ifdef DEBUG
-  Serial.print("CalculateTotalLiters");
-  Serial.print("    exLitersPerCycle = ");
-  Serial.print(exLitersPerCycle);
-  Serial.print("    inLitersPerCycle = ");
-  Serial.print(inLitersPerCycle);
-  Serial.print("    dTime = ");
-  Serial.print(dTime);
-  Serial.print("    tempC = ");
-  Serial.println(tempC);
-#endif
-}
 
 // -----------------------End of FLOW MEASUREMENT SUBROUTINES------------------
 
@@ -556,6 +485,8 @@ void check_pressure_limits() {
     { // we are at the end of inspiration and never saw an acceptable pressure
       alarm(ALARM_SLOW);
       update_status2( (char*) "LO");
+      alarm_array[0] = 1;  // 0 slot is for LO PRESS
+      
 #ifdef INSP_PRESSURE_LIMITS
       Serial.print("current_phase = ");
       Serial.print(current_phase);
@@ -570,6 +501,8 @@ void check_pressure_limits() {
     if (peakinspiratorypressure > lowpressurelimit) {
       alarm(ALARM_OFF);
       update_status2( (char*) "ON");
+      alarm_array[0] =  0;    // zero the inspiratory alarm 
+      
 #ifdef INSP_PRESSURE_LIMITS
       Serial.print("No low pressure\n\n");
 #endif
@@ -721,8 +654,9 @@ int  p = measure_pressure();
 -------------------------------original assisted ventilation ----------------------*/
 
 
-  bargraph[current_phase] = (int)(p - atmospheric_pressure);
+  bargraph[current_phase] = (int)(p - atmospheric_pressure);  // I don't think we need the bargraph
   current_pressure = bargraph[current_phase];
+  //current_pressure = (int) (p- atmospheric_pressure);// calcuate the guage pressure    
   pressure_total += current_pressure;
   if (use_tft)
     tft_graph_update();
@@ -738,12 +672,16 @@ int  p = measure_pressure();
     if (exmLPerCycle > (desired_TV + 100)) {
       alarm(ALARM_SLOW);
       update_status2( (char*) "V^");
-    }
+      alarm_array[3]= 1;  // set the alarm array
+    } else alarm_array[3]= 0; 
+    
     if (exmLPerCycle < (desired_TV - 100)) {
       alarm(ALARM_FAST);
       update_status2( (char*) "Vv");
+      alarm_array[2]=1;  // set the alarm array
 
-    }
+    }  else alarm_array[2]=0;   // reset the alarm array 
+    
 /*
 #ifdef TOTALTIDAL-DISPLAY
     Serial.print("Tidal Vol This Breath: ");
@@ -843,7 +781,8 @@ void setup() {
   }
   // Chance of randomly hitting either value is 1/256
 
-
+  for(int t=0; t<6; t++) alarm_array[t] = 0;   // zero out the char alarm_array values
+  
 
   load_settings();
   pinMode(MOTOR_A, OUTPUT);
@@ -927,9 +866,9 @@ void setup() {
   analogReference(DEFAULT);
   exhale            = false;
   lastMode          = false;
-  averageInstantFlowValue  = 0.0;
-  inAverageFlowRate = 0.0;
-  exAverageFlowRate = 0.0;
+
+  
+  
 
   // read the baseline voltage reading from the differntial pressure
   zerorawSensorValue = 0;

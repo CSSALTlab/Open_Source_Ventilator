@@ -71,10 +71,20 @@ extern uint8_t I2CBusAllowed;                    // variable to track whether th
 extern bool exhale;                              //Boolean to indicate if on the exhale cycle
 extern bool lastMode;                            //Boolean for switching from Inhale to exhale
 
-extern int alarm_status;                
+extern int alarm_status;  
+extern char alarm_array[];          // allows to keep track of 6 different alarms 
+                    //  Each is 0  if no alarm there
+                    //  Each is 0x01 if an alarm.
+                    //  Get updated with each breath so transitory existence
+                    //  alarm_array[0] refers to LOW PRESS
+                    //  alarm_array[1] refers to HI PRESS
+                    //  alarm_array[2] refers to LOW VOL
+                    //  alarm_array[3] refers to HI VOL
+                    //  others are undefined at the moment
+                            
 extern int beats_per_minute;            
 extern int atmospheric_pressure;        
-extern int bargraph[];
+extern int bargraph[];   // Deprecated
 extern int beats_per_minute;
 extern int current_phase;
 extern int current_pressure;
@@ -114,13 +124,13 @@ extern long pressure_total;
 extern long pressure_peak;
 extern long randomNumber;                  ;
 
-extern float averageInstantFlowValue;            // Average Flow Rate
-extern float averageStoredFlowValues;            // Stored Instantaneous flow Values for averaging
-extern float exAverageFlowRate;                  // exhale flow rate in Liters/min
+
+
+
 extern float exLitersPerCycle;                   // Liters Per exhale Cycle
 extern float fpressure;                          // ambient pressure
 extern float hum;                                // Humidity 
-extern float inAverageFlowRate;                  // Inhale flow rate in Liters/min
+
 extern float inLitersPerCycle;                   // Liters Per Inhale Cycle
 extern float instantFlowValue;                   // Instantaneous Flow
 extern float pressurecmH2O;

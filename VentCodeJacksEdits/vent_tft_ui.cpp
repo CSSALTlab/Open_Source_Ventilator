@@ -51,23 +51,23 @@ void tft_graph_clear(){
 
 void tft_graph_update(){
   char buff[5];
-  
-  int barval = bargraph[current_phase];
+ 
+int barval = bargraph[current_phase];   // bargraph deprecated
   if (barval < 0)
-    barval = 0;
+   barval = 0;
 
   itoa(barval, buff, 10);
   displayText(buff, 0,0,40,18, DISPLAY_GREEN, DISPLAY_BLACK, DISPLAY_BLACK);
   
-  barval /= 5;
+ barval /= 5;
   int x = 50 + (current_phase * 5);
 
   if (barval > 50){
-    barval = 50;
-    quickFill(x, 60-barval, x+4, 60, DISPLAY_RED);
+   barval = 50;
+   quickFill(x, 60-barval, x+4, 60, DISPLAY_RED);
   }
   else
-    quickFill(x, 60-barval, x+4, 60, DISPLAY_YELLOW);
+   quickFill(x, 60-barval, x+4, 60, DISPLAY_YELLOW);
 
   if (is_pressure_on)
     quickFill(x, 65, x+3, 72, DISPLAY_WHITE);

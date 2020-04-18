@@ -101,6 +101,8 @@ void lcd_graph_update(){
   memset(framebuffer, 0x0, sizeof(framebuffer));
 
   if (vent_running){
+
+    
     for (int i = 0; i < current_phase; i+=2){
       int b = bargraph[i] / 40;
       if (b > 7)
@@ -111,13 +113,20 @@ void lcd_graph_update(){
         lcd_pixel(i/2, j);
         //lcd_pixel(i, 7-b);
     }
+   
+    
     lcd_refresh();
   }
 
-  char buff[10];
+  char buff[17];
   char buff2[6];  // temp storage
-  
-  itoa(bargraph[current_phase]/10, buff, 10);
+
+  itoa(bargraph[current_phase]/10, buff, 10);  // bargaph deprecated  
+
+ // This is sorta stupid -- we write out the values but instantly change to alarms if need be.    
+ // There has to be a better way but this will probably work
+ // GLG
+ 
   if (lcd_size == LCDDISPLAY)
     lcd.setCursor(0,0);
   else
@@ -131,6 +140,17 @@ void lcd_graph_update(){
     strcat(buff,"mL");
     lcd.print(buff);
 
+
+
+  lcd.setCursor(0,0); 
+  if(current_phase < 4 && alarm_array[0]==1) lcd.print("***LO PRESS***");  // print LOW press alarms for slices 0-3
+  if(current_phase > 3  && current_phase < 8 && alarm_array[1]==1) lcd.print("***HI PRESS***");  // print high press alarms slices 4,5,6,7
+  if(current_phase > 7  && current_phase < 12 && alarm_array[2] ==1 ) lcd.print("***LO VOL***");  // print low volume alarms slices 8,9,10,11
+  if(current_phase >11  && current_phase < 16 && alarm_array[3] ==1)  lcd.print("***HI VOL***");  // print high volume alarms slices 12, 13, 14, 15
+
+
+  
+  
 }
 
 
@@ -143,7 +163,8 @@ void paint_lcd(){
     // GLG:  THIS is the size that I'm developing for right now......
 
     
-    //paint the user interface
+    //paint the user interface  -- ths part does the SECOND LINE
+    
     lcd.setCursor(0,1);
     if (selected_item == SELECT_PRESSURE) 
       lcd.print('[');
@@ -226,7 +247,7 @@ void lcd_init(int display_size){
   pinMode(DOWN,   INPUT_PULLUP);
   pinMode(ON_OFF, INPUT_PULLUP);
 
-  lcd_graph_clear();
+   lcd_graph_clear();
   paint_lcd();
 }
 
