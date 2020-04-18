@@ -5,8 +5,60 @@
 // Modified to work with BMP280 by Gordon Gibby
 // Gordon Gibby gives NO PERMISSION FOR ANY USE WHATSOEVER
 // without written permission from himself for usage.
-//  A small change.   
-#define WeAreTrying 
+
+
+
+#define I2C_ADDRESS 0x77                  //  What exactly is this for??? the BMP280 uses this
+
+//------------------------BMP CHOICES --------------------------------------
+//--------------------UNCOMMENT THE ONE YOU NEED----------------------------
+
+
+#define BMP280
+//#define BMP180
+
+
+
+#ifdef BMP180
+#include <BMP180I2C.h>
+    //create an BMP180 object using the I2C interface
+    BMP180I2C bmp180(I2C_ADDRESS);
+#endif
+
+#ifdef BMP280
+#include <sSense-BMx280I2C.h>   // Download link halfway down this page: 
+                                // https://create.arduino.cc/projecthub/dragos-iosub/arduino-bme280-sensor-how-to-115560
+
+BMx280I2C::Settings settings(
+  BME280::OSR_X1,
+  BME280::OSR_X1,
+  BME280::OSR_X1,
+  BME280::Mode_Forced,
+  BME280::StandbyTime_1000ms,
+  BME280::Filter_Off,
+  BME280::SpiEnable_False,
+  I2C_ADDRESS                                 // I2C address LCD display
+);
+BMx280I2C ssenseBMx280(settings);
+#endif
+
+
+
+
+//==================================BMP structs for setups ============================
+
+
+#ifdef BMP280   
+//                                Settings for the BMP280 device:
+
+#endif
+
+#ifdef BMP180
+
+#endif
+
+//=================================BMP Structs for setups===================================
+
 
 #ifndef BEENHERE
 #include "vent.h"
@@ -53,9 +105,12 @@
 
 #include <Wire.h>
 #include <avr/wdt.h>            // required for the watchdog timer, see routines below.  
-// #include <BMP180I2C.h>       // Obsolete: replaced with BM280 on next include 
-#include <sSense-BMx280I2C.h>   // Download link halfway down this page: 
-                                // https://create.arduino.cc/projecthub/dragos-iosub/arduino-bme280-sensor-how-to-115560
+
+
+
+
+
+
 #include <EEPROM.h>
 #include "nano_gui.h"
 #include "vent.h"
@@ -78,7 +133,7 @@
 #define INSP_PRESSURE_LIMITS
 #define AIRWAYPRESSURECHECKING
 
-#define I2C_ADDRESS 0x77                  //  For 4x20 display. 0x77 for the Adafruit 2x16 LCD display
+
 
 //---------------------FLOW MEASUrEMENT SUBRoutINE  (Schmidt / Purdum from 4/5/2020 Version 4
 //  Here are the routines and what they will do and return
@@ -169,19 +224,10 @@ float temp;                               // Temporary working variable
 
 //===================================== Define Objects ================================
 
-//                                Settings for the BMP280 device:
-BMx280I2C::Settings settings(
-  BME280::OSR_X1,
-  BME280::OSR_X1,
-  BME280::OSR_X1,
-  BME280::Mode_Forced,
-  BME280::StandbyTime_1000ms,
-  BME280::Filter_Off,
-  BME280::SpiEnable_False,
-  I2C_ADDRESS                                 // I2C address LCD display
-);
 
-BMx280I2C ssenseBMx280(settings);
+
+
+
 
 #ifdef JACKSTEST
 LiquidCrystal_I2C lcd(0x27, 20, 4);           // Define the display object
@@ -344,8 +390,12 @@ void log_message(char *text) {
 
 int measure_pressure() {
   unsigned long testpressure;
+
+#ifdef BMP280
   BME280::PresUnit presUnit(BME280::PresUnit_Pa);
   BME280::TempUnit tempUnit(BME280::TempUnit_Celsius);
+#endif
+
   //start a temperature
 #ifdef SERIALPRINT
   Serial.print("measure_pressure\n");
@@ -364,13 +414,54 @@ int measure_pressure() {
   if (I2CBusAllowed == 1) {
     I2CBusFailFlag = 0x99; // set the flag to indicate failure if reset happens
 
+
+#ifdef BMP280    
     ssenseBMx280.read(fpressure, temp, hum, tempUnit, presUnit);
+#endif  // End of the BMP280
+
+#ifdef BMP180
+  //start a temperature measurement using BMP180
+  if (!bmp180.measureTemperature())
+  {
+    log_message("Sensor Err1");
+    return;
+  }
+
+  //wait for the measurement to finish. proceed as soon as hasValue() returned true. 
+  do
+  {
+    delay(0);
+  } while (!bmp180.hasValue());
+
+  //start a pressure measurement. pressure measurements depend on temperature measurement, you should only start a pressure 
+  //measurement immediately after a temperature measurement. 
+  if (!bmp180.measurePressure()){
+    Serial.println("Sensor Err2");
+    return;
+  }
+
+  //wait for the measurement to finish. proceed as soon as hasValue() returned true. 
+  do{
+    delay(0);
+  } while (!bmp180.hasValue());
+
+  fpressure = ((102l * (long)bmp180.getPressure())/1000l); 
+// GLG****   I don't know what TYPE the bmp returns -- so this may need to be fixed 
+// GLG****   I don't know the proper conversion here!!!  needs to be PASCALS!!!
+// GLG****   I convert pascals into cmH2 just a few lines further down
+
+#endif    // end of the BMP180
+
+
+
     testpressure = (unsigned long) fpressure;
     testpressure = testpressure / 98;  // cm H2O
     // If we got here, we must be fine
-    I2CBusFailFlag = 0x38; // reset flag to "working"
+    I2CBusFailFlag = 0x38; // ===reset flag to "working"====
   }
-  else testpressure = 999; // set measured ambient pressure to 999 cmH2O
+  else testpressure = 999; // set measured ambient pressure to 999 cmH2O TO MARK AN ERROR!!!!
+
+  
 #ifdef SERIALPRINT
   Serial.print("1stPress cmH2O: ");
   Serial.print(testpressure);
@@ -714,20 +805,19 @@ void vent_init() {
   log_message( (char*) "Testing...");
 
   //begin() initializes the interface, checks the sensor ID and reads the calibration parameters.
-  /*----------GLG
 
+#ifdef BMP180   //   SETUP THE BMP180 
     if (!bmp180.begin()){
       pressure_sensor_present = 0;
       while (1);
     }
-    ------------GLG----------------*/
-
 
   //reset sensor to default parameters.
-  // bmp180.resetToDefaults();
+    bmp180.resetToDefaults();
 
   //enable ultra high resolution mode for pressure measurements
-  // bmp180.setSamplingMode(BMP180MI::MODE_UHR);
+    bmp180.setSamplingMode(BMP180MI::MODE_UHR);
+#endif   // END OF BMP180 SETUP  (BMP280 is inside setup()
 
   log_message( (char*) "Starting..");
   measure_atmospheric_pressure();
@@ -788,7 +878,7 @@ void setup() {
   pinMode(MOTOR_A, OUTPUT);
   pinMode(MOTOR_B, OUTPUT);
 
-  Wire.begin();
+  Wire.begin();   // <<<<=========HAS TO BE CALLED BEFORE TRYING TO USE i2C BUS*****************
 
   if (use_tft)
     tft_init();
@@ -823,25 +913,27 @@ void setup() {
 
     }
 
+
+//----------------------------BMP SETUP IF REQUIRED--------------------------
+#ifdef BMP280
     switch (ssenseBMx280.chipModel())
     {
       case BME280::ChipModel_BME280:
         // insert any desired cocde to notify that BME280 with humidity detected.
-#ifdef BMP280DEBUG
+        #ifdef BMP280DEBUG
         Serial.print("BME280(hum) " );
-#endif
+        #endif
 
         break;
       case BME280::ChipModel_BMP280:
         // insert any desired code to notify that BMP280 (no humidity) detected
-#ifdef  BMP280DEBUG
+        #ifdef  BMP280DEBUG
         Serial.print("BMP280(nohum) " );
-#endif
+        #endif
         break;
       default:
         // insert any code to notify that the unknown sensor found.
         Serial.print(" Error \n" );
-
         break;
     }
 
@@ -851,8 +943,12 @@ void setup() {
 
     //--------------------------GLG
 
-  } // End of I2C access portion
+      } // End of I2C access portion
+#endif
 
+
+
+//=======================END OF BMP SETUP IF REQUIRED ==================================
 
   vent_init();
   //setupTouch();
