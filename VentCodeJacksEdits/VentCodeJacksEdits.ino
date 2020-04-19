@@ -8,7 +8,7 @@
 
 
 
-#define I2C_ADDRESS 0x77                  //  What exactly is this for??? the BMP280 uses this
+#define I2C_ADDRESS 0x77              //  What exactly is this for??? the BMP280 uses this
 
 //------------------------BMP CHOICES --------------------------------------
 //--------------------UNCOMMENT THE ONE YOU NEED----------------------------
@@ -88,7 +88,7 @@ BMx280I2C ssenseBMx280(settings);
 // GLG   04102020
 
 
-#define PEEP  10 // GLG test peep    04172020
+#define PEEP  15 // GLG test peep    04172020
 
 // set I2CBusAllowed=0 to disable the bus
 
@@ -284,7 +284,7 @@ int ReadFlowPressureSensor()
   Serial.print("Raw Sensor value: ");
   Serial.print(rawSensorValue);
   Serial.print("\n");
-  delay(500);
+  MyDelay(500);
 #endif
 
   //Raw digital input from pressure sensor
@@ -430,7 +430,7 @@ int measure_pressure() {
   //wait for the measurement to finish. proceed as soon as hasValue() returned true. 
   do
   {
-    delay(0);
+    MyDelay(0);
   } while (!bmp180.hasValue());
 
   //start a pressure measurement. pressure measurements depend on temperature measurement, you should only start a pressure 
@@ -442,7 +442,7 @@ int measure_pressure() {
 
   //wait for the measurement to finish. proceed as soon as hasValue() returned true. 
   do{
-    delay(0);
+    MyDelay(0);
   } while (!bmp180.hasValue());
 
   fpressure = ((102l * (long)bmp180.getPressure())/1000l); 
@@ -502,13 +502,13 @@ void measure_atmospheric_pressure() {
   //if pressure is on, turn it off and wait for 8 seconds for the lungs and compressor to deflate
   if (is_pressure_on) {
     pressure_off();
-    delay(100);
+    MyDelay(100);
   }
   //now calibrate for 0.5 seconds
   atmospheric_pressure = 0;
   for (int i = 0; i < 10; i++) {
     atmospheric_pressure += measure_pressure();
-    delay(50);
+    MyDelay(50);
   }
   //now take the average
   atmospheric_pressure /= 10;
@@ -908,7 +908,7 @@ void setup() {
       // the device could not be found.
 #ifdef BMP280DEBUG
       Serial.print("BMx280 not found.");
-      delay(250);
+      MyDelay(250);
 #endif
 
     }
@@ -983,7 +983,7 @@ void setup() {
   // ------------end of FLOW MEASUREMENT SETUPS
 
   Serial.println("Setup done");
-  //delay(500);
+  //MyDelay(500);
 }
 
 void loop() {
@@ -1008,7 +1008,7 @@ void loop() {
   //Serial.println(measure_pressure());
   // Ashhar had a delay of 100 msec here but I think that is WAY too long to
   // allow slices of 50 msec to be handled.   So I'll change it to 10 mSec
-  // delay(5);
+  // MyDelay(5);
 }
 
 void  vent_start() {
@@ -1024,7 +1024,7 @@ void vent_abort() {
   //  pressure_off();
   current_phase = 0;
   vent_running = 0;
-  delay(200);
+  MyDelay(200);
   //  pressure_off();
   digitalWrite(MOTOR_A, LOW);
   digitalWrite(MOTOR_B, LOW);// get both valves open!!

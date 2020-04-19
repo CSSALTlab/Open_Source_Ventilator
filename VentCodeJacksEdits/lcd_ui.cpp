@@ -267,7 +267,7 @@ int getButton(){
               digitalWrite(MOTOR_A, LOW);
               digitalWrite(MOTOR_B, LOW);// get both valves open!!
            //  vent_abort();   // unfortunately this completely stops ventilation  
-            delay(700);   // allow a second button to be pressed
+            MyDelay(700);   // allow a second button to be pressed
             if(digitalRead(UP)==LOW) {
             inspiratory_pause=1;  // turn on inspiratory pause
             lcd_message( (char*) "PAUS-ON");
@@ -275,7 +275,7 @@ int getButton(){
             Serial.print("InspiratoryPause Turned On \n");
 #endif
              wdt_reset();
-             delay(1000);
+             MyDelay(1000);
             }
             
             else if (digitalRead(FN)==LOW) {
@@ -286,7 +286,7 @@ int getButton(){
 #endif
        
             wdt_reset();
-            delay(1000); 
+            MyDelay(1000); 
             lcd_refresh();   // see what this does             
             }
 
@@ -298,7 +298,7 @@ int getButton(){
             Serial.print("I2C was reset \n");
 #endif
             wdt_reset();
-            delay(1000);              
+            MyDelay(1000);              
             }
 
             
@@ -345,7 +345,7 @@ void lcd_slice(){
       
       for(q=0;q<8;q++) {
         wdt_reset();
-        delay(1000);
+        MyDelay(1000);
       }
       wdt_reset();
       // now rezero things
@@ -403,7 +403,7 @@ void lcd_slice(){
   save_settings();
   paint_lcd();
   //debounce
-  delay(5); // I don't think this delay is even needed.  
+  MyDelay(5); // I don't think this delay is even needed.  
   while(getButton()){
   digitalWrite(MOTOR_A, LOW);
   digitalWrite(MOTOR_B, LOW);// get both valves open!!  

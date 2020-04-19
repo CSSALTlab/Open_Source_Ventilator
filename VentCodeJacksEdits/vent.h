@@ -140,6 +140,7 @@ extern float temp;                               // Temporary working variable
 
 //======================================= Function Prototypes ================================
 
+void MyDelay(unsigned long ms);    // Jack's non-blocking delay function
 void alarm(int action);
 void alarm_slice();
 void alarm_silence(int silence_in_seconds);

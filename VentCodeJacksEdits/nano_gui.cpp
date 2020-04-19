@@ -372,7 +372,7 @@ void displayInit(void){
   utftData(0x27);  
 
   utftCmd(0x11);    //Exit Sleep 
-  delay(120); 
+  MyDelay(120); 
       
   utftCmd(0x29);    //Display on 
   utftCmd(0x2c); 
@@ -512,9 +512,9 @@ void setupTouch(){
   displayVline(20,10,20, DISPLAY_WHITE);
 
   while(!readTouch())
-    delay(100);
+    MyDelay(100);
   while(readTouch())
-    delay(100);
+    MyDelay(100);
    x1 = ts_point.x;
    y1 = ts_point.y; 
 
@@ -522,46 +522,46 @@ void setupTouch(){
   displayHline(10,20,20,DISPLAY_BLACK);
   displayVline(20,10,20, DISPLAY_BLACK);
 
-  delay(1000);
+  MyDelay(1000);
    
   //TOP RIGHT
   displayHline(290,20,20,DISPLAY_WHITE);
   displayVline(300,10,20, DISPLAY_WHITE);
 
   while(!readTouch())
-    delay(100); 
+    MyDelay(100); 
   while(readTouch())
-    delay(100);
+    MyDelay(100);
    x2 = ts_point.x;
    y2 = ts_point.y; 
 
   displayHline(290,20,20,DISPLAY_BLACK);
   displayVline(300,10,20, DISPLAY_BLACK);
 
-  delay(1000);
+  MyDelay(1000);
 
   //BOTTOM LEFT
   displayHline(10,220,20,DISPLAY_WHITE);
   displayVline(20,210,20, DISPLAY_WHITE);
   
   while(!readTouch())
-    delay(100);
+    MyDelay(100);
    x3 = ts_point.x;
    y3 = ts_point.y; 
      
   while(readTouch())
-    delay(100);
+    MyDelay(100);
   displayHline(10,220,20,DISPLAY_BLACK);
   displayVline(20,210,20, DISPLAY_BLACK);
 
-  delay(1000);
+  MyDelay(1000);
 
   //BOTTOM RIGHT
   displayHline(290,220,20,DISPLAY_WHITE);
   displayVline(300,210,20, DISPLAY_WHITE);
 
   while(!readTouch())
-    delay(100);
+    MyDelay(100);
    x4 = ts_point.x;
    y4 = ts_point.y; 
      
