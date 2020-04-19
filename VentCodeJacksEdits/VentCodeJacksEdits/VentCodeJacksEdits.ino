@@ -579,7 +579,7 @@ void check_pressure_limits() {
     digitalWrite(MOTOR_B, LOW);// get both valves open!!
     // open expiratory valve and close inspiratory valve
     alarm(ALARM_FAST);
- //   update_status2( (char*) "  ");  // no longer needed
+    update_status2( (char*) "  ");  // no longer needed
     Serial.print("HI ALARM\n\n");
   }
 
