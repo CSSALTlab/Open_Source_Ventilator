@@ -11,7 +11,5 @@ There are two codebases for the controller. The first, under OSVent folder, UF i
 
 The ControllerSourceCode folder in here does not have the latest updates.
 
-The prime contact for ControllerSourceCode is [mv_email@yahoo.com](mailto:mv_email@yahoo.com)
-
 
 
