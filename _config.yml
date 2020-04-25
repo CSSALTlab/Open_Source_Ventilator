@@ -23,7 +23,7 @@ email: marshallrawson@ufl.edu
 description: >-
  This is an open source ventilator project made by students and retirees at the University of Florida in their spare time.
 baseurl: "" # the subpath of your site, e.g. /blog
-url: "" # the base hostname & protocol for your site, e.g. http://example.com
+url: "https://cssaltlab.github.io/Open_Source_Ventilator/" # the base hostname & protocol for your site, e.g. http://example.com
 github_username:  MarshallRawson
 
 # Build settings
