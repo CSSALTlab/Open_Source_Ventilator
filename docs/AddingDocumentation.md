@@ -33,20 +33,25 @@ If you are a developer wanting to add documentation to the project here is what 
 If you want to add to documentation, you need to install the markdown to html compiler (jekyll) to make sure your changes actaully build.
 
 
+### Install Ruby
+
 ### Ubuntu Linux
 *NOTE: this may also work on Mac*
-
-#### Install Ruby
 * see if you have ruby with `ruby -v`
   * if you do not have it install it with: `sudo apt install ruby`
 
-#### Install Bundler
- * For very good reasons, install a program to manage Ruby Environment variables called `Bundler` with
+### Windows
+* Download [Ruby](https://rubyinstaller.org/)
+
+
+## Install Bundler
+ * For very good reasons, install a program to manage Ruby Environment variables called `Bundler` with the command:
 
 `gem install bundler`
 
-#### Use Bundler to install all the other things that we need
-* Navigate to the root of the repository
+## Use Bundler to install all the other things that we need
+* Navigate to the root of the repository (in a termianl)
+* Issue the command
 
 `bundle install`
 
@@ -110,7 +115,7 @@ request your changes be added to master, know in the buisness as a `Pull Request
 * push your branch to the github with `git push origin <my-branch-name> -u`
 *NOTE: you must be invited as a contributor to push your branch*
 
-* go to the [github](https://github.com/CSSALTlab/Open_Source_Ventilator) and click on `Pull Requests*
+* go to the [github](https://github.com/CSSALTlab/Open_Source_Ventilator) and click on `Pull Requests`
 * click on `New pull request`
 * select your branch
 * leave a breif description of what you did.
