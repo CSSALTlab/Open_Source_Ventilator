@@ -1,3 +1,8 @@
+---
+layout: default
+title: Operator's Manual
+---
+
 PanVent User Manual
 
 | **Version** | **Date** | **Who** | **Comments** |
@@ -232,7 +237,7 @@ PanVent TM Ventilator:
 |![](./images/symbols/model_number.png) | Model(Part)Number |
 |![](./images/symbols/lot_number.png) | Lot Number |
 |![](./images/symbols/do_not_reuse.png) | Do Not Reuse |
-|![](./images/symbols/mri_conditional_3t.png) | MRI Conditional (3T) |
+|![](./images/symbols/mri_conditional_3T.png) | MRI Conditional (3T) |
 |![](./images/symbols/manufactured_date.png) | Manufactured Date |
 |![](./images/symbols/manufacturer.png) | Manufacturer |
 |![](./images/symbols/use_by_date.png) | Use By Date |
