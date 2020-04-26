@@ -68,7 +68,7 @@ If you want to add to documentation, you need to install the markdown to html co
 
 *NOTE: this will not work if you are editing the _config.yml file, then the local jekyll server needs to be relaunched every time you change that file*
 
-* open the url `http://127.0.0.1:4000/` in your favorite web browser
+* open the url `http://127.0.0.1:4000/Open_Source_Ventilator/` in your favorite web browser
 
 * Make a change to a file, save the file, refresh the web page, and see the change in your web browser! WOW Computers are so Cool!!!
 
@@ -76,7 +76,7 @@ If you want to add to documentation, you need to install the markdown to html co
 
 ### Add a Documentation file
 
-* Make a new text file with the extention `.md` or `.markdown`
+* Make a new text file with the extention `.md` or `.markdown` in the `/docs` directory
 
 * make sure the first lines of the file look like this
 ```

@@ -18,6 +18,3 @@ Developers:
   [Guide to adding / editing documentation](./docs/AddingDocumentation.md)
 
   [Guide to developing / testing](./docs/testing/developing_guide.html)
-
-
-
