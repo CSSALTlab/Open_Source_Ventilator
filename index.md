@@ -10,7 +10,7 @@ This is the Open Source Ventilator Project from the University of Forida.
 
 [Operator's manual](./docs/OperatorsManual/manual.md)
 
-[Testing history](./docs/tests/)
+[version 1.0 testing report](./docs/tests/test_v1.html)
 
 
 Developers:
