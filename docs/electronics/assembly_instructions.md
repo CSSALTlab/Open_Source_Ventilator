@@ -30,7 +30,7 @@ Address questions to docvacuumtubes@gmail.com
 |1| Carlon 8”x8”x4” electrical box|Home Depot or equivalent https://www.homedepot.com/p/Carlon-8-in-x-4-in-PVC-Junction-Box-E989N-CAR/|
 |2| Chosen LCD Display| Connection pins must be on the back of the board and must be long enough to properly connect to the socket on the main board.|
 |||20x4: https://www.amazon.com/gp/product/B00GZ6GK7A/ref=ppx_yo_dt_b_asin_title_o08_s00?ie=UTF8&psc=|
-|||https://www.amazon.com/gp/product/B071W8SW9R/|ref=ppx_yo_dt_b_asin_title_o06_s00?ie=UTF8&psc=
+|||https://www.amazon.com/gp/product/B071W8SW9R/ref=ppx_yo_dt_b_asin_title_o06_s00?ie=UTF8&psc=
 |3 |Pushbuttons| https://www.amazon.com/gp/product/B0752RMB7Q/ref=ppx_yo_dt_b_asin_title_o09_s00?ie=UTF8&psc=|
 |4| Pine dowels |3/8” outer diameter x 0.90” length, square cuts, pine (soft)Remember to make pilot drills before inserting sheet metal screws.|
 |5| Sheet metal screws| #6 x 5/8” to secure the main board standoffs from the front –qty 3 required.|
