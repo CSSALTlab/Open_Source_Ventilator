@@ -4,7 +4,7 @@
 #include "vent.h"
 #endif
 
-/*****
+/******
   Purpose: Returns the alarm status
 
   Argument list:
@@ -61,9 +61,6 @@ void alarm_slice()
   if (!alarm_status)
     return;
 
-  //Serial.print("off");Serial.print(alarm_off_until);
-  //Serial.print(", on");Serial.println(alarm_on_until);
-
   if (alarm_off_until < now && alarm_suppress_until <= now){
     if (alarm_status == ALARM_FAST){
       alarm_on_until = now + 100;
@@ -85,8 +82,6 @@ void alarm_slice()
       noTone(ALARM_PIN);
     is_ringing = 0;
   }  
-  //Serial.print("alarm off until: ");Serial.println(alarm_off_until);
-  //Serial.println(__LINE__);
 
 }
 
