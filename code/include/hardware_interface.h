@@ -1,7 +1,9 @@
 #pragma once
 //prototype the hardware interface functions here
 
-void print(char* str);
+void initialize_hardware();
+
+void uart_print(char* str);
 
 
 
