@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 import multiprocessing
 import sys
-from queue import Queue
+import time
+import queue
+
 
 from core import Core
 
@@ -9,18 +11,27 @@ from core import Core
 if __name__ == "__main__":
   print('starting sim')
   # who ever has the update semaphore / mutex gets to mess with the queues
-  update_semaphore = multiprocessing.Semaphore(1)
-  sensor_data = multiprocessing.Queue()
-  command = multiprocessing.Queue()
-  core = Core(update_semaphore, sensor_data, command)
+  update_lock = multiprocessing.Lock()
+  sensor_data = multiprocessing.Queue(1)
+  command = multiprocessing.Queue(1)
+
+  core = Core(update_lock, sensor_data, command)
+
+  DELTA_T = 0.001
+
+  STATE = {'time' : 0.0, 'pressure': 0, 'flow': 0}
+
   try:
     while True:
-      pass
-      # wait for the update semaphore
       # read the command queue
+      try:
+        new_command = command.get(timeout = DELTA_T)
+      except queue.Empty as e:
+        new_command = {}
       # calculate the next time step values appropriately
-      # put the appropriate data in the command queue
-      # release the update semaphore
+      sensor_data.put(STATE)
+      time.sleep(DELTA_T)
+      STATE['time'] += DELTA_T
   except KeyboardInterrupt as e:
     core.terminate()
     print('terminated all')

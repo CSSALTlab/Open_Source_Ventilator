@@ -50,7 +50,6 @@ PyObject* call_pyfunc(const char* module_name, const char* func_name, PyObject* 
     PyErr_Print();
     fprintf(stderr, "Failed to load \"%s\"", module_name);
   }
-
   return pValue;
 }
 
@@ -63,10 +62,10 @@ PyObject* call_pyfunc(const char* module_name, const char* func_name, PyObject* 
 void initialize_hardware()
 {
   Py_Initialize(); // initialization for C Python API
-  PyEval_InitThreads(); // initialization for supported threads 
-  //  (needed because this code is initialized from a thread)
+  PyEval_InitThreads(); // initialization for supported threads
+  //  (needed because this code is initialized from a separte thread)
   PyGILState_Ensure(); // Acuire the Global Interpreter Lock, we dont need to give back ever
-  //  since the python that is running in this proccess just spawns us and thats all
+  //  since the other python thread that is running in this proccess just spawns us and thats all
 }
 
 
@@ -90,5 +89,58 @@ void uart_print(char* string)
 }
 
 
+void lcd_print(uint8_t row, uint8_t col, const char* string)
+{
+  PyObject* pRow = PyLong_FromSize_t(row);
+  PyObject* pCol = PyLong_FromSize_t(row);
+  PyObject* pString = PyUnicode_FromString(string); // translate from C string to python unicode
+  if (pString == NULL || pCol == NULL || pRow == NULL)
+  {
+      fprintf(stderr, "Cannot convert argument\n");
+      return;
+  }
+  PyObject* pArgs = PyTuple_Pack(3, pRow, pCol, pString);
+  PyObject* pRet = call_pyfunc("core", "lcd_print", pArgs);
+  Py_DECREF(pArgs); // done with args
+  Py_DECREF(pRet); // done with returned value
+  return;
+}
 
 
+void sound_alarm()
+{
+  PyObject* pArgs = PyTuple_New(0);
+  PyObject* pRet = call_pyfunc("core", "sound_alarm", pArgs);
+  Py_DECREF(pArgs); // done with args
+  Py_DECREF(pRet); // done with returned value
+  return;
+}
+
+
+void silence_alarm()
+{
+  PyObject* pArgs = PyTuple_New(0);
+  PyObject* pRet = call_pyfunc("core", "silence_alarm", pArgs);
+  Py_DECREF(pArgs); // done with args
+  Py_DECREF(pRet); // done with returned value
+  return;
+}
+
+
+void delay_ms(uint32_t ms)
+{
+  PyObject* pValue = PyLong_FromSize_t(ms); // translate to python unicode
+  if (pValue == NULL)
+  {
+      fprintf(stderr, "Cannot convert argument\n");
+      return;
+  }
+  // pValue reference stolen here
+  PyObject* pArgs = PyTuple_Pack(1, pValue);
+
+  pValue = call_pyfunc("core", "delay_ms", pArgs);
+
+  Py_DECREF(pArgs); // done with args
+  Py_DECREF(pValue); // done with returned value
+  return;
+}
