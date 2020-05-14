@@ -3,31 +3,41 @@
 
 //  LIBRARIES  
 
-#define VERSION                110
+#define VERSION                115
+
+#define SIZEOFFILTER  10      // Changing this may mess up the PID filter
 
 
 
 
-//#define DEBUGSERIAL         // MUST be done in order to see any debuggng statements
+#define DEBUGSERIAL         // MUST be done in order to see any debuggng statements
                             // This is the one that sets up the serial port.
                             
-#define DEBUGBMP280           //  To see statements related to BMP280 setup
+//#define DEBUGBMP280           //  To see statements related to BMP280 setup
 //#define FLOWMEASURE           //  To see info related to flow measurements
 //#define DEBUG              // Turn on to debug, geneal output of lots of sections
 //#define SHOWINSTANTFLOW    // to see calculations of instantaneous flow
 //#define TOTALTIDAL-DISPLAY // to see the tidal volume calculated each breath
-//#define BMP280DEBUG        // to see serial port related to BMP
 //#define AIRWAYPRESSURECHECKING   // help me figure out why the valve isn't opening
 //#define SERIALPRINT;        // gives a load ofprintouts on pressure monitoring
 //#define SMOOTHPRESSURERUN   // Investigating expiratory ringing and assist control ventilation
 //#define DIGITALPRESSURESPY    // to see measurements related to digital I2C diff press
-//#define ASSISTSPY           // allows visualization of ASSIST breaths, and of the smooth_pressure_run (>2) required to allow them
+//#define ASSISTSPY             // allows visualization of ASSIST breaths, and of the smooth_pressure_run (>2) required to allow them
 //#define VOLTAGESPY            // watch what happens with voltage
+//#define ANALOGSPY             // to watch analog flow measurement outputs
+//#define FLOWMEASURE2          // to watch the flow calculation on breaths -- time width etc 
+//#define FLOWMEASUREBREATH     // just to get the flow at the end of a breath
+#define AMBIENTPRESSURESPY    // to watch, end of each cycle, the stored diff, and the corrected atmospheric pressure
+//#define FILTERSPY             // overall informaiton on the expiratory pressure filter
+//define PEEPFILTERPRESSURESPY  // to see the pressure finally reaching pressure_off()
+//#define PIDFILTERSPY            // see basic output from the PID filter
 
+//#define TIMEWIDTHSPY              // to see the time an expiratory fast cycle took
+//#define TOTALOPENINGSPY           // to see the total time the exp. valve was open  
+//#define LUNGMEASUREMENTSSPY       // to see lung measureents
 
-
-#define VOLTAGEDIVIDER      // if defined, indicates we have a voltage divider to sense supply problems
-#define LOWVOLTAGELIMIT   11.5    // low voltage limit during activation of both solenoids
+#define VOLTAGEDIVIDER          // if defined, indicates we have a voltage divider to sense supply problems
+#define LOWVOLTAGELIMIT   0      // low voltage limit during activation of both solenoids
 #define DIVIDER           0.25    // factor by which supply voltage is dropped
 
 
@@ -49,15 +59,47 @@
 //=========================== YOUR MUST SELECT CORRECT PARAMETERS HERE FOR SENSORS AND DISPLAY =========
 
 
+//  Select if there is an additional BMP280 at Address 0x76 to do ambient pressure
+#define BMP280AMBIENT           //  Sensor at 0x76 to do ambient pressure  <<<_--IMPORTANT>>>>
+                                //  Base sensor for airway pressure defined as 0x77
+// ====== YOU MUST HAVE THE CORRECT ADDRESS FOR THE AIRWAYPRESSURE I2C DEFICE (THE I2C FLOW DEVICE ISFIXED AT 41 )
+#define BMP_ADDRESS 0x76        // Adafruit for AirwayPressure (Purple PCB)
+#define BMP_AMBIENT 0x77       // *****GLG   THE KY (Blue PCB)
+
+
+
+
 //=====YOU MUST ENABLE ONE OF THESE TO GET FLOW MEASUREMENTS!!!!===============
 //#define ANALOGDIFFTRANSDUCER              // if using the 2kPa analog transdcuer
+    //  MVXP7002DP
+    //  Datasheet:   https://www.nxp.com/docs/en/data-sheet/MPXV7002.pdf
+    //  Available on breakout boards that simply have +V, Ground and Analog out
+    //  Feed with +5 VDC (10 mA typical current)  
+    //  Output  voltage at 0Pa differential approximately 2.5 (hence the need for zero'inig)
+    //  (mine shows about 2.7 v at rest) 
+    //  Arduino will analogRead approximatelly 555 at zero differential pressure 
+    //  Output voltage rises toward max of 4.5 V with a slope of 1 mV / Pascal
+    //  We expect a maximum differential pressure of 150 Pa -- so voltage rises to 2.7 + .150 =  2.85
+    //  Arduino might measure 583
+    //  
+    //  Sensitivity of 10-bit (1024) Arduino is down to 4.8 mV  resolution
+    //  Hence resolution of system will be only approx 5 Pa.
+    //  However, during an exhalation, typical pressures achieved for adult expiration reach 125 Pa (125mV) -- easily measureable
+    //  I will clip off any pressure below 15 Pa (to avoid very injurious over estimations of flow) and see how well it performs
+    //  Each measurement takes approximately 1 mSec so the system is plenty fast enough for us.    
+
 #define   I2CDIFFTRANSDUCER               // if using the I2C transducer 
 
+// ======YOU MUST ENABLE ONE OF THE TWO TYPES OF EXPIRATORY LIMBS  
 //#define STRAIGHTEXPLIMB
-#define USHAPEEXPLIMB
+#define USHAPEEXPLIMB     
 
-#define BMP_ADDRESS 0x77                  // *****GLG  FOR ADAFRUT
-//#define BMP_ADDRESS 0x76                  // *****GLG   THE ALTERNATIVE
+// =========================FILTER CHOICES
+
+
+//#define PIDFILTER
+
+#define ADAPTIVE2 
 
 //============================ DISPLAY PARAMETERS =============================      
 // ITEMS TO SET WHEN MOVING CODE TO AND FROM ASHHAR / GORDON
@@ -194,9 +236,18 @@ extern char alarm_array[];          // allows to keep track of 6 different alarm
 
 //I2C failure detection system 
 #define I2C_BUSY  (0x99)
-#define I2C_READY (0x38)
-extern uint8_t i2c_status  __attribute__ ((section (".noinit")));
-extern uint8_t i2c_allowed;                    // variable to track whether this bus is allowed
+#define I2C_READY (0x37)
+extern uint8_t        i2c_status  __attribute__ ((section (".noinit")));
+extern uint8_t        i2c_allowed;                    // variable to track whether this bus is allowed
+
+// Valve monitoring
+extern unsigned long  exp_valve_first_open_time;
+extern int            exp_valve_last_closed;   // 1 = we closed the valve in expiration to maintain peep and will not reopen it
+extern unsigned long  exp_valve_last_closed_time ; // time that we closed the vale to try and hold PEEP
+extern int            exp_valve_reopen; 
+extern int            exp_valve_first_open;
+extern int            loops_since_major_jump;   // track when we made a major jump in the exp open time 
+
 
 // global ventilator declares
 extern bool exhale;                              //Boolean to indicate if on the exhale cycle
@@ -205,9 +256,14 @@ extern bool lastMode;                            //Boolean for switching from In
 extern float  supply_voltage;                      // supply voltge 
 extern int beats_per_minute;            
 extern int atmospheric_pressure;        
+extern int atmospheric_pressure2;          // in cmH2O from the Ambient Pressure Unit
+extern int diff_atmospheric_pressure;     //  = sensor1 - sensor2
+                                           // only updated at begnning and in zero/reset
+                                           
 extern int bargraph[];   // Deprecated
 extern int beats_per_minute;
 extern int desired_peep;   // the desired peep vaue. 
+extern int vent_assist;    // 1 = assist ventilation  0 = don't
 extern int current_phase;
 extern int current_pressure;
 extern int cut_off;                              
@@ -250,11 +306,22 @@ extern float exLitersPerCycle;                   // Liters Per exhale Cycle
 extern float fpressure;                          // ambient pressure
 extern float hum;                                // Humidity 
 
-extern float inLitersPerCycle;                   // Liters Per Inhale Cycle
-extern float instantFlowValue;                   // Instantaneous Flow
-extern float pressurecmH2O;
-extern float pressureSensorVoltage;              // Measured differential pressure sensor voltage. Purdum/Schmidt
-extern float temp;                               // Temporary working variable
+extern float  inLitersPerCycle;                   // Liters Per Inhale Cycle
+extern float  instantFlowValue;                   // Instantaneous Flow
+extern float  pressurecmH2O;
+extern float  pressureSensorVoltage;              // Measured differential pressure sensor voltage. Purdum/Schmidt
+extern float  temp;                               // Temporary working variable
+extern float  phistory[];                       // finite impulse filter storage of pressure 
+
+extern  int     peep_filter_pressure;         // a calculated perssure, only used for peep control.   
+extern int      Tbottomlimit;
+extern int      smooth_pressure_run;             // needed in both main routine and in filter.cpp
+extern int      final_closure;   // 1 = we closed the valve in expiration to maintain peep and will not reopen it
+extern int      tested_settled_peep;     // flag for testing ONCE 
+extern int      loopcounter;  // loop counter for trips through the expiratory filter
+extern int      wastedloops; 
+extern int      total_exp_valve_open_time;  // counts the total open time for the PID filter
+extern float    current_exp_volume;                 // the volume in the most recent tiny slice (approx 23 mSec)
 
 
 //======================================= Function Prototypes ================================
@@ -309,8 +376,13 @@ void menu_reset_i2c(struct menu_item *me, int cmd);
 void menu_pause_inhalation(struct menu_item *me, int cmd);
 void menu_reset_sensor(struct menu_item *me, int cmd);
 void menu_inspiratory_pause(struct menu_item *me, int cmd);
+void menu_assist(struct menu_item *m, int cmd);           // GLG -- turn ASSIST on or off
 void menu_peep_desired(struct menu_item *me, int cmd);   // GLG -- add a way to change the PEEP setting
 void menu_trigger_cm(struct menu_item *me, int cmd);     // GLG -- add a way to adjust trigger sensitivity
+int finitefilter(int pressure);
+int PIDfilter(int pressure)   ;                           // GLG -- the PID filter
+int TimeCycledFilter(int pressure);                       // GLG -- filter that opens the exp valve ONCE
+
 
 
 // set I2CBusAllowed=0 to disable the bus

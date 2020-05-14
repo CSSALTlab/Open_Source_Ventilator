@@ -1,4 +1,43 @@
-//  Version 108   4/28/2020
+// Version 120 5/10/2020 Added Jacks code to sensor init sections to reduce blocking in the case of i2c sensor 
+//                        failure.
+// 
+//Version 118  5/6/2020   Will add in measurments of compliance and resistance
+//
+//
+// Version 117  5/4/2020   Fix the advancement of phase no. so it can't skip cut_off phase
+//                              This version provided Tbottomlimit to count the total amount of
+//                              opening of the expiratory valve in two different working routines:
+//                              PID -- simple pid revision of the observed presusre to better guide
+//                                     the algorithm
+//                              ADAPTIVE2 -- a new algorithm that keeps the valve open for Tbottomline
+//                                     loops (where each loop was measured at approx 23 milliseconds)
+//                                     and more quickly, or more slowly adjusts Tbottomline up or down
+//                                     and measures the result ONLY once in phase 18, to adjust
+//                              Choice of the filter to use is by #defines in vent.h
+//
+// Version 116   5/3/2020  -- ASSIST now controllable from menu on/off 
+//                              PAUSE now equal to 25% of inspiration
+//                              ASSIST should be availablein either pause or non pause (not checkec)
+//                              PID filter available (uncomment)
+//                              ADAPTIVE filter selected
+//                              FIR filter -- not working at moment
+//                              Turn PEEP off by setting menu peep to 0 (disables it)
+                              
+
+
+// Version 115  5/2/2020 -- added in filter.cpp with a working adaptive filter.
+
+// Version 112  4/30/2020   Gordon Gibby -- but usingShane S's code for the imprved lcd functions
+//
+
+//Version 111   4/30/2020   Gordon Gibby -- includes support for the MVXP7002DP analog digital flow
+//                            transducer, using a fudge factor of 2 to make the expired flows appear
+//                            reasonnably accurate.   Unable to explain that.....
+//                            Also has working code for the I2C transducer....works like a charm
+//                            Gordon's fixes to the user interface code with beeps to indicate I2C progress...
+//                            Does not yet have Steve S's improvements to saves and rolling menu
+//
+//                            
 // Version 1.6, Apr 15, 2020. Jack Purdum, W8TEE. flash: 23760, SRAM: 1088. Stopped duplication of string
 //                            constants, moved includes to where they belong in vent.h, set toggle code for
 //                            different displays (untested), moved function prototypes to vent.h, moved
@@ -87,6 +126,10 @@
 
 //---------------------FLOW MEASUrEMENT SUBRoutINE  (Schmidt / Purdum from 4/5/2020 Version 4
 //  Here are the routines and what they will do and return
+//  TO USE ANALOG OUTPUT DIFFERENTIAL PRESSURE TRANSDUCER
+//  #define ANALOGDIFFTRANSDUCER (in vent.h)  for the MVXP7002DP 2kPa analog transdcuer
+//  to watch outputs, #defineANALOGSPY
+//
 //  int ReadFlowPressureSensor()    returns an positive-valued int,  from 0 to 1023
 //      Note:  zerorawSensorValue will keep the zero-flow value (baseline)
 //      it also computes the zero-based global variable  int delP = rawSensorValue-zerorawSensorValue;
@@ -100,13 +143,19 @@
 //      Note that the time slice width in milliseconds is basically the same for all slices.
 //      So simply add up all the instantFlowValues and multiply by the total time of expiration to get the total volume
 //
-
+//   There are two completely dfferent routines to calculate flow from the I2C-based differentia pressure transducer
+//   which returns a float from its libary of routines.
+//
 //==================================== Global Definitions ==============================================
 // moved these to vent.h
 
 float  supply_voltage =   12.0  ;  // iitial value only!
 uint8_t i2c_status  __attribute__ ((section (".noinit")));
 uint8_t i2c_allowed;   // variable to track whether this bus is allowed
+
+// Variables to track exact peep performancee
+
+
 
 bool exhale;                              //Boolean to indicate if on the exhale cycle
 bool lastMode;                            //Boolean for switching from Inhale to exhale
@@ -123,14 +172,19 @@ char alarm_array[6];          // allows to keep track of 6 different alarms
 //  alarm_array[4] refers to LOW VOLTAGE from supply
 //  others are undefined at the moment
 
-int atmospheric_pressure    = 0;          // in cmH2O
+int atmospheric_pressure    = 0;          // in cmH2O  from the Airway Pressure Unit 
+int atmospheric_pressure2   = 0;          // in cmH2O from the Ambient Pressure Unit
+int diff_atmospheric_pressure = 0;     // measured difference sensor 1 - sensor 2
+                                       // measured at beginning and at ZERO/RESET
+ 
 int bargraph[MAX_PHASES];  // bargraph deprecated
 int beats_per_minute        = 10;
-int desired_peep = 5;                     // what PEEP we want to happen.
+int desired_peep            =  5;          // what PEEP we want to happen.
+int vent_assist             = 0;          // 1 = assist; 0 = none          
 int current_phase           = 0;
 int current_pressure        = 0;
 int cut_off;                              // phase at which we turn off the inspiration
-int delP;                                 //Measured differential pressure sensor Flow Delta Pressure in Kpa; Purdum/Schmidt
+int delP;                                 //Measured differential pressure sensor Flow Delta Pressure in Pa; Purdum/Schmidt
 int desired_TV              = 700;        // default tidal volume = 700
 int exmLPerCycle;                         // int milliliters exhanled
 int inspiratory_pause       = 0;          // set to 1 for inspiratory pause
@@ -190,8 +244,10 @@ float instantFlowValue;                   // Instantaneous Flow
 float pressurecmH2O;
 float pressureSensorVoltage;              // Measured differential pressure sensor voltage. Purdum/Schmidt
 float temp;                               // Temporary working variable
+float current_exp_volume;                 // the volume in the most recent tiny slice (approx 23 mSec)
 
-static  int smooth_pressure_run;          // counter for how tightly the expriatory pressure is kept
+int smooth_pressure_run;          // counter for how tightly the expriatory pressure is kept
+int tested_settled_peep=0;            // flag for testing the peep ONCE
 
 //===================================== Define Objects ================================
 #if I2CLCDDISPLAY == true
@@ -213,8 +269,21 @@ BMx280I2C::Settings settings(
   BMP_ADDRESS                                 // I2C address LCD display
 );
 
+BMx280I2C::Settings settings2(
+  BME280::OSR_X1,
+  BME280::OSR_X1,
+  BME280::OSR_X1,
+  BME280::Mode_Forced,
+  BME280::StandbyTime_1000ms,
+  BME280::Filter_Off,
+  BME280::SpiEnable_False,
+  BMP_AMBIENT                                 // I2C address LCD display
+);
 
-BMx280I2C ssenseBMx280(settings);
+
+BMx280I2C ssenseBMx280(settings);   // for the airway pressure BMP280
+BMx280I2C ssenseBMx282(settings2);  // for the ambient pressure BMP280
+
 
 
 BMP180I2C bmp180(BMP_ADDRESS);    // For the BMP180
@@ -283,43 +352,35 @@ float ReadI2CFlowPressureSensor()
 
 int ReadFlowPressureSensor()
 {
-
+  // This routine for the ANALALOG pressure transducer 
   // NOTE defines:
-  //#define ANALOGDIFFTRANSDUCER   // if using the 2kPa analog transdcuer
-  //#define   I2CDIFFTRANSDUCER     // if using the I2C transducer
-  //  EXAMPLE of Handling I2C bus:
-  //  if(i2c_allowed==1){
-  //     i2c_status=I2C_BUSY;  // set the flag to indicate failure if reset happens
-  //     ....now do i2C business
-  //     ....finished with I2C business
-  //     i2c_status=I2C_READY; // reset flag to "working"
-  //     }
-  //     else // put in code to provide default value for pressure measurement
-
-
-  // lets average 3 readings and try that.
+  //#define ANALOGDIFFTRANSDUCER   // if using the MVXP7002DP 2kPa analog transdcuer
+  //#define ANALOGSPY  to see actual (0-1023) values measured
+  // see very extensive information on this device in vent.h file 
+  //
+    // lets average 3 readings and try that.
   int q;
+  
+  
   rawSensorValue = 0;
   for (q = 0; q < 3; q++)
   {
-    rawSensorValue        =  rawSensorValue + analogRead(PRESSURESENSORPIN);
+    rawSensorValue        =  rawSensorValue + analogRead(PRESSURESENSORPIN);  // analogRead returns 0-1023 
   }
 
   rawSensorValue = rawSensorValue / 3;
-
-#ifdef DEBUG
-  Serial.print(F("Raw Sensor value: "));
-  Serial.print(rawSensorValue);
-  Serial.print(F("\n"));
-  MyDelay(500);
+  
+#ifdef ANALOGSPY
+  // rawSensorVaue is an int  
+  Serial.print(F("Raw Analog (0-1023): "));
+  Serial.println(rawSensorValue);
 #endif
 
-  //Raw digital input from pressure sensor
-  //pressureSensorVoltage = ((float) map(rawSensorValue, 0, 1023, 0, 5)) / 100.0;   //Convert raw bits read to volts
-  // delP                  = (5.0 * pressureSensorVoltage / VSOURCE) - 2.5;          //Convert volts to kPa  Return delP;
-  delP = rawSensorValue - zerorawSensorValue; // adjust for the offset of the sensor based on the baseline that was captured in the setup();
-  // later we can make this spiffier and adjust with every breath
 
+  //Raw digitized voltage input from pressure sensor  (0-1023 representig 0-5 volts) 
+  //ALSO--
+  //Calculate GLOBAL int variable, difference between raw 0-1023 and baseline zero flow value, delP
+  delP =  rawSensorValue - zerorawSensorValue ; // all INTS and in units of 0-1023 
   return (rawSensorValue);
 }
 
@@ -338,6 +399,7 @@ int ReadFlowPressureSensor()
 float CalculateI2CInstantFlow()
 {
   //  Uses RawDigitalPressure and calculates the associated flow that produced it.
+  //  output is global float instantFlowValue
 
 #ifdef STRAIGHTEXPLIMB
   if (RawDigitalPressure > 145) {
@@ -409,23 +471,60 @@ if (RawDigitalPressure > 145) {
   return (instantFlowValue);   // change to millilliters!!!
 }
 
-// ------------------------------------------------------------------------
+
+
+
+
+// -------------ANALOG VERSION OF INTANT FLOW CALCULATION---------------------------------------------
+//    requires global variabe delP  (int, 0-1023, differntialpressure having substrated the zero-flow number
 
 float CalculateInstantFlow()
 {
-  float correction;                 // Used in calculation to avoid square root of negative number
-  if (delP < 0)
-    correction = -1.0;
-  else
-    correction = 1.0;
-  instantFlowValue = MF * PTFCC * sqrt(delP * correction);
-  instantFlowValue *= correction;
+  
 
-#ifdef DEBUG 
+  // needs to receive global variable float delP in units of Pascals.   
+  // convert from 0-1023 ints to pressure in Pascals
+  // and switch to using global float RawDigitalPressure  to be compatible  with the I2C-based routine  
+  // to convert to Pascals:     1023 measurements cover span of 5 volts
+  // sensitivity of the MPXV7002DP device is 1mV = 1 Pa
+  // see:    https://www.nxp.com/docs/en/data-sheet/MPXV7002.pdf
+
+  RawDigitalPressure  =   (float) delP   * 2*   (5000  /* Pascals */ / 1023 ) ;  // GLG FUDGE FACTOR
+
+  if (RawDigitalPressure > 145) {
+    // stuck this in
+    instantFlowValue = 0.22 * RawDigitalPressure + 31.0;  // GLG estimate
+  } else if (RawDigitalPressure > 124.6) {
+    instantFlowValue = 0.235 * RawDigitalPressure + 30.96;
+  } else if (RawDigitalPressure > 85.02) {
+    instantFlowValue = 0.248 * RawDigitalPressure + 29.33;
+  } else if (RawDigitalPressure > 52.14) {
+    instantFlowValue = 0.297 * RawDigitalPressure + 25.19;
+  } else if (RawDigitalPressure > 30.51) {
+    instantFlowValue = 0.445 * RawDigitalPressure + 17.12;
+  } else if (RawDigitalPressure > 12.39) {
+    instantFlowValue = 0.619 * RawDigitalPressure + 12.14;
+  } 
+
+  //With the limited resolution, values below 12 mV (or Pascal, they are the same) are suspect
+  //else if (RawDigitalPressure > 5) {
+  //  instantFlowValue = 1.015 * RawDigitalPressure + 7.231;
+  //}
+  // 
+  else {
+    instantFlowValue = 0;
+  }           // unit is liters/minute
+
+  
+
+#ifdef ANALOGSPY
+   int intRawDigitalPressure = (int) RawDigitalPressure;
   Serial.print(F("CalculateInstantFlow"));
-  Serial.print(F("    delP = "));
+  Serial.print(F("delP = "));
   Serial.print(delP);
-  Serial.print(F("    instantFlowValue = "));
+  Serial.print(F("  intRawDigitalPressure = "));
+  Serial.println(intRawDigitalPressure);
+  Serial.print(F("Instant Flow:  "));
   Serial.println(instantFlowValue);
 #endif
 
@@ -520,13 +619,23 @@ void log_message(char *text) {
   Serial.println(text);
 }
 
+// 5/10 SDS added Jacks edits to reduce i2c blocking
 void init_bmp180() {
   //begin() initializes the interface, checks the sensor ID and reads the calibration parameters.
-  if (!bmp180.begin()) {
-    pressure_sensor_present = 0;
-    while (1);
+  unsigned long start = millis();
+  
+  while (true) {           // routine to initialize sensor...
+  
+  if (!bmp180.begin()) {   // Hasn't initialized yet...
+    if (millis() - start > 2000UL) {    // If sensor doesn't init in 2 seconds...
+       pressure_sensor_present = 0;
+       lcd.print("Error: 180 sensor");   // Tell them bad sensor and go home
+       return;
+    }
+  } else {
+    break;
   }
-
+  }
   //enable ultra high resolution mode for pressure measurements
   // bmp180.setSamplingMode(BMP180MI::MODE_UHR);
   //reset sensor to default parameters.
@@ -537,53 +646,72 @@ void init_bmp180() {
 
 }
 
+////////////////// Initiaization of the AMBIENT  bmp280/////////////////////////////
+
+// 5/10 SDS added Jacks edits to reduce i2c blocking
+void init_bmp282() {
+ 
+  BME280::PresUnit presUnit(BME280::PresUnit_Pa);
+  BME280::TempUnit tempUnit(BME280::TempUnit_Celsius);
+    if (i2c_allowed == 1) {
+    #ifdef DEBUGBMP280 
+    Serial.print(F( "\n\nWill read BMx280-2  i2c_allowed = "));
+    Serial.println(i2c_allowed);
+    #endif
+
+  unsigned long start = millis();
+
+   while (true) {   // routine to initialize sensor...
+    if (!ssenseBMx282.begin()) {
+      if (millis() - start > 2000UL) {  // If sensor doesn't init in 2 seconds...
+        #ifdef DEBUGBMP280
+        Serial.print(F("No BMP-2.")); // Tell them bad sensor and go home
+        #endif
+        
+        lcd.setCursor(0, 0);
+        lcd.print(F("No init of BMx280-2"));
+        return;
+      }
+    } else {
+      break;
+    }
+   }
+     }
+    }
+    
+///////////////////////////////
+// 5/10 SDS added Jacks edits to reduce i2c blocking
 void init_bmp280() {
-  int passCount = 0;
+
   BME280::PresUnit presUnit(BME280::PresUnit_Pa);
   BME280::TempUnit tempUnit(BME280::TempUnit_Celsius);
 
   if (i2c_allowed == 1) {
-#ifdef DEBUG   
-    Serial.print(F( "\n\nWill read BMx280  i2c_allowed = "));
-    Serial.println(i2c_allowed);
+      #ifdef DEBUGBMP280 
+      Serial.print(F( "\n\nWill read BMx280  i2c_allowed = "));
+      Serial.println(i2c_allowed);
+      #endif
+
+  unsigned long start = millis();
+
+    while (true) {  // routine to initialize sensor...
+      if (!ssenseBMx280.begin()) {
+        if (millis() - start > 2000UL) {   // If sensor doesn't init in 2 seconds...
+#ifdef DEBUGBMP280
+          Serial.print(F("No BMP Airway"));  // Tell them bad sensor and go home
 #endif
-    
-    while (!ssenseBMx280.begin()) {
-      ++passCount;
-      MyDelay(250L);
-      if (passCount > 16) {             // Try initializing it for 4 seconds
-#ifdef DEBUG
-        Serial.print(F("No BMP."));
-#endif
-        lcd.setCursor(0, 0);
-        lcd.print(F("No init of BMx280"));
-        return;
+
+          lcd.setCursor(0, 0);
+          lcd.print(F("No init AW Sens"));   // Tell them bad sensor and go home
+          return;
+        }
+      } else {
+        break;
+
       }
     }
-    switch (ssenseBMx280.chipModel()) {
-      case BME280::ChipModel_BME280:
-#ifdef DEBUG
-        Serial.print(F("BME280(hum) " ));
-#endif
-        break;
-      case BME280::ChipModel_BMP280:
-        // insert any desired code to notify that BMP280 (no humidity) detected
-#ifdef  DEBUG
-        Serial.print(F("BMP280(nohum) " ));
-#endif
-        break;
-      default:
-        // insert any code to notify that the unknown sensor found.
-        lcd.print(ssenseBMx280.chipModel());
-#ifdef DEBUG        
-       Serial.println(F("Sensor ssenseBMx280 not found."));
-#endif        
-        break;
-    }
-    ssenseBMx280.read(fpressure, temp, hum, tempUnit, presUnit);
 
   } // end of skipping everything if i2c_allowed==0
-
 }
 
 void init_pressure_sensor() {
@@ -592,8 +720,13 @@ void init_pressure_sensor() {
   if (i2c_allowed == 1) {
 
     i2c_status = I2C_BUSY; // set flag to discover a possible failure
-    if (USE_BMP280)
-      init_bmp280();
+    if (USE_BMP280){
+                  init_bmp280();
+                 #ifdef BMP280AMBIENT
+                  // initialize that one also
+                  init_bmp282();   
+                   #endif
+    }
     else
       init_bmp180();
     // If we made it to here, the I2C bus worked OK
@@ -640,7 +773,34 @@ int measure_bmp180() {
   return m;
 }
 
+////////////////////////2nd BMP Measure ///////////////////////////////
+int measure_bmp282()  {
+  unsigned long testpressure2;
+  BME280::PresUnit presUnit(BME280::PresUnit_Pa);
+  BME280::TempUnit tempUnit(BME280::TempUnit_Celsius);
+  i2c_status = I2C_BUSY; // set the flag to indicate failure if reset happens
 
+  // Try the second sensor
+  ssenseBMx282.read(fpressure, temp, hum, tempUnit, presUnit);
+  // TEST---------------------------------------------------
+  //MyDelay(10000); // see if the wdt timer will kick in 
+  //Yes...it kicks in!!!
+  // TEST--------------------------------------------------
+  // don't we need to reset the flag??
+  i2c_status = I2C_READY; 
+  
+  testpressure2 = (unsigned long) fpressure;
+  testpressure2= testpressure2 / 98;  // cm H2O
+
+  #ifdef DEBUGBMP280
+  Serial.print ("\n 2nd BMPAirway P cmH2O: ");
+  Serial.print (testpressure2);
+  Serial.print ("\n");
+   #endif
+
+   return (testpressure2);
+   Serial.print(testpressure2);
+}
 
 
 //returns the absolute pressure in cmH2O
@@ -653,21 +813,46 @@ int measure_bmp280() {
   i2c_status = I2C_BUSY; // set the flag to indicate failure if reset happens
 
   ssenseBMx280.read(fpressure, temp, hum, tempUnit, presUnit);
+  // don't we need to reset the flag??
+  i2c_status = I2C_READY;  
+  
   testpressure = (unsigned long) fpressure;
   testpressure = testpressure / 98;  // cm H2O
 
-#ifdef DEBUG 
+#ifdef DEBUGBMP280
   Serial.print ("\n Airway P cmH2O: ");
   Serial.print (testpressure);
   Serial.print ("\n");
 #endif
-
-
-  i2c_status = I2C_READY; // reset flag to "working"  GLG---
   return (testpressure);
 
 }
+///////////////////////////////////////////////////////////////////////////////////////
 
+
+int measure_pressure2() {
+  long m;
+  if (i2c_allowed == 1) {
+    i2c_status = I2C_BUSY; // set the flag to indicate failure if reset happen
+    if (USE_BMP280)
+      m =  measure_bmp282();
+    else
+      m =  measure_bmp180();
+    if (m == 0) i2c_allowed = 0; // stop using it
+    else     i2c_status = I2C_READY; // reset flag to "working"
+#ifdef DEBUGBMP280 
+    Serial.print(F("2ndPress cmH2O: "));
+    Serial.println(m);
+#endif
+    return m;
+  }
+  else
+    m = 999;
+  return m;
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////////
 int measure_pressure() {
 
   long m;
@@ -685,7 +870,7 @@ int measure_pressure() {
     if (m == 0) i2c_allowed = 0; // stop using it
     else     i2c_status = I2C_READY; // reset flag to "working"
 
-#ifdef DEBUG 
+#ifdef DEBUGBMP280 
     Serial.print(F("1stPress cmH2O: "));
     Serial.println(m);
 #endif
@@ -696,9 +881,9 @@ int measure_pressure() {
 
   return m;
 
-  //     return 999;  not sure why this is needed???
 }
 
+/////////////////////////////////////////////////////////////////////////////////
 int loop_count = 0;
 
 void pressure_on() {
@@ -720,24 +905,44 @@ void pressure_off() {   // now implements both inspiratory pause AND PEEP
 
 #endif
 
-  if (i2c_allowed == 0) {
+  
+  if ( (i2c_allowed == 0)  || (desired_peep==0) ) {
 
+    // This allows a "no peep" selection of desired_peep = 0;
+    // and keeps the system functioning if the i2C bus has been disabled. 
     // turn off the Motor_B
+    // In this case---there is no pressure monitoring so no electronic control of peep
+    // 
     digitalWrite(MOTOR_B, LOW);
     is_pressure_on = 0;
     return;
   }
-
-
   // CAUTION:: If the peak inspiratory pressure never made it above lowpressurelimit
   // CAUTION:: We may have a disconnected or blocked airway pressure line -- MUST ALLOW TO EXHALE!!!
   //           SO DONT KEEP EXHALATION CLOSED IF PRESSURE IS LOW!!!
   // put in a delay to make them happy
-  if (inspiratory_pause == 1 && (current_phase < (cut_off + 4) )  && (peakinspiratorypressure > lowpressurelimit) )digitalWrite(MOTOR_B, HIGH);
+  if (inspiratory_pause == 1 && (current_phase < (cut_off + cut_off/4) )  && (peakinspiratorypressure > lowpressurelimit) )digitalWrite(MOTOR_B, HIGH);
   else {  // NOW we need to look at PEEP
-    if (current_pressure > desired_peep  || (peakinspiratorypressure < lowpressurelimit) ) digitalWrite(MOTOR_B, LOW); // drop the pressure
-    if (current_pressure <= desired_peep   && (peakinspiratorypressure > lowpressurelimit) ) digitalWrite(MOTOR_B, HIGH); //don't drop thepressure
-    // Note a tiny bit of hysteress
+    // Need to find the exact moment that the expiration valve first gets opened.
+    // char not_opened_yet get set to 1 at current_phase==0;   gets set to 0 at first moment of opening and time opening recorded in 
+    // unsigned long exp_valve_first_open_time  (milliseondss)
+ 
+    #ifdef PEEPFILTERPRESSURESPY
+    Serial.print(F("\npressure_off: peep_filter_pressure: "));
+    Serial.print(peep_filter_pressure);
+    Serial.println("");
+    #endif
+    
+    if (peep_filter_pressure > desired_peep  || (peakinspiratorypressure < lowpressurelimit) ){
+      digitalWrite(MOTOR_B, LOW); // drop the pressure
+      if(exp_valve_first_open==0){
+        exp_valve_first_open = 1;  // note that it has opened
+        exp_valve_first_open_time= millis();  // note the time it opened.  
+        
+      }
+    }
+    if (peep_filter_pressure <= desired_peep   && (peakinspiratorypressure > lowpressurelimit) ) digitalWrite(MOTOR_B, HIGH); //don't drop thepressure
+    
   }
 
 
@@ -746,6 +951,24 @@ void pressure_off() {   // now implements both inspiratory pause AND PEEP
   is_pressure_on = 0;
 
 }
+
+void measure_atmospheric_pressure2() {
+  // We presume that no waiting is necessary because this unit is not within the airway
+ //now calibrate for 1.0 seconds
+  long accumulated_pressure = 0;
+  for (int i = 0; i < 3; i++) {
+    accumulated_pressure += measure_pressure2();
+    // no delay
+  }
+  atmospheric_pressure2 = accumulated_pressure / 3;
+    #ifdef DEBUGBMP280 
+    Serial.print(F("Atm press2= "));
+    Serial.print(atmospheric_pressure2);
+    #endif
+    wdt_reset();   
+}
+  
+//////////////////////////////////////////
 
 void measure_atmospheric_pressure() {
   //if pressure is on, turn it off and wait for 4 seconds for the lungs and compressor to deflate
@@ -763,13 +986,13 @@ void measure_atmospheric_pressure() {
 
   //now calibrate for 1.0 seconds
   long accumulated_pressure = 0;
-  for (int i = 0; i < 10; i++) {
+  for (int i = 0; i < 3; i++) {
     accumulated_pressure += measure_pressure();
     wdt_reset();
-    MyDelay(100);
+    MyDelay(50);
   }
 
-  atmospheric_pressure = accumulated_pressure / 10;
+  atmospheric_pressure = accumulated_pressure / 3;
 #ifdef DEBUG 
   Serial.print(F("Atm press= "));
   Serial.print(atmospheric_pressure);
@@ -893,7 +1116,6 @@ void check_pressure_limits() {
 void vent_slice() {
 int p;  // to allow pressure to be measured
 
-  // long differentialpressure;
 
   cut_off = MAX_PHASES - (MAX_PHASES * (ie_ratio)) / (ie_ratio + 1);   // no longer needed here
   current_pressure= measure_pressure() - atmospheric_pressure  ;    // MEASURE AIRWAY PRESSURE
@@ -919,6 +1141,9 @@ int p;  // to allow pressure to be measured
 
   // Set up a counter to keep track of how settled the expiratory pressure is--do it right at the transition
   if (current_phase == cut_off) {
+    total_exp_valve_open_time=0;   // use as a counter of total time spent with exp valve open
+    tested_settled_peep = 0;      // set the flag so we will test thepeep ONCE
+    loopcounter=0;   // havent made any loops through the expiratory limb;   
     smooth_pressure_run = 0;
     last_flow_time = micros();   //  microseconds-- get a baseline for this cycle to start
   }                               // remember this portion of code is done many many times, not just at the end of a slice
@@ -927,7 +1152,7 @@ int p;  // to allow pressure to be measured
                                   
 
 
-  if ( current_phase > cut_off  && inspiratory_pause == 0  ) { // we only look for inspiratory effort during expiration
+  if ( ((current_phase > cut_off  && inspiratory_pause == 0) || (current_phase > (cut_off + cut_off/4) ) )&& vent_assist==1 ) { // we only look for inspiratory effort during expiration
     // for simplicity I'm not offering this with inspiratory pause also
     // WE ARE IN EXHALATION
     // Have to measure the pressure....
@@ -942,12 +1167,11 @@ int p;  // to allow pressure to be measured
       // search for an inspiratory breath.
       // TRIGGER IS NOW ADJUSTABLE -- higher the trigger_cm the more difficult to trigger
 
-      if ( current_pressure <  (desired_peep - trigger_cm) )  { // this needs to be adjusted for peep!!!!
- #ifdef ASSISTSPY
+      if ( current_pressure <  (desired_peep - trigger_cm) )  { // this adjusts for peep 
+        #ifdef ASSISTSPY
         Serial.print(F("\n\n**ASSISTED**\n\n"));
- #endif
- 
-        // jam us to the end of this slide immediately
+        #endif
+       // jam us to the end of this slide immediately
         current_phase = 0; // force us into the beginning of an inspiratory pressure state
         next_slice = millis() - 1  ; // force us into a decision point (end of time slice)
       }
@@ -985,18 +1209,59 @@ if (current_phase < cut_off+4)
     alarm(ALARM_FAST);
     alarm_high_pressure = true;
     update_status2( (char*) "HI");
-    current_phase++;  // jump ahead!!
+    if(current_phase< (cut_off-2) )current_phase++;  // jump ahead!!
+                                                    // but never skip important phase cut_off
     alarm_array[1] = 1; // set the alarm array
     }
 
   }  // end of checking during inspiration for over pressure 
 
   // ATTEMPT PEEP CONTROL------------------------------------------------
-  if (current_phase > cut_off) { // Note that if we have jammed an inspiratio to start, this will be avoided
+   
+  if ( (( current_phase > cut_off) && (inspiratory_pause==0)) ||  (inspiratory_pause==1 && current_phase>(cut_off + cut_off/4)) ) { // Note that if we have jammed an inspiratio to start, this will be avoided
     // current_pressure = measure_pressure() - atmospheric_pressure;  // already got tht done above!! doesn't need repeating
+    // IF WE ARE IN HERE:  it is time to open the expiratory valve....
+    #ifdef FILTERSPY
+    Serial.print(F("\n\nBefore filter: "));
+    Serial.println(current_pressure);
+    
+    #endif
+
+    // to use the filters, keep these lines uncommented
+    // Note that we use the simpler PIDfilter if inspiratory_assist is available, because it
+    // doesn't need to see the pressure long ways into expiration
+    // The TimeCycledFilter DOES need to see a steady pressure there, which 
+    // a person breathing would mess up
+    //
+
+    //////////////////   FILTERS    ////////////////////////////////////////////////////////////
+    
+    if(vent_assist==1) peep_filter_pressure = PIDfilter(current_pressure);
+    else peep_filter_pressure = TimeCycledFilter(current_pressure);
+    
+    
+   if (exp_valve_first_open == 0)   // we are here for the first time....
+      {
+      exp_valve_first_open =1;  // set the market that we opened it
+      exp_valve_first_open_time=millis();   // unsigned long to keep that time
+      }
+
+    
+    // DONT MESS WITH current_pressure!  that way overpressure tests don't get misled..... 
+    
+    
+    #ifdef FILTERSPY
+    Serial.print(F("current_phase:"));
+    Serial.println(current_phase);
+    #endif
+
+    
     pressure_off();  // that routine has it written in now.
-    // NOW lets' carry out the Expiratory Flow Measurements
+
+  // EXPIRATORY FLOW MEASUREMENTS --------------------------------------
+    
     DoExhaledTidalVolume();  // this will get done MANY TIMES per slice!!
+  
   }
 
 
@@ -1029,6 +1294,10 @@ if (current_phase < cut_off+4)
     alarm_array[0] = 0; // zero the low pressure alarm, which gets displayed LATE
     alarm_array[1] = 0; // zero the high pressure alarm, which gets displayed LATE
 
+    // preset the variable to track when the expiratory valve first opens
+    exp_valve_first_open = 0;
+    
+    
     //  If i2c isn't working, there are few alarms we can measure, so give a short done to tell we are ventlating anyway at 400 Hz
     if(i2c_allowed==0) {
       tone(ALARM_PIN,400,250);   // 1/4 second
@@ -1038,7 +1307,7 @@ if (current_phase < cut_off+4)
 
 // Check the supply voltage in phases 2 and 3
 #ifdef VOLTAGEDIVIDER
-  if(current_phase ==2 || current_phase==3)
+  if(current_phase ==2 || current_phase==3)  // we check the supply voltage here, because it is UNDER LOAD
   {
   // check the voltage.
   supply_voltage = (analogRead(SUPPLYVOLTAGESENSORPIN)) *.00489/DIVIDER;  // 5volts/1023 slots =  .00489 per slot  Typically A7
@@ -1067,6 +1336,25 @@ if (current_phase < cut_off+4)
   //  4)  keep accumulating it.
   //  5)  zero it out during inspirations.
 
+  // mark that we have not yet finally closed the valve in expiration for ADAPTIVE2
+  if(current_phase==cut_off) {
+    exp_valve_last_closed = 0;    // 1 or greater  = we closed the valve in expiration to maintain peep and will not reopen it
+    exp_valve_first_open= 0;
+    exp_valve_reopen=0;
+    wastedloops= 0;
+    loops_since_major_jump=0  ;   // track when we made a major jump in the exp open time 
+    
+  }
+
+  #ifdef ADAPTIVEFILTER   // means we are using adaptive filter 
+  
+  if(current_phase==cut_off) {
+    // INITIALIZE THE ADAPTIVE FILTER COMPONENTS
+    for(int x=0; x< SIZEOFFILTER; x++) phistory[x] = peakinspiratorypressure;
+    for(int x=0; x< SIZEOFFILTER; x++) evalvestatus[x] = 0 ; // valves were closed 
+      }
+  #endif 
+  
   if (current_phase > cut_off) {
                       // pressure first possibly gets turned off at slice cut_off +1
     pressure_off();   // Note that pressure_off() now correctly handles both inspiratory pause AND PEEP
@@ -1109,19 +1397,33 @@ if (current_phase < cut_off+4)
   current_phase++;
 
   // RESET the volume alarms only just befoe the end of the cycle so they show for a cycle
-  if (current_phase == MAX_PHASES - 1) {
+ if (current_phase == MAX_PHASES - 1) {
     alarm_array[3] = 0; // reset the HI VOL alarm just before it will get caluclated again
     alarm_array[2] = 0; // reset the LO VOL alarm just before it will get calculated again
   }
 
-  if (current_phase >= MAX_PHASES) { // end of the entire respiratory cycle
+  if (current_phase >= MAX_PHASES) { //   ***end of the entire respiratory cycle***
 
-    //  CORRECTION TIME!!!! GLG
-    //  No longer needed after rarranging the expiratory flow path.....
-  
-
+   
+      #ifdef BMP280AMBIENT
+      measure_atmospheric_pressure2();   // measures the ambient pressure in the 2nd unit
+      atmospheric_pressure=atmospheric_pressure2 + diff_atmospheric_pressure;
+          #ifdef AMBIENTPRESSURESPY
+          Serial.print(F("diff_atmospheric_pressure, atmospheric_pressure = "));
+          Serial.print(diff_atmospheric_pressure);
+          Serial.print(F(" ,"));
+          Serial.println(atmospheric_pressure);
+          #endif
+      #endif
     
     exmLPerCycle = (int) exLitersPerCycle; // note exmLPerCycle= INT
+
+    #ifdef FLOWMEASUREBREATH
+    Serial.print(F("Last CycleVol:  "));
+    Serial.println(exmLPerCycle);
+    #endif
+
+    
     if (exmLPerCycle < 0) exmLPerCycle = 0; // dont allow negative numbers
 
     // Check tidal volume limits
@@ -1176,7 +1478,7 @@ if (current_phase < cut_off+4)
 void DoExhaledTidalVolume()
 {
   float diffpressure;  // There really isn't a need to make this an array
-  unsigned long  time_width; // the amount of time since we did the last measurement
+  unsigned long  time_width; // the amount of time since we did the last measurement in microsedsonds
 
   /*----------------The different values and units
 
@@ -1197,8 +1499,11 @@ void DoExhaledTidalVolume()
 
 
 #ifdef ANALOGDIFFTRANSDUCER
-  diffpressure =  ReadFlowPressureSensor();
-  exLitersPerCycle = exLitersPerCycle  +   (  CalculateInstantFlow() * 60 / ( (float) (beats_per_minute *  MAX_PHASES))  )  ;
+  delP =  ReadFlowPressureSensor() - zerorawSensorValue ; // all INTS and in units of 0-1023
+  CalculateInstantFlow();   // returns float instant flow 
+  //diffpressure = (float)  ReadFlowPressureSensor() - (float) zerorawSensorValue;   // Function returns an INT
+  // these are scaled now 0-1023 for a 5 volt span, and the unit is approximately Pascals
+   exLitersPerCycle = exLitersPerCycle  +  time_width * (( instantFlowValue  / 60000 ) );
 #endif
 
 #ifdef I2CDIFFTRANSDUCER
@@ -1226,8 +1531,18 @@ void DoExhaledTidalVolume()
   // mL =    liters/minute * time_width / 60 000;
 
   // here the instantFlowvalue is Liters/minute
-  CalculateI2CInstantFlow();
-   exLitersPerCycle = exLitersPerCycle  +  time_width * (( instantFlowValue  / 60000 ) );
+
+#ifdef I2CDIFFTRANSDUCER
+    CalculateI2CInstantFlow();
+#endif
+    current_exp_volume = time_width * (( instantFlowValue  / 60000 ) );
+    exLitersPerCycle = exLitersPerCycle  +  current_exp_volume;
+
+#ifdef  TIMEWIDTHSPY
+Serial.print(F("Twid: "));
+Serial.println(time_width);
+#endif
+
 
 #ifdef  FLOWMEASURE2
 Serial.print(F("T.Wid, I.Flow, exLPC: "));
@@ -1275,21 +1590,34 @@ void vent_abort() {
   digitalWrite(MOTOR_B, LOW);// get both valves open!!
 }
 
+// 
+// vent_init will properly turn off valves, and measure either one or two sensors,
+// store the difference, set up atmospheric_pressure,  works whether BMP280AMBIENT exists or not
+// 
+
 void vent_init() {
 
   log_message( (char*) "vent_init: sensors");
   init_pressure_sensor();
+                  // note that mesure_atmospheric_pressure will turn off valve x 4 seconds. 
   MyDelay(1000);
   wdt_reset();   // MUST be certain that pressure is not applied!
   MyDelay(1000);
   wdt_reset();
-  MyDelay(1000);
-  wdt_reset();
-  MyDelay(1000);
-  wdt_reset();
+  
 
   log_message( (char*) "Cal sens");
   measure_atmospheric_pressure();
+
+  #ifdef BMP280AMBIENT
+  measure_atmospheric_pressure2();   // measures the ambient pressure in the 2nd unit
+  // store the tracking differnce between these two....
+  diff_atmospheric_pressure = atmospheric_pressure - atmospheric_pressure2;  
+  // exists other than 0 only if BMP280AMBIENT is defined.  Otherwise remainds 0.   
+  // software throughout system uses the first one  atmospheric_pressure   for all calculations of gauge pressure
+  // REMEASURE THIS DIFFERENCE by calling vent_init()   whenever a ZERO/RESET is done.   
+  #endif
+  
   MyDelay(100);  // I don't think this delay is necessary so I reduced it dramaticallly
   log_message( (char*) "Vent rdy");
 }
@@ -1320,33 +1648,33 @@ void MyDelay(unsigned long ms)
 void setup() {
   // put your setup code here, to run once:
   // turn on the watchdog FIRST THING
-  //  setup_watchdog();   // see elsewhere for explanation.
+  setup_watchdog();   // see elsewhere for explanation.
   tone(ALARM_PIN,500,250);
   wdt_reset();
   MyDelay(250);
   wdt_reset();   // resets the watchdog timer
   
-#ifdef DEBUGSERIAL  
+  #ifdef DEBUGSERIAL  
   Serial.begin(115200);
   while (!Serial);
-#endif 
-  //  JAM THIS SO WE CAN KEEP GOING
- // i2c_status = I2C_READY;  // COMMENT  OUT FOR SHIPPING
- // i2c_allowed = 1;  // set to use it
+  #endif 
+  //  JAM THIS IN DEVELOPMET SO WE CAN KEEP GOING
+    // i2c_status = I2C_READY;  // COMMENT  OUT FOR SHIPPING
+    // i2c_allowed = 1;  // set to use it
 
-#ifdef DEBUGBMP280  
+  #ifdef DEBUGBMP280  
   Serial.print(F("I2C Sensor status:"));
-#endif  
+  #endif  
   switch (i2c_status) {
     case I2C_READY:
-#ifdef DEBUGBMP280      
+      #ifdef DEBUGBMP280      
       Serial.println(F("Ready"));
-#endif      
+      #endif      
       break;
     case I2C_BUSY:
-#ifdef DEBUGBMP280      
+      #ifdef DEBUGBMP280      
       Serial.println(F("Unresponsive from previous bootup"));
-#endif      
+      #endif      
       i2c_allowed = 0; // disable the I2C Buss!!!!
       for(int z=0;z<3;z++)  // send three dashes to say the I2C is busted.....
       {
@@ -1358,9 +1686,9 @@ void setup() {
       
       break;
     default:
-#ifdef DEBUGBMP280      
+      #ifdef DEBUGBMP280      
       Serial.println(F("Cold start"));
-#endif      
+      #endif      
       i2c_allowed = 1; // Allow the bus! on COLD START
       i2c_status = I2C_READY;
   }
@@ -1451,6 +1779,13 @@ else tone(ALARM_PIN,400,1000);
 wdt_reset();
 MyDelay(1000);
 wdt_reset();
+
+Tbottomlimit = 20;   // a guess.   
+#ifdef FILTERSPY
+Serial.print(F("Tbottomlimit: "));
+Serial.println(Tbottomlimit);
+#endif
+
 
 }
 

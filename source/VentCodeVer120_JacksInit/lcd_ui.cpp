@@ -50,7 +50,7 @@ struct menu_item {
   void (*menu_item_handler)(struct menu_item *me, int cmd);
 };
 
-// Add your menu items here
+// Add your menu items here    Rearranged menu to group similar items --SDS
 struct menu_item menu_list[] = {
   {0, menu_exit},
   {1, menu_vent_on},
@@ -58,13 +58,13 @@ struct menu_item menu_list[] = {
   {3, menu_bpm},
   {4, menu_pressure},
   {5, menu_peep_desired},
-  {6, menu_volume},
-  {7, menu_ie_ratio},
-  {8, menu_reset_alarms},  
-  
-  {9, menu_inspiratory_pause},
-  {10, menu_trigger_cm},
-  {11, menu_reset_sensor}
+  {6, menu_assist},
+  {7, menu_trigger_cm},
+  {8, menu_volume},
+  {9, menu_ie_ratio},
+  {10, menu_inspiratory_pause},
+  {11, menu_reset_alarms},
+  {12, menu_reset_sensor}
   };
 
 
@@ -78,12 +78,16 @@ void lcd_clear_screen() {
   //lcd.setCursor(0,2);
   //lcd.print("1234567890123456");
 }
+
+
 void lcd_status(char *text) {
   if (lcd_size == LCDDISPLAY)
     lcd.setCursor(13, 0);
   else
     lcd.setCursor(14, 3);
-  lcd.print(text);
+
+if (menu_cursor == -1)
+lcd.print(text);
 }
 
 //pads up the string with spaces to the end of the line
@@ -105,7 +109,7 @@ void lcd_message(char *text) {
     lcd.print(' ');
 }
 
-#if I2CLCDDISPLAY == false
+
 
 void lcd_init(int display_size) {
 
@@ -148,7 +152,7 @@ void lcd_init(int display_size) {
   make_ticker();
   animate_ticker();
 }
-#endif
+
 
 /*
    Ticker makes it easy for longer messages to scroll
@@ -197,14 +201,20 @@ void animate_ticker() {
   if (next_ticker_time > millis())
     return;
 
-  lcd.setCursor(0, n_display_rows - 1);
+
   if (!vent_running){
-  
+    lcd.setCursor(0,1);
     lcd.print(F("<<VENT OFF>>"));
  
     return;
   }
   
+  lcd.setCursor(0, n_display_rows - 1);
+
+  
+// Make ticker string longer for if using larger screen
+
+  #ifdef LCD16x2
   int len = strlen(ticker);
   int t = ticker_index;
   for (int i = 0; i < 12; i++) {
@@ -216,6 +226,20 @@ void animate_ticker() {
   if (ticker_index >= len)
     ticker_index = 0;
   next_ticker_time = millis() + 400;
+#else
+  int len = strlen(ticker);
+  int t = ticker_index;
+  for (int i = 0; i < 20; i++) {
+    if (t >= len)
+      t = 0;
+    lcd.print(ticker[t++]);
+  }
+  ticker_index++;
+  if (ticker_index >= len)
+    ticker_index = 0;
+  next_ticker_time = millis() + 400;
+#endif
+  
 }
 
 /*
@@ -305,13 +329,15 @@ void lcd_graph_clear() {
 void lcd_graph_update() {
 
   //stop this while the menu is on display
-  if (menu_cursor != -1)
+  if (menu_cursor != -1) 
     return;
 
   //reset the framebuffer
   memset(framebuffer, 0x0, sizeof(framebuffer));
-
-  if (vent_running) {
+  
+ char buff[17];
+ 
+  if (vent_running && i2c_allowed) {
 
 
     for (int i = 0; i < current_phase; i++) {
@@ -323,41 +349,55 @@ void lcd_graph_update() {
       for (int j = 7; j >= 7 - b; j--)
         lcd_pixel(i, j);
     }
-  }
-  lcd_refresh();
+      lcd_refresh();
 
-  char buff[17];
+ 
   
 
   itoa(bargraph[current_phase] / 10, buff, 10); // bargaph deprecated
+  }
+
 
   
-    if (lcd_size == LCDDISPLAY)
-     lcd.setCursor(0, 0);
-    else
-     lcd.setCursor(14, 0);
+
+lcd.setCursor(0,0); 
+
 
 #ifdef DEBUG
     Serial.print(F("\nPeak Inspiratory Pressure:  "));
     Serial.print(peakinspiratorypressure);
 #endif
-   
-    itoa(peakinspiratorypressure, buff, 10); // print the peak inspiratory pressure GLG---
+
+ if (!i2c_allowed){
+  lcd.print("Err RESET SENSOR");
+  }
+  
+if (i2c_allowed){ 
+itoa(peakinspiratorypressure, buff, 10); // print the peak inspiratory pressure GLG---
     
-    strcat(buff, "cm");
- //   if (strlen(buff) < 4)
-//      lcd.print(' ');
+    strcat(buff, "cm ");
+
     lcd.print(buff);
     itoa(exmLPerCycle, buff, 10); // print out the expiratory tidal volume detected
       // add it to the display
-    strcat(buff, "mL");
+    strcat(buff, "mL ");
     lcd.print(buff);
     itoa(current_pressure,buff,10);// print the current airway pressure  GLG ---
     strcat(buff,"cm");
     lcd.print(buff);
+    if (strlen(buff) < 4) // Clear residual characters when string shortens
+    lcd.print(' ');
+}
 
 // NOW HANDLE MAKING ALARMS PAINFULLY OBVIOiuS
+
+#ifdef LCD16x2
 lcd.setCursor(0,0); 
+#else
+lcd.setCursor(0,1);
+#endif
+
+
   //    LOW pressure alarm become valid after about slice 10;   Display LATE (>7  < 12)  and reset only at slice 0  
   //    HI pressure alarm becomes valid anywhere between 0 and 10  Display LATER (>11 < 16)  but must LATCH -- not be reset until slice 0
   //    LO Volume alarm valid at slice MAX_PHASES -- don't reset until cut_off+4 and display early (<4 )  in the slices
@@ -366,6 +406,7 @@ lcd.setCursor(0,0);
   if( i2c_allowed==1 &&current_phase > 3  && current_phase < 8 && alarm_array[3]==1) lcd.print(F("TV HIGH"));  // print high press alarms slices 4,5,6,7
   if(i2c_allowed ==1 && current_phase > 7  && current_phase < 12 && alarm_array[0] ==1 ) lcd.print(F("LOW AIRWAY PRES!"));  // print low pressure alarms slices 8,9,10,11
   if(current_phase >11  && current_phase < 16 && alarm_array[1] ==1)  lcd.print(F("OVER PRES ALARM!"));  // print high volume alarms slices 12, 13, 14, 15
+  
   #ifdef VOLTAGEDIVIDER
   if(current_phase>15 && alarm_array[4]==1) lcd.print(F("ELECT SUPP FAIL!"));  // print supply voltage failure
 
@@ -404,11 +445,17 @@ bool button_update() {
 
   //debounce, so, read next button update only after 200 msec
   if (new_status != button_status) {
-    next_button_read_time = millis() + 200;
+    next_button_read_time = millis() + 75;
     button_status = new_status;
     return true;
   } else
-    return false;
+
+
+// If > 10s and no button and not on home screen, go back to home screen
+if (millis() >= (next_button_read_time + 10000) && new_status == button_status && menu_cursor != -1 )
+ {clear_menu(); }
+
+ return false;
 }
 
 void menu_exit(struct menu_item *m, int cmd) {
@@ -434,13 +481,16 @@ void menu_bpm(struct menu_item *m, int cmd) {
   }
   
   if (cmd == CMD_DISPLAY) {
-    lcd.print(F("Breaths "));
+    lcd.print(F("Breaths   "));
     if (selected_item == m->id)
       lcd.print((char) CHAR_CARET);
     else
       lcd.print((char)':');
     lcd.print(beats_per_minute);
     lcd.print(F("/min"));
+
+
+    
     
   }
 }
@@ -451,11 +501,12 @@ void menu_pressure(struct menu_item *m, int cmd) {
     vent_pressure_limit -= 1;
     save_settings();    
   }
-  else if (cmd == CMD_UP && vent_pressure_limit < 60)
+  else if (cmd == CMD_UP && vent_pressure_limit < 60){
     vent_pressure_limit += 1;
-
+    save_settings();
+  }
   if (cmd == CMD_DISPLAY) {
-    lcd.print(F("Pressure"));
+    lcd.print(F("Pressure  "));
     if (selected_item == m->id)
       lcd.print((char) CHAR_CARET);
     else
@@ -472,11 +523,12 @@ void menu_trigger_cm(struct menu_item *m, int cmd) {
     trigger_cm -= 1;
     save_settings();    
   }
-  else if (cmd == CMD_UP && trigger_cm < 15)
+  else if (cmd == CMD_UP && trigger_cm < 15){
     trigger_cm += 1;
-
+    save_settings();
+}
   if (cmd == CMD_DISPLAY) {
-    lcd.print(F("Asst Trig"));
+    lcd.print(F("Asst Trig "));
     if (selected_item == m->id)
       lcd.print((char) CHAR_CARET);
     else
@@ -503,13 +555,13 @@ void menu_volume(struct menu_item *m, int cmd) {
   }
   
   if (cmd == CMD_DISPLAY) {
-    lcd.print(F("Volume  "));
+    lcd.print(F("Volume    "));
     if (selected_item == m->id)
       lcd.print((char) CHAR_CARET);
     else
       lcd.print((char)':');
     lcd.print(desired_TV);
-    lcd.print(F("mL "));
+    lcd.print(F("mL"));
   }
 }
 
@@ -524,7 +576,7 @@ void menu_ie_ratio(struct menu_item *m, int cmd) {
   }
   
   if (cmd == CMD_DISPLAY) {
-    lcd.print(F("IE Ratio"));
+    lcd.print(F("IE Ratio  "));
     if (selected_item == m->id)
       lcd.print((char) CHAR_CARET);
     else
@@ -538,6 +590,12 @@ void menu_vent_on(struct menu_item *m, int cmd)
 {
   if (cmd == CMD_SELECTED /* && selected_item == m->id*/ ) {
     vent_running= 2;  // set it to TWO
+    Tbottomlimit = 20;  
+    #ifdef FILTERSPY
+    Serial.print(F("Tbottomlimit: "));
+    Serial.println(Tbottomlimit);
+    #endif
+    
     lcd_clear_screen();
     clear_menu();   
     clear_menu();
@@ -552,12 +610,10 @@ if (cmd == CMD_DISPLAY) {
       //lcd.print(F("ON"));
     }
     else
-      lcd.print((char)':');
+     // lcd.print((char)':');
     if(vent_running>0) lcd.print(F("ON"));  // Print the ON only when the vent is already ON
     
-   
     }
- 
 }
 
 void menu_vent_off(struct menu_item *m, int cmd)
@@ -645,6 +701,35 @@ void menu_ventilate(struct menu_item *m, int cmd) {
 
 -----------------------------------------------*/
 
+void menu_assist(struct menu_item *m, int cmd) {
+if (cmd==CMD_SELECTED /* && selected_item == m->id */ ) {
+    if (vent_assist == 0){
+      vent_assist = 1;
+      save_settings();    
+    }  
+    else{
+      vent_assist = 0;
+      save_settings();    
+    }
+    //deselect!
+    selected_item = -1;
+  }
+
+  if (cmd == CMD_DISPLAY) {
+    lcd.print(F("ASSIST   "));
+    if (selected_item == m->id)
+      lcd.print((char) CHAR_CARET);
+    else
+      lcd.print((char)':');
+
+    if (vent_assist == 1)
+      lcd.print(F("Yes"));
+    else
+      lcd.print(F("No"));
+  }
+
+  
+}
 
 void menu_inspiratory_pause(struct menu_item *m, int cmd) {
   if (cmd==CMD_SELECTED /* && selected_item == m->id */ ) {
@@ -661,7 +746,7 @@ void menu_inspiratory_pause(struct menu_item *m, int cmd) {
   }
 
   if (cmd == CMD_DISPLAY) {
-    lcd.print(F("I-Pause "));
+    lcd.print(F("I-Pause   "));
     if (selected_item == m->id)
       lcd.print((char) CHAR_CARET);
     else
@@ -693,12 +778,24 @@ void menu_reset_alarms(struct menu_item *m, int cmd) {
   }
 
   if (cmd == CMD_DISPLAY) {
-    lcd.print(F("Alarms   "));
+    lcd.print(F("Alarms    "));
     if (selected_item == m->id) lcd.print((char) CHAR_CARET);
     else lcd.print((char)':');
     lcd.print(F("Reset"));
   }
 }
+
+ //Begin to set up the Digital Flow Sensor transducer (differential I2C pressure
+  //  EXAMPLE of Handling I2C bus:
+  //  if(i2c_allowed==1){
+  //     i2c_status=I2C_BUSY;  // set the flag to indicate failure if reset happens
+  //     ....now do i2C business
+  //     ....finished with I2C business
+  //     i2c_status=I2C_READY; // reset flag to "working"
+  //     }
+  //     else // put in code to provide default value for pressure measurement
+  //
+
 
 
 void menu_reset_sensor(struct menu_item *m, int cmd) {
@@ -706,7 +803,7 @@ void menu_reset_sensor(struct menu_item *m, int cmd) {
     {
     // lcd.print(F("*RESET/CAL*"));
     vent_abort();
-    i2c_status = I2C_READY;
+    i2c_status = I2C_BUSY;  // mark this for a possible fault if it won't reset!!!!
     i2c_allowed = 1;
     save_settings(); 
     //  init_pressure_sensor();
@@ -743,7 +840,7 @@ void menu_reset_sensor(struct menu_item *m, int cmd) {
     else lcd.print((char)':');
     lcd.print(F("A:"));
     lcd.print(i2c_allowed);
-    if(i2c_allowed==1) lcd.print(F("DONE"));
+    if(i2c_allowed==1) lcd.print(F(" DONE"));
     
   }
     
@@ -762,7 +859,7 @@ void menu_peep_desired(struct menu_item *m, int cmd) {
   }
   
   if (cmd == CMD_DISPLAY) {
-    lcd.print(F("PEEP "));
+    lcd.print(F("PEEP      "));
     if (selected_item == m->id)
       lcd.print((char) CHAR_CARET);
     else
@@ -771,8 +868,6 @@ void menu_peep_desired(struct menu_item *m, int cmd) {
     lcd.print(F("cm"));
   }
 }
-
-
 
 
 void clear_menu(){
@@ -789,15 +884,22 @@ void display_menu() {
 alarm_silence(60);   
 
 
-
-  for (int i = 0; i < n_menu_items; i++) {
+    for (int i = 0; i < n_menu_items; i++) {
     int item_position = i - screen_top_line;
     if (item_position < 0 || item_position >= n_display_rows)
-      continue;
+      continue; 
+
+ 
 
     //clear the display to the end of the line
     lcd.setCursor(0, item_position);
+
+#ifdef LCD20x4    
+    for (int j = 0; j < 20; j++)
+#else
     for (int j = 0; j < 16; j++)
+#endif
+
       lcd.print(' ');
     lcd.setCursor(0, item_position);
     //show the caret on the menu item if only the item is not selected
@@ -811,8 +913,9 @@ alarm_silence(60);
   }
 }
 
+#ifdef LCD16x2
 void lcd_show_alarms() {
-  if (!vent_running)
+  if (!vent_running) // only displays if vent is running and menu isn't displayed
     return;
 
   //rubout the alarms
@@ -846,6 +949,45 @@ void lcd_show_alarms() {
     lcd.print(F("-OK-"));
   }
 }
+#else
+
+void lcd_show_alarms() {
+  if (!vent_running) // only displays if vent is running 
+    return;
+    
+  //rubout the alarms
+  lcd.setCursor(14,2);
+  lcd.print(F("    "));
+  
+  int trouble = 0;
+  if (current_phase < 4 && alarm_low_pressure == true) {
+    lcd.setCursor(14, 2);
+    lcd.print(F("Lp"));
+    trouble++;
+  }
+  if (current_phase > 3  && current_phase < 8 && alarm_high_pressure == true) {
+    lcd.setCursor(14, 2);
+    lcd.print(F("Hp"));
+    trouble++;
+  }
+  if (current_phase > 7  && current_phase < 12 && alarm_low_volume == true) {
+    lcd.setCursor(16, 2);
+    lcd.print(F("Lv"));
+    trouble++;
+  }
+  if (current_phase > 11  && current_phase < 16 && alarm_high_volume == true) {
+    lcd.setCursor(16, 2);
+    lcd.print(F("Hv"));
+    trouble++;
+  }
+
+  if (!trouble){
+    lcd.setCursor(14, 2);
+    lcd.print(F("-OK-"));
+  }
+}
+#endif
+
 
 void lcd_slice() {
 
@@ -873,8 +1015,11 @@ void lcd_slice() {
   else if (selected_item == -1) {
     if ((button_status & BTN_DN) && menu_cursor + 1 < n_menu_items)
       menu_cursor++;
+      else if ((button_status & BTN_DN) && menu_cursor + 1 >= n_menu_items)
+      menu_cursor = 0;
     else if ((button_status & BTN_UP) &&  menu_cursor > 0 )
       menu_cursor--;
+
 
     //scroll the selected item to view
     if (menu_cursor < screen_top_line)
