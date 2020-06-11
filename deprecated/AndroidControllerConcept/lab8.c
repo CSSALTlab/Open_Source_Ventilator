@@ -6,6 +6,7 @@
  
  Equipment: Arduino Uno, LCD display, wires, buttons, breadboard
  Link to purchase:
+ YSP2020
 *******************************************************************************/
 #include <avr/io.h>
 #include <util/delay.h>
