@@ -57,7 +57,10 @@ void alarm_silence(int silence_in_seconds)
 void alarm_slice()
 {
 
-  now = millis();
+// GLG0531   I don't think we should be setting now = millis() here!
+//  now = millis();
+
+
   if (!alarm_status)
     return;
 

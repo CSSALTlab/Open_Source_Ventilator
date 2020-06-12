@@ -50,7 +50,7 @@ struct menu_item {
   void (*menu_item_handler)(struct menu_item *me, int cmd);
 };
 
-// Add your menu items here    Rearranged menu to group similar items --SDS
+// Add your menu items here
 struct menu_item menu_list[] = {
   {0, menu_exit},
   {1, menu_vent_on},
@@ -58,23 +58,27 @@ struct menu_item menu_list[] = {
   {3, menu_bpm},
   {4, menu_pressure},
   {5, menu_peep_desired},
-  {6, menu_assist},
-  {7, menu_trigger_cm},
-  {8, menu_volume},
-  {9, menu_ie_ratio},
-  {10, menu_inspiratory_pause},
-  {11, menu_reset_alarms},
-  {12, menu_reset_sensor}
+  {6, menu_peep_type},  //TJ 06.12.2020 This is probably what PEEP control algorithm is used (PID, ILC)
+  {7, menu_assist},
+  {8, menu_trigger_cm},
+  {9, menu_volume},
+  {10, menu_ie_ratio},
+  {11, menu_plat},
+  {12, menu_inspiratory_pause},
+  {13, menu_reset_alarms},
+  {14, menu_reset_sensor}
   };
 
 
 void lcd_clear_screen() {
   //clear the screen
+   wdt_reset();
   for (int y = 0; y < n_display_rows; y++) {
     lcd.setCursor(0, y);
     for (int x = 0; x < n_display_columns; x++)
       lcd.print(' ');
   }
+   wdt_reset();
   //lcd.setCursor(0,2);
   //lcd.print("1234567890123456");
 }
@@ -82,7 +86,7 @@ void lcd_clear_screen() {
 
 void lcd_status(char *text) {
   if (lcd_size == LCDDISPLAY)
-    lcd.setCursor(13, 0);
+    lcd.setCursor(0, 2);    // Move text down to bar graph --SDS
   else
     lcd.setCursor(14, 3);
 
@@ -92,6 +96,8 @@ lcd.print(text);
 
 //pads up the string with spaces to the end of the line
 void lcd_message(char *text) {
+wdt_reset();
+  
   if (lcd_size == 1602) {
     int i, padding = (16 - strlen(text)) / 2;
     lcd.setCursor(0, 0);
@@ -112,24 +118,34 @@ void lcd_message(char *text) {
 
 
 void lcd_init(int display_size) {
-
+wdt_reset();
   //  lcd_size = display_size;
 
   Serial.println(F("Initializing the display"));
 
+#ifndef I2CLCDDISPLAY  // Defined out for I2C SDS
   if (display_size == 2004) {
     lcd.begin(20, 4);
   } else {
     lcd.begin(16, 2);
   }
+#endif
+// Reorginized these steps a bit to diaplay "Vent Starting" as soon as lcd is ready -- SDS
   
   n_display_rows    = LCDDISPLAY % 10;
   n_display_columns = LCDDISPLAY / 10;
+ wdt_reset();
+  lcd_graph_clear();
+  lcd_clear_screen();
+
+  lcd.setCursor(0,1);            
+  lcd.print("Vent Starting");
+  
   n_menu_items = sizeof(menu_list) / sizeof(struct menu_item); //just a way of counting them
   Serial.print(F("Menu Items Number = "));
   Serial.println(n_menu_items);
 
-  
+  wdt_reset();
   
   /*
     lcd.begin(20, 4);
@@ -145,12 +161,14 @@ void lcd_init(int display_size) {
   pinMode(DOWN,   INPUT_PULLUP);
   pinMode(ON_OFF, INPUT_PULLUP);
 
-  lcd_graph_clear();
-  lcd_clear_screen();
-
+  wdt_reset();
   //  paint_lcd();
-  make_ticker();
-  animate_ticker();
+ 
+// SDS removed make and animate ticker so ticker not displayed when 
+// vent off since pressure is not measured anyway. 
+// These functions are called in LCD slice when vent on.
+
+   
 }
 
 
@@ -161,6 +179,8 @@ void lcd_init(int display_size) {
 */
 
 void make_ticker() {
+ wdt_reset();
+  
   char num_str[5];
 
   ticker[0] = 0;
@@ -198,13 +218,15 @@ void make_ticker() {
 }
 
 void animate_ticker() {
+ wdt_reset();
+  
   if (next_ticker_time > millis())
     return;
 
 
-  if (!vent_running){
+  if (!vent_running){       //added trailing space to overwrite "Vent Starting" text after startup -- SDS
     lcd.setCursor(0,1);
-    lcd.print(F("<<VENT OFF>>"));
+    lcd.print(F("<<VENT OFF>> "));
  
     return;
   }
@@ -239,7 +261,7 @@ void animate_ticker() {
     ticker_index = 0;
   next_ticker_time = millis() + 400;
 #endif
-  
+  wdt_reset();
 }
 
 /*
@@ -306,8 +328,15 @@ void lcd_refresh() {
   for (int i = 0; i < 8; i++)
     lcd.createChar(i, (uint8_t*) (framebuffer + (i * 8)));
 
+ #ifdef LCD16x2          // Move graph to lower position if larger screen
   lcd.setCursor(12, 0);
+  #else
+  lcd.setCursor(0, 2);  
+#endif
+  
   for (int i = 0; i < 5; i++)
+
+if (menu_cursor == -1)    // Stop graph from displaying over menu
     lcd.write((byte)i);
 }
 
@@ -327,7 +356,7 @@ void lcd_graph_clear() {
 }
 
 void lcd_graph_update() {
-
+wdt_reset();
   //stop this while the menu is on display
   if (menu_cursor != -1) 
     return;
@@ -339,7 +368,7 @@ void lcd_graph_update() {
  
   if (vent_running && i2c_allowed) {
 
-
+  wdt_reset();
     for (int i = 0; i < current_phase; i++) {
       int b = bargraph[i] / 40;
       if (b > 7)
@@ -349,6 +378,7 @@ void lcd_graph_update() {
       for (int j = 7; j >= 7 - b; j--)
         lcd_pixel(i, j);
     }
+    wdt_reset();
       lcd_refresh();
 
  
@@ -373,6 +403,8 @@ lcd.setCursor(0,0);
   }
   
 if (i2c_allowed){ 
+
+#ifdef LCD20x4     // If using large screen, space things out and display BPM -- SDS
 itoa(peakinspiratorypressure, buff, 10); // print the peak inspiratory pressure GLG---
     
     strcat(buff, "cm ");
@@ -383,10 +415,30 @@ itoa(peakinspiratorypressure, buff, 10); // print the peak inspiratory pressure 
     strcat(buff, "mL ");
     lcd.print(buff);
     itoa(current_pressure,buff,10);// print the current airway pressure  GLG ---
+    strcat(buff,"cm ");
+    lcd.print(buff);
+    itoa(actual_BPM,buff,10);
+    strcat(buff,"BPM");
+    lcd.print(buff);
+  //  if (strlen(buff) < 5) 
+    lcd.print("    ");// Clear residual characters when string shortens --SDS
+
+#else
+itoa(peakinspiratorypressure, buff, 10); // print the peak inspiratory pressure GLG---
+    
+    strcat(buff, "cm");
+
+    lcd.print(buff);
+    itoa(exmLPerCycle, buff, 10); // print out the expiratory tidal volume detected
+      // add it to the display
+    strcat(buff, "mL");
+    lcd.print(buff);
+    itoa(current_pressure,buff,10);// print the current airway pressure  GLG ---
     strcat(buff,"cm");
     lcd.print(buff);
-    if (strlen(buff) < 4) // Clear residual characters when string shortens
+    if (strlen(buff) < 4) // Clear residual characters when string shortens --SDS
     lcd.print(' ');
+#endif    
 }
 
 // NOW HANDLE MAKING ALARMS PAINFULLY OBVIOiuS
@@ -416,9 +468,6 @@ lcd.setCursor(0,1);
   #endif
   #endif
   
-
-
-
     
 }
 
@@ -430,7 +479,7 @@ lcd.setCursor(0,1);
 */
 bool button_update() {
   uint8_t new_status = 0;
-
+wdt_reset();
   if (millis() < next_button_read_time)
     return false;
 
@@ -443,7 +492,8 @@ bool button_update() {
   if (digitalRead(ON_OFF) == LOW)
     new_status |= BTN_PW;
 
-  //debounce, so, read next button update only after 200 msec
+  //debounce, so, read next button update only after 75 msec
+  wdt_reset();
   if (new_status != button_status) {
     next_button_read_time = millis() + 75;
     button_status = new_status;
@@ -459,18 +509,31 @@ if (millis() >= (next_button_read_time + 10000) && new_status == button_status &
 }
 
 void menu_exit(struct menu_item *m, int cmd) {
-
+wdt_reset();
   switch (cmd) {
     case CMD_SELECTED:
       clear_menu();
       break;
     case CMD_DISPLAY:
-      lcd.print(F("Exit \007"));
+      lcd.print(F("Exit \007   FW "));
+      lcd.print(VERSION);  // SDS121 added version display
+  }
+}
+
+void menu_plat(struct menu_item *m, int cmd){  // -- SDS plat menu
+
+  switch (cmd) {
+    case CMD_SELECTED:
+      measure_plat = 1;
+      clear_menu();
+      break;
+    case CMD_DISPLAY:
+      lcd.print(F("Check Plat"));  
   }
 }
 
 void menu_bpm(struct menu_item *m, int cmd) {
-
+wdt_reset();
   if (cmd == CMD_DN && beats_per_minute > 10){
     beats_per_minute--;
     save_settings();    
@@ -488,15 +551,12 @@ void menu_bpm(struct menu_item *m, int cmd) {
       lcd.print((char)':');
     lcd.print(beats_per_minute);
     lcd.print(F("/min"));
-
-
-    
     
   }
 }
 
 void menu_pressure(struct menu_item *m, int cmd) {
-
+wdt_reset();
   if (cmd == CMD_DN && vent_pressure_limit > 15){
     vent_pressure_limit -= 1;
     save_settings();    
@@ -518,7 +578,7 @@ void menu_pressure(struct menu_item *m, int cmd) {
 /*-----------------------my trigger sensitivity ------------------*/
 
 void menu_trigger_cm(struct menu_item *m, int cmd) {
-
+wdt_reset();
   if (cmd == CMD_DN && trigger_cm > 3){
     trigger_cm -= 1;
     save_settings();    
@@ -544,7 +604,7 @@ void menu_trigger_cm(struct menu_item *m, int cmd) {
 
 
 void menu_volume(struct menu_item *m, int cmd) {
-
+wdt_reset();
   if (cmd == CMD_UP && desired_TV < 900){
     desired_TV += TV_INCREMENT;
      save_settings();    
@@ -566,6 +626,7 @@ void menu_volume(struct menu_item *m, int cmd) {
 }
 
 void menu_ie_ratio(struct menu_item *m, int cmd) {
+wdt_reset();
   if (cmd == CMD_UP && ie_ratio < 4){
     ie_ratio++;
     save_settings();    
@@ -591,14 +652,20 @@ void menu_vent_on(struct menu_item *m, int cmd)
   if (cmd == CMD_SELECTED /* && selected_item == m->id*/ ) {
     vent_running= 2;  // set it to TWO
     Tbottomlimit = 20;  
+    next_slice=  millis();  // GLG0531 -- gotta set the next slice!!!!
+    loops_since_major_jump=0;  //GLG0602 -- initilize the loops_since_major_jump here!
+
+    
     #ifdef FILTERSPY
     Serial.print(F("Tbottomlimit: "));
     Serial.println(Tbottomlimit);
     #endif
-    
+  
     lcd_clear_screen();
+
     clear_menu();   
-    clear_menu();
+
+    //clear_menu();  //duplicate call not needed -- SDS
     return;
     
   }
@@ -617,7 +684,7 @@ if (cmd == CMD_DISPLAY) {
 }
 
 void menu_vent_off(struct menu_item *m, int cmd)
-{
+{wdt_reset();
   if (cmd==CMD_SELECTED /* && selected_item == m->id  */ ) {
     
     if(vent_running==1){  // means we managed to decrement down to 1 and this is our last selection!
@@ -701,7 +768,37 @@ void menu_ventilate(struct menu_item *m, int cmd) {
 
 -----------------------------------------------*/
 
+// PEEP filter selection option SDS121
+void menu_peep_type(struct menu_item *m, int cmd) {
+if (cmd==CMD_SELECTED /* && selected_item == m->id */ ) {
+    if (peep_type == 0){
+      peep_type = 1;
+      save_settings();    
+    }  
+    else{
+      peep_type = 0;
+      save_settings();    
+    }
+    //deselect!
+    selected_item = -1;
+  }
+
+  if (cmd == CMD_DISPLAY) {
+    lcd.print(F("PEEP TYPE "));
+    if (selected_item == m->id)
+      lcd.print((char) CHAR_CARET);
+    else
+      lcd.print((char)':');
+
+    if (peep_type == 1)
+      lcd.print(F("PID"));
+    else
+      lcd.print(F("Adapt"));
+  } 
+}
+
 void menu_assist(struct menu_item *m, int cmd) {
+  wdt_reset();
 if (cmd==CMD_SELECTED /* && selected_item == m->id */ ) {
     if (vent_assist == 0){
       vent_assist = 1;
@@ -716,7 +813,7 @@ if (cmd==CMD_SELECTED /* && selected_item == m->id */ ) {
   }
 
   if (cmd == CMD_DISPLAY) {
-    lcd.print(F("ASSIST   "));
+    lcd.print(F("ASSIST     "));
     if (selected_item == m->id)
       lcd.print((char) CHAR_CARET);
     else
@@ -727,11 +824,10 @@ if (cmd==CMD_SELECTED /* && selected_item == m->id */ ) {
     else
       lcd.print(F("No"));
   }
-
-  
 }
 
 void menu_inspiratory_pause(struct menu_item *m, int cmd) {
+  wdt_reset();
   if (cmd==CMD_SELECTED /* && selected_item == m->id */ ) {
     if (inspiratory_pause == 0){
       inspiratory_pause = 1;
@@ -760,6 +856,7 @@ void menu_inspiratory_pause(struct menu_item *m, int cmd) {
 }
 
 void menu_reset_alarms(struct menu_item *m, int cmd) {
+  wdt_reset();
   if (cmd==CMD_SELECTED /* && selected_item == m->id */ ) {
     //reset all the alarms
     alarm_silence(60);  // silence them for a minute
@@ -799,19 +896,25 @@ void menu_reset_alarms(struct menu_item *m, int cmd) {
 
 
 void menu_reset_sensor(struct menu_item *m, int cmd) {
+  wdt_reset();
   if (cmd==CMD_SELECTED /* && selected_item == m->id*/  ) 
     {
     // lcd.print(F("*RESET/CAL*"));
     vent_abort();
-    i2c_status = I2C_BUSY;  // mark this for a possible fault if it won't reset!!!!
+    i2c_status = I2C_READY;  // mark this for a possible fault if it won't reset!!!! 
+                                                 // I think this needs to say READY. The purpose of this menu setting is to reset this. If there is a fault, it will be re-set to busy later in the code
     i2c_allowed = 1;
+    wdt_reset();
     save_settings(); 
     //  init_pressure_sensor();
     tone(ALARM_PIN,500,250);
     wdt_reset();
     MyDelay(250);
     vent_init();            //  Initialize in order to get the atomospheric again!! GLG---
-    measure_atmospheric_pressure();  // measure the atmospheric pressure!! GLG ---
+    wdt_reset();
+  // SDS Changes.  Removed call to measure_atmospheric_pressure since 
+  // it is already called in vent_init
+  
 
     // What about the differntial pressure transducer???
     // lets at least zero that....
@@ -848,9 +951,10 @@ void menu_reset_sensor(struct menu_item *m, int cmd) {
 
 /*---------Gibby tries to add a menu item -----------*/
 void menu_peep_desired(struct menu_item *m, int cmd) {
+  wdt_reset();
 
-  if (cmd == CMD_DN && desired_peep > -1){
-    desired_peep--;
+  if (cmd == CMD_DN && desired_peep >= 1) {  //TJ 06.11.2020 corrected logic 
+	  desired_peep--;
     save_settings();    
   }
   else if (cmd == CMD_UP && desired_peep < 25){
@@ -956,33 +1060,33 @@ void lcd_show_alarms() {
     return;
     
   //rubout the alarms
-  lcd.setCursor(14,2);
+  lcd.setCursor(16,2);
   lcd.print(F("    "));
   
   int trouble = 0;
   if (current_phase < 4 && alarm_low_pressure == true) {
-    lcd.setCursor(14, 2);
+    lcd.setCursor(16, 2);
     lcd.print(F("Lp"));
     trouble++;
   }
   if (current_phase > 3  && current_phase < 8 && alarm_high_pressure == true) {
-    lcd.setCursor(14, 2);
+    lcd.setCursor(16, 2);
     lcd.print(F("Hp"));
     trouble++;
   }
   if (current_phase > 7  && current_phase < 12 && alarm_low_volume == true) {
-    lcd.setCursor(16, 2);
+    lcd.setCursor(18, 2);
     lcd.print(F("Lv"));
     trouble++;
   }
   if (current_phase > 11  && current_phase < 16 && alarm_high_volume == true) {
-    lcd.setCursor(16, 2);
+    lcd.setCursor(18, 2);
     lcd.print(F("Hv"));
     trouble++;
   }
 
   if (!trouble){
-    lcd.setCursor(14, 2);
+    lcd.setCursor(16, 2);
     lcd.print(F("-OK-"));
   }
 }

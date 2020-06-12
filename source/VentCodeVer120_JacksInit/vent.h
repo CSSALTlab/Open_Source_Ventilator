@@ -3,16 +3,21 @@
 
 //  LIBRARIES  
 
-#define VERSION                115
+#define VERSION                132
 
 #define SIZEOFFILTER  10      // Changing this may mess up the PID filter
+#define PEEPMEASUREMENTDELAY   300   // msec to delay after valve closed to measure peep
+    // GLG0531
+    
 
 
 
 
 #define DEBUGSERIAL         // MUST be done in order to see any debuggng statements
                             // This is the one that sets up the serial port.
-                            
+#define CYCLEDIAGNOSTICOVERVIEW  // This gives one printout at the end of each cycle with useful info
+           
+//#define FILTERCHECKINGSPY     // prints current_phase and a millis timer at start of vent_slice()                           
 //#define DEBUGBMP280           //  To see statements related to BMP280 setup
 //#define FLOWMEASURE           //  To see info related to flow measurements
 //#define DEBUG              // Turn on to debug, geneal output of lots of sections
@@ -27,14 +32,16 @@
 //#define ANALOGSPY             // to watch analog flow measurement outputs
 //#define FLOWMEASURE2          // to watch the flow calculation on breaths -- time width etc 
 //#define FLOWMEASUREBREATH     // just to get the flow at the end of a breath
-#define AMBIENTPRESSURESPY    // to watch, end of each cycle, the stored diff, and the corrected atmospheric pressure
+//#define AMBIENTPRESSURESPY    // to watch, end of each cycle, the stored diff, and the corrected atmospheric pressure
 //#define FILTERSPY             // overall informaiton on the expiratory pressure filter
-//define PEEPFILTERPRESSURESPY  // to see the pressure finally reaching pressure_off()
+//#define PEEPFILTERPRESSURESPY  // to see the pressure finally reaching pressure_off()
 //#define PIDFILTERSPY            // see basic output from the PID filter
+//#define INSPIRATORYPAUSESPY     // to allow us to see every time the PAUSE is effected
 
 //#define TIMEWIDTHSPY              // to see the time an expiratory fast cycle took
 //#define TOTALOPENINGSPY           // to see the total time the exp. valve was open  
 //#define LUNGMEASUREMENTSSPY       // to see lung measureents
+//#define NEXTSLICESPY
 
 #define VOLTAGEDIVIDER          // if defined, indicates we have a voltage divider to sense supply problems
 #define LOWVOLTAGELIMIT   0      // low voltage limit during activation of both solenoids
@@ -50,8 +57,12 @@
 #include <SPI.h>
 #include <Wire.h>
 #include <AllSensors_DLHR.h>            // https://github.com/jeremycole/AllSensors_DLHR
+
+// ########## SDS Changes for BMP180
+#ifdef USE_BMP180
 #include <BMP180I2C.h>                  // Obsolete: replaced with BM280 on next include 
-                                        // https://groups.io/g/VentilatorDevelopers/message/1241
+#endif                                 // https://groups.io/g/VentilatorDevelopers/message/1241
+
 #include <sSense-BMx280I2C.h>           // Download link halfway down this page: 
                                         // https://create.arduino.cc/projecthub/dragos-iosub/arduino-bme280-sensor-how-to-115560
 
@@ -60,12 +71,18 @@
 
 
 //  Select if there is an additional BMP280 at Address 0x76 to do ambient pressure
-#define BMP280AMBIENT           //  Sensor at 0x76 to do ambient pressure  <<<_--IMPORTANT>>>>
+//#define BMP280AMBIENT           //  Sensor at 0x76 to do ambient pressure  <<<_--IMPORTANT>>>>
                                 //  Base sensor for airway pressure defined as 0x77
 // ====== YOU MUST HAVE THE CORRECT ADDRESS FOR THE AIRWAYPRESSURE I2C DEFICE (THE I2C FLOW DEVICE ISFIXED AT 41 )
-#define BMP_ADDRESS 0x76        // Adafruit for AirwayPressure (Purple PCB)
-#define BMP_AMBIENT 0x77       // *****GLG   THE KY (Blue PCB)
 
+/*--------------GLG ADDRESSES
+#define BMP_ADDRESS 0x77        // Adafruit for AirwayPressure 
+#define BMP_AMBIENT 0x76        // *****GLG   THE KY
+-----------------------------*/
+
+/*--------------uf addresses ------------*/
+#define BMP_ADDRESS 0x76        // KY for AirwayPressure 
+#define BMP_AMBIENT 0x77        // ADAFRUIT for ambient
 
 
 
@@ -167,7 +184,7 @@ extern LiquidCrystal lcd;
 #define EEPROM_PAUSE            64
 #define EEPROM_TV               68
 #define EEPROM_PEEP             72
-
+#define EEPROM_ASSIST           76
 
 #define AVERAGEBINNUMBER        10      // Number of averaging bins for the averaging routine
 #define PRESSURESENSORPIN       A6      // pin that the flow pressure sensor is attached to
@@ -208,7 +225,7 @@ extern LiquidCrystal lcd;
 
 #define USE_BMP280  1       /// set to 0 if not using the BMP280
 
-
+//#define USE_BMP180  0  //  if using BMP180  ########## SDS changes for BMP180
 
 //the lcd_size is 1602 (16x2) or 2004 (20x4)
 
@@ -219,9 +236,9 @@ extern boolean alarm_high_volume;
 
 extern int alarm_status;  
 
-extern long alarm_off_until;
-extern long alarm_on_until;
-extern long alarm_suppress_until;
+extern unsigned long alarm_off_until;
+extern unsigned long alarm_on_until;
+extern unsigned long alarm_suppress_until;
 extern boolean alarm_low_pressure;
 
 extern char alarm_array[];          // allows to keep track of 6 different alarms 
@@ -236,7 +253,7 @@ extern char alarm_array[];          // allows to keep track of 6 different alarm
 
 //I2C failure detection system 
 #define I2C_BUSY  (0x99)
-#define I2C_READY (0x37)
+#define I2C_READY (0x38)
 extern uint8_t        i2c_status  __attribute__ ((section (".noinit")));
 extern uint8_t        i2c_allowed;                    // variable to track whether this bus is allowed
 
@@ -244,14 +261,13 @@ extern uint8_t        i2c_allowed;                    // variable to track wheth
 extern unsigned long  exp_valve_first_open_time;
 extern int            exp_valve_last_closed;   // 1 = we closed the valve in expiration to maintain peep and will not reopen it
 extern unsigned long  exp_valve_last_closed_time ; // time that we closed the vale to try and hold PEEP
-extern int            exp_valve_reopen; 
+
 extern int            exp_valve_first_open;
 extern int            loops_since_major_jump;   // track when we made a major jump in the exp open time 
 
 
 // global ventilator declares
-extern bool exhale;                              //Boolean to indicate if on the exhale cycle
-extern bool lastMode;                            //Boolean for switching from Inhale to exhale
+
 
 extern float  supply_voltage;                      // supply voltge 
 extern int beats_per_minute;            
@@ -262,9 +278,12 @@ extern int diff_atmospheric_pressure;     //  = sensor1 - sensor2
                                            
 extern int bargraph[];   // Deprecated
 extern int beats_per_minute;
-extern int desired_peep;   // the desired peep vaue. 
-extern int vent_assist;    // 1 = assist ventilation  0 = don't
-extern int current_phase;
+extern byte actual_BPM;   // Track the actual breath rate, accounts for assisted breaths.  SDS
+extern long breath_duration; // duration of each breath, used to calculate actual BMP SDS
+extern byte desired_peep;   // the desired peep vaue. 
+extern byte vent_assist;    // 1 = assist ventilation  0 = don't
+extern byte peep_type; // PEEP filter type in menu 0 = Assist2/time cycled  1 = PID SDS 121
+extern byte current_phase;
 extern int current_pressure;
 extern int cut_off;                              
 extern int delP;                                 
@@ -296,8 +315,8 @@ extern int  trigger_cm;  // cm of water below nominal PEEP that patient has to p
 
 
 extern long cTime;                           
-extern long next_slice;
-extern long now;                                 // wall clock of the system
+extern unsigned long next_slice;
+extern unsigned long now;                                 // wall clock of the system
 extern long pressure_total;
 extern long pressure_peak;
 extern long randomNumber;                  ;
@@ -378,12 +397,23 @@ void menu_reset_sensor(struct menu_item *me, int cmd);
 void menu_inspiratory_pause(struct menu_item *me, int cmd);
 void menu_assist(struct menu_item *m, int cmd);           // GLG -- turn ASSIST on or off
 void menu_peep_desired(struct menu_item *me, int cmd);   // GLG -- add a way to change the PEEP setting
+void menu_peep_type(struct menu_item *me, int cmd);      // SDS121 Add peep filter selection
 void menu_trigger_cm(struct menu_item *me, int cmd);     // GLG -- add a way to adjust trigger sensitivity
+void menu_plat(struct menu_item *me, int cmd);           // SDS
 int finitefilter(int pressure);
 int PIDfilter(int pressure)   ;                           // GLG -- the PID filter
 int TimeCycledFilter(int pressure);                       // GLG -- filter that opens the exp valve ONCE
 
-
+// SDS Plateau and compliance variables
+extern byte compliance;
+extern byte pause_state;
+extern byte do_measure_pressure;
+extern float plat_pressure;
+extern int plat_count;
+extern byte measure_plat;
+extern byte do_measure_plat;
+extern byte measuring_plat;
+extern long save_next_slice;
 
 // set I2CBusAllowed=0 to disable the bus
 
