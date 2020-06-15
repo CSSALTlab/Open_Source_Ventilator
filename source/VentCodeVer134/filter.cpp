@@ -18,14 +18,14 @@ float   drop;  // value to use to calculate the drop
 
 // variables for the predictive time ADAPTIVE2 (ILC) algorithm
 //int           Tbottomlimit;  // earliest "time" we will even consider closing the expiration valve in expiration to try and set peep // TJ 06.15.2020 "time" in previous comment should be "vent slice"
-int			  exp_valve_closure_cycle; // TJ 06.15.2020 earliest cycle we will even consider closing the exhalation valve. New variable to replace old variable "Tbottomlimit".
+int			  ; // TJ 06.15.2020 earliest cycle exp_valve_closure_cycle will even consider closing the exhalation valve. New variable to replace old variable "Tbottomlimit".
 int           exp_valve_last_closed;   // 1 = we closed the valve in expiration to maintain peep and will not reopen it
 unsigned long exp_valve_last_closed_time ; // time that we closed the vale to try and hold PEEP
 
 unsigned long exp_valve_first_open_time; 
 int           exp_valve_first_open;
 int           loopcounter;   //TJ 06.15.2020 How is loopcounter counted? when is it reset? when does it start counting?
-int           wastedloops;   // counts the loops between nearly no peep and exp_valve_closure_cycle
+int           wastedloops;   // counts the loops between nearly no peep and Tbottomlimit
 int           total_exp_valve_open_time;  // counts the total open time for the PID filter
 int           loops_since_major_jump;   // track when we made a major jump in the exp open time 
 
@@ -119,7 +119,7 @@ int TimeCycledFilter(int pressure) {    // Filter that chooses a single stretch 
 
    
   
-  if(loopcounter < exp_valve_closure_cycle) { 
+  if(loopcounter < exp_valve_closure_cycle) {
     // leave the valve open
     output2 = desired_peep+5;
     if(pressure< desired_peep/2) wastedloops++;   // counts the number of loops between reaching very little peep and exp_valve_closure_cycle

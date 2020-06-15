@@ -333,7 +333,7 @@ extern float  temp;                               // Temporary working variable
 extern float  phistory[];                       // finite impulse filter storage of pressure 
 
 extern  int     peep_filter_pressure;         // a calculated perssure, only used for peep control.   
-extern int      Tbottomlimit;
+extern int      exp_valve_closure_cycle;
 extern int      smooth_pressure_run;             // needed in both main routine and in filter.cpp
 extern int      final_closure;   // 1 = we closed the valve in expiration to maintain peep and will not reopen it
 extern int      tested_settled_peep;     // flag for testing ONCE 

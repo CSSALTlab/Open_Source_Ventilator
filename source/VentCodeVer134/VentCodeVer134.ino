@@ -23,7 +23,7 @@
 //
 //
 // Version 117  5/4/2020   Fix the advancement of phase no. so it can't skip cut_off phase
-//                              This version provided Tbottomlimit to count the total amount of
+//                              This version provided exp_valve_closure_cycle to count the total amount of
 //                              opening of the expiratory valve in two different working routines:
 //                              PID -- simple pid revision of the observed presusre to better guide
 //                                     the algorithm
@@ -1776,8 +1776,8 @@ if (do_measure_plat == 1 && current_phase == cut_off){
       Serial.print(diff_atmospheric_pressure);
       Serial.print(F(" ,"));
       Serial.println(atmospheric_pressure);
-      Serial.print(F("Tbottomlimit = "));
-      Serial.println(Tbottomlimit);
+      Serial.print(F("exp_valve_closure_cycle = "));
+      Serial.println(exp_valve_closure_cycle);
       Serial.print(F("Desired PEEP: "));
       Serial.println(desired_peep);
       Serial.print(F("loopcounter: "));
@@ -2237,10 +2237,10 @@ wdt_reset();
 MyDelay(1000);
 wdt_reset();
 
-Tbottomlimit = 20;   // a guess.   
+exp_valve_closure_cycle = 20;   // a guess.   
 #ifdef FILTERSPY
-Serial.print(F("Tbottomlimit: "));
-Serial.println(Tbottomlimit);
+Serial.print(F("exp_valve_closure_cycle: "));
+Serial.println(exp_valve_closure_cycle);
 #endif
 
 

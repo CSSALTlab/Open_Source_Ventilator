@@ -651,14 +651,14 @@ void menu_vent_on(struct menu_item *m, int cmd)
 {
   if (cmd == CMD_SELECTED /* && selected_item == m->id*/ ) {
     vent_running= 2;  // set it to TWO
-    Tbottomlimit = 20;  
+    exp_valve_closure_cycle = 20;  
     next_slice=  millis();  // GLG0531 -- gotta set the next slice!!!!
     loops_since_major_jump=0;  //GLG0602 -- initilize the loops_since_major_jump here!
 
     
     #ifdef FILTERSPY
-    Serial.print(F("Tbottomlimit: "));
-    Serial.println(Tbottomlimit);
+    Serial.print(F("exp_valve_closure_cycle: "));
+    Serial.println(exp_valve_closure_cycle);
     #endif
   
     lcd_clear_screen();
