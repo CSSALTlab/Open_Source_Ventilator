@@ -256,6 +256,10 @@ boolean alarm_high_pressure;
 boolean alarm_low_volume;
 boolean alarm_high_volume;
 
+int breaths_since_vent_restart; //Number of COMPLETED breaths since the ventilator has restarted (clearing the volatile memory). Does not include current breath.
+int previous_peep_array[3];		//TJ 06.15.2020 Array of size 3 to store values of PEEP from 2 previous breaths. [2] = 2 breaths ago. [1] = previous breath. [0] = current breath
+int previous_cycles_until_exhValve_closure[3];  //TJ 06.15.2020 Array of size 3 to store values for number of cycles until closing exhalation valve for 2 previous breaths. [2] = 2 breaths ago. [1] = previous breath. [0] = current breath
+int peep_error_over_breaths; //TJ 06.15.2020 variable to hold value of difference between peep two breaths ago and previous peep (PEEP values are from array created and updated in VentCodeVerxxx.ino)  
 
 long cTime;                               //time of last computations for the integrator
 unsigned long next_slice             = 0L;         // Use 'L' for typoe suffix, not lowercase 'l'--looks like a 1 digit character
@@ -1547,7 +1551,27 @@ if (current_phase < cut_off)
     //
 
     //////////////////   FILTERS    ////////////////////////////////////////////////////////////
-    
+	//TJ 06.15.2020 first breath. Save the current PEEP, but remember to not use it yet. This is simply to store the variable for future use.
+	if (breaths_since_vent_restart == 0) {
+		previous_peep_array[0] = current_pressure;
+	}
+
+	//TJ 06.15.2020 second breath. Save the current PEEP to the array. After this breath array will be fully initialized and ready to use. (remember previous_peep_array[2] is a placeholder to keep current_pressure in memory)
+	if (breaths_since_vent_restart == 1) {
+		previous_peep_array[1] = previous_peep_array[0];
+		previous_peep_array[0] = current_pressure;
+	}
+
+	//TJ 06.15.2020 it's been two breaths, so the arrays are initialized.  Now cycle the 
+	if (breaths_since_vent_restart > 1) {
+		previous_peep_array[2] = previous_peep_array[1];
+		previous_peep_array[1] = previous_peep_array[0];
+		previous_peep_array[0] = current_pressure;
+		peep_error_over_breaths = previous_peep_array[2] - previous_peep_array[1];
+	}
+
+
+
     if(peep_type==0) peep_filter_pressure = TimeCycledFilter(current_pressure); // SDS121 allows filter to be set from menu //TJ 06.15.2020 peep_type is the type of control (PID,ILC) used to control PEEP. 
     else peep_filter_pressure = PIDfilter(current_pressure);
     
@@ -1920,6 +1944,12 @@ next_slice = now + 4000L; //If measuring plat use slice time of 4s -- SDS
   
   // GLG0531 - steve S's method of getting  this to the proper settings 
   current_phase++;
+
+
+  //TJ 06.15.2020 Track breaths by adding 1 to int every full breath. Check for overflow here, if int breaths_since_vent_restart is at limit do not count up.
+  if (breaths_since_vent_restart < 2147483647) {
+	  breaths_since_vent_restart = breaths_since_vent_restart++;
+  }
   
 
   return;

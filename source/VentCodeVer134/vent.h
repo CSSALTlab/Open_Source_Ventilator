@@ -260,7 +260,7 @@ extern uint8_t        i2c_allowed;                    // variable to track wheth
 // Valve monitoring
 extern unsigned long  exp_valve_first_open_time;
 extern int            exp_valve_last_closed;   // 1 = we closed the valve in expiration to maintain peep and will not reopen it
-extern unsigned long  exp_valve_last_closed_time ; // time that we closed the vale to try and hold PEEP
+extern unsigned long  exp_valve_last_closed_time; // time that we closed the valve to try and hold PEEP
 
 extern int            exp_valve_first_open;
 extern int            loops_since_major_jump;   // track when we made a major jump in the exp open time 

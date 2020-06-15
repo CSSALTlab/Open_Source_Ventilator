@@ -18,7 +18,6 @@ float   drop;  // value to use to calculate the drop
 
 int previous_cycle_peep; //TJ 06.15.2020 variable to hold value of previous peep
 int current_cycle_peep;  //TJ 06.15.2020 variable to hold value of current peep. Possibly redunant, possibly not.  Having a higher scope variable will keep the variable persistant between loops unlike the variable 'pressure' in the ILC input. Leaving for now in order assist in debugging/trouble shooting
-int peep_error_over_cycles; //TJ 06.15.2020 variable to hold value of difference between current peep and previous peep meausured.  
 int peep_error_current_vs_desired; //TJ 06.15.2020 variable to hold value of difference between current peep and desired peep.
 
 int peep_tuning_variable; //TJ 06.15.2020 variable to allow fine tuning of peep calibration. Used to calibrate algorithm using peep_error_over_cycles. Dev only.
@@ -125,23 +124,7 @@ int TimeCycledFilter(int pressure) {    // Filter that chooses a single stretch 
      
    #endif
 	 
-	//TJ 06.15.2020 essentially says if current cycle ISN'T the first cycle, set "previous_cycle_peep" equal to value of last cycle's peep ("current_cycle_peep", which now stores last cycle's peep as it is outdated) 
-	if (loopcounter > 0) {
-		previous_cycle_peep = current_cycle_peep;
-   }
-
-	//TJ 06.15.2020 Set current_cycle_peep equal to input variable "pressure". "current_cycle_peep" will be used again next loop to set previous pressure variable.
-	//Line below needs to come after setting of "previous_cycle_peep" to avoid "current_cycle_peep" being overwritten by current value.
-	current_cycle_peep = pressure;
-
-	//TJ 06.15.2020 set peep_error_over_cycles after current and previous cycle peep recorded
-	if (loopcounter > 0) {
-		peep_error_over_cycles = current_cycle_peep - previous_cycle_peep;
-	}
-
-	//TJ 06.15.2020 current-desired so that if current is larger value is positive and vice versa. Easier to intuit than the opposite
-	peep_error_current_vs_desired = current_cycle_peep - desired_peep; 
-
+	//TJ 06.15.2020 What is exp_valve_closure_cycle initialized to? 0?  If so, wouldn't that mean that output2 = desired_peep-5 is the first value from the first loop?
   if(loopcounter < exp_valve_closure_cycle) {
     // leave the valve open
     output2 = desired_peep+5;
@@ -266,6 +249,8 @@ int TimeCycledFilter(int pressure) {    // Filter that chooses a single stretch 
           // We are way high -- need to open a lot less
           if  (pressure>desired_peep*3/2){
             exp_valve_closure_cycle = exp_valve_closure_cycle*3/2;
+			//TJ 06.15.2020 Commenting out for now, don't want to apply logic yet. 
+			//exp_valve_closure_cycle = exp_valve_closure_cycle * 3 / 2 + (peep_tuning_variable * peep_error_over_cycles);
             loops_since_major_jump=0  ;   // track when we make major jumps
           }
 
