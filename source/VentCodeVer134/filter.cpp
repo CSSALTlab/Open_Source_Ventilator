@@ -16,9 +16,17 @@ int     peep_filter_pressure;  // use this only to drive the PEEP choices
 int     weightprint;  // to print the adaptive weights
 float   drop;  // value to use to calculate the drop
 
+int previous_cycle_peep; //TJ 06.15.2020 variable to hold value of previous peep
+int current_cycle_peep;  //TJ 06.15.2020 variable to hold value of current peep. Possibly redunant, possibly not.  Having a higher scope variable will keep the variable persistant between loops unlike the variable 'pressure' in the ILC input. Leaving for now in order assist in debugging/trouble shooting
+int peep_error_over_cycles; //TJ 06.15.2020 variable to hold value of difference between current peep and previous peep meausured.  
+int peep_error_current_vs_desired; //TJ 06.15.2020 variable to hold value of difference between current peep and desired peep.
+
+int peep_tuning_variable; //TJ 06.15.2020 variable to allow fine tuning of peep calibration. Used to calibrate algorithm using peep_error_over_cycles. Dev only.
+int peep_tuning_variable2; //TJ 06.15.2020 variable to allow fine tuning of peep calibration. Used to calibrate alghorithm using peep_error_current_vs_desired. Dev only.
+
 // variables for the predictive time ADAPTIVE2 (ILC) algorithm
 //int           Tbottomlimit;  // earliest "time" we will even consider closing the expiration valve in expiration to try and set peep // TJ 06.15.2020 "time" in previous comment should be "vent slice"
-int			  ; // TJ 06.15.2020 earliest cycle exp_valve_closure_cycle will even consider closing the exhalation valve. New variable to replace old variable "Tbottomlimit".
+int			  exp_valve_closure_cycle; // TJ 06.15.2020 earliest cycle exp_valve_closure_cycle will even consider closing the exhalation valve. New variable to replace old variable "Tbottomlimit".
 int           exp_valve_last_closed;   // 1 = we closed the valve in expiration to maintain peep and will not reopen it
 unsigned long exp_valve_last_closed_time ; // time that we closed the vale to try and hold PEEP
 
@@ -116,9 +124,24 @@ int TimeCycledFilter(int pressure) {    // Filter that chooses a single stretch 
     
      
    #endif
+	 
+	//TJ 06.15.2020 essentially says if current cycle ISN'T the first cycle, set "previous_cycle_peep" equal to value of last cycle's peep ("current_cycle_peep", which now stores last cycle's peep as it is outdated) 
+	if (loopcounter > 0) {
+		previous_cycle_peep = current_cycle_peep;
+   }
 
-   
-  
+	//TJ 06.15.2020 Set current_cycle_peep equal to input variable "pressure". "current_cycle_peep" will be used again next loop to set previous pressure variable.
+	//Line below needs to come after setting of "previous_cycle_peep" to avoid "current_cycle_peep" being overwritten by current value.
+	current_cycle_peep = pressure;
+
+	//TJ 06.15.2020 set peep_error_over_cycles after current and previous cycle peep recorded
+	if (loopcounter > 0) {
+		peep_error_over_cycles = current_cycle_peep - previous_cycle_peep;
+	}
+
+	//TJ 06.15.2020 current-desired so that if current is larger value is positive and vice versa. Easier to intuit than the opposite
+	peep_error_current_vs_desired = current_cycle_peep - desired_peep; 
+
   if(loopcounter < exp_valve_closure_cycle) {
     // leave the valve open
     output2 = desired_peep+5;
