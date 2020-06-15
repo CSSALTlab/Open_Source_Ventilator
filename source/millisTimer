@@ -1,0 +1,64 @@
+TIMSK1 |= (1 << OCIE1A);	
+OCR1A = 6250;
+TCCR1B |= (1 << CS12);
+	// turn on interrupts
+sei();
+
+breathState = 1
+    // breathState = 1 => inhaling
+    // breathState = 2 => inhalatory pause
+    // breathState = 3 => exhalation
+
+digitalWrite(MOTOR_A, HIGH);
+// -------------- open inhalation valve
+digitalWrite(MOTOR_B, HIGH);
+// -------------- close exhalation valve
+
+millis() = 0
+    // keeps track of the real time with internal clock in Arduino
+
+inhalationTime = 
+    // asks user for amount of time patient is inhaling 
+iPauseTime = 
+    // asks user for amount of time patient is in inhalation pause 
+exhalationTime = 
+    // asks user for amount of time patient is exhaling
+
+while(1){
+     while(millis < inhalationTime){
+
+     }
+    
+    digitalWrite(MOTOR_B, LOW);
+    // -------------- open exhalation valve
+    millis = 0
+            // resets the real time for 0
+            // thought it made more sense if you keep track
+            // of the each cycle rather than the entire breath
+            // you reset the clock and let the patient breathe 
+            // for the amount of time for that breath state 
+            // then you switch breath states, reset the clock and move on
+    breathState = 2
+
+    while(millis < iPauseTime && breathState = 2){
+
+    }
+
+    digitalWrite(MOTOR_A, LOW);
+    // -------------- close inhalation valve
+    millis = 0
+    breathState = 3
+
+    while(millis < exhalationTime && breathState = 3){
+
+    }
+    digitalWrite(MOTOR_A, HIGH);
+    // -------------- open inhalation valve
+    digitalWrite(MOTOR_B, HIGH);
+    // -------------- close exhalation valve
+    millis = 0
+    breathState = 1    
+
+    ISR(TIMER1_COMPA_vect) {
+    millis++;
+}
