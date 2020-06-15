@@ -217,8 +217,8 @@ extern LiquidCrystal lcd;
 #define OFFSET_X                40
 #define OFFSET_Y                44
 
-#define MOTOR_A                 2
-#define MOTOR_B                 3
+#define MOTOR_A                 2   //TJ 06.15.2020 MOTOR_A is normally closed inspiratory valve. LOW = closed, HIGH = open, gas flow is to patient
+#define MOTOR_B                 3   //TJ 06.15.2020 MOTOR_B is normally closed 3-way solenoid valve driving the pressure driven exhalation valve. LOW = closed, exhalation valve is OPEN; HIGH = open, exhalation valve is PRESSURIZED SHUT. Gas flows from patient
 
 #define MAX_PHASES              20      // At 40 the machne could barely keep up
 #define TV_INCREMENT            50      // 50 cc tidal volume changes

@@ -16,15 +16,16 @@ int     peep_filter_pressure;  // use this only to drive the PEEP choices
 int     weightprint;  // to print the adaptive weights
 float   drop;  // value to use to calculate the drop
 
-// variables for the predictive time ADAPTIVE2 algorithm
-int           Tbottomlimit;  // earliest time we will even consider closing the expiration valve in expiration to try and set peep
+// variables for the predictive time ADAPTIVE2 (ILC) algorithm
+//int           Tbottomlimit;  // earliest "time" we will even consider closing the expiration valve in expiration to try and set peep // TJ 06.15.2020 "time" in previous comment should be "vent slice"
+int			  exp_valve_closure_cycle; // TJ 06.15.2020 earliest cycle we will even consider closing the exhalation valve. New variable to replace old variable "Tbottomlimit".
 int           exp_valve_last_closed;   // 1 = we closed the valve in expiration to maintain peep and will not reopen it
 unsigned long exp_valve_last_closed_time ; // time that we closed the vale to try and hold PEEP
 
 unsigned long exp_valve_first_open_time; 
 int           exp_valve_first_open;
-int           loopcounter;   
-int           wastedloops;   // counts the loops between nearly no peep and Tbottomlimit
+int           loopcounter;   //TJ 06.15.2020 How is loopcounter counted? when is it reset? when does it start counting?
+int           wastedloops;   // counts the loops between nearly no peep and exp_valve_closure_cycle
 int           total_exp_valve_open_time;  // counts the total open time for the PID filter
 int           loops_since_major_jump;   // track when we made a major jump in the exp open time 
 
@@ -79,6 +80,7 @@ int TimeCycledFilter(int pressure) {    // Filter that chooses a single stretch 
                                         // after the ringing perturbations have gone
                                         // This may take some time to converge and reach the correct opening
                                         // time
+										// TJ 06.15.2020 TimeCycledFilter is Iterative Learning Control (ILC) algorithm 
   int x, output2; 
   float output=0;
   float lung_compliance;
@@ -117,15 +119,15 @@ int TimeCycledFilter(int pressure) {    // Filter that chooses a single stretch 
 
    
   
-  if(loopcounter < Tbottomlimit) {
+  if(loopcounter < exp_valve_closure_cycle) { 
     // leave the valve open
     output2 = desired_peep+5;
-    if(pressure< desired_peep/2) wastedloops++;   // counts the number of loops between reaching very little peep and Tbottomlimit
+    if(pressure< desired_peep/2) wastedloops++;   // counts the number of loops between reaching very little peep and exp_valve_closure_cycle
     }
 
-  if(loopcounter>Tbottomlimit || loopcounter==Tbottomlimit || current_phase==MAX_PHASES) {
+  if(loopcounter>exp_valve_closure_cycle || loopcounter==exp_valve_closure_cycle || current_phase==MAX_PHASES) {
    // GLG0531  GLG127 -- added the last clause to force an evaluation at least at the end of the entire respiratory cycle
-    // in the case that we have incremented Tbottomlimit far too high....
+    // in the case that we have incremented exp_valve_closure_cycle far too high....
      output2 = desired_peep-5;  // close the valve
 
 // GLG0601 Oops!! turns out it was NOT done in pressure_off....so I went back there and added t back in.... 
@@ -149,14 +151,12 @@ int TimeCycledFilter(int pressure) {    // Filter that chooses a single stretch 
      //////////////////////////CHECK PEEP   ONCE  ///////////////////           
       // if we close it, now we need to study the outcome 
       // this will take some time to settle......
-
-       if (    
-        
-           (  
-           ( (exp_valve_last_closed==1)&& (current_phase>cut_off) &&(now > (exp_valve_last_closed_time + PEEPMEASUREMENTDELAY)) )
-            || (current_phase==MAX_PHASES) 
-           ) 
-           
+		//TJ 06.15.2020 
+       if ((( 
+		   (exp_valve_last_closed==1) 
+		   && (current_phase>cut_off) 
+		   && (now > (exp_valve_last_closed_time + PEEPMEASUREMENTDELAY)) ) 
+		   || (current_phase==MAX_PHASES) ) 
            && tested_settled_peep==0 ) 
            
               // GLG 121a  test the peep after ringing has stopped after clsoing exp valve.. 
@@ -166,7 +166,7 @@ int TimeCycledFilter(int pressure) {    // Filter that chooses a single stretch 
               // so as to defeat a failure mode we discovered with
               // tony opening circut for a while and THEN connecting!
       {
-        // now measure where PEEP ended up at (given to use as pressure) and adjust Tbottomlimit
+        // now measure where PEEP ended up at (given to use as pressure) and adjust exp_valve_closure_cycle
         
         #ifdef FILTERSPY
         Serial.print(F("**CHECKING**pressure:  "));
@@ -192,67 +192,72 @@ int TimeCycledFilter(int pressure) {    // Filter that chooses a single stretch 
         // the changes that INCREASE PEEP will be limited so that the system doesn't oscillate from way below
         // to way above -- willing to force it to slowly grow to correct peep as the safety risks are less that way
 		//TJ 06.12.2020 - THIS IS Iterative Learning Control (ILC)
-        /*--------FIXING BELOW DESIRE PEEP (TBOTTOMLIMIT IS TOO LARGE)------------------------*/
+        /*--------FIXING BELOW DESIRE PEEP (exp_valve_closure_cycle IS TOO LARGE)------------------------*/
         // CASE: WAY BELOW 
         // We are way below desired_peep -- need to open the valve a third less
         // We allow ONE of these immmediately, but then you can't do another unless 7 small steps have been made. 
 		//TJ 06.12.2020 - loops_since_major_jump in lcd_ui is probably for tuning without having to change and recompile code
 		if (pressure < (desired_peep/2)  && loops_since_major_jump>8) {
-          Tbottomlimit = (Tbottomlimit*2)/3; 
+          exp_valve_closure_cycle = (exp_valve_closure_cycle*2)/3; 
           #ifdef FILTERSPY //Filterspy is a variable which toggles print statements if defined
-          Serial.println(F("Jump down Tbottomlimit"));         
+          Serial.println(F("Jump down exp_valve_closure_cycle"));         
           #endif
           loops_since_major_jump=0  ;   // track when we make major jumps
         }
 
         // CASE: SLIGHTY BELOW
         // We are sightly below desired_peep; need to open a litte less 
-        if (pressure <desired_peep)  
+		// TJ 06.15.2020 Changed this statment to be "else if" instead of just "if". This will prevent both "WAY BELOW" and "SLIGHTLY BELOW" conditions to excute if pressure is "WAY BELOW"
+        else if (pressure <desired_peep)  
           {
-          Tbottomlimit--  ;// 
-          if(Tbottomlimit<1) Tbottomlimit=1;  
+          exp_valve_closure_cycle--  ;// 
+          if(exp_valve_closure_cycle<1) exp_valve_closure_cycle=1;  
               // establish that it must be positive
               // due to valve latency, no reason to go below 1
           // GLG0531 -- added in this fix from ver127 that avoided the 
           // complete failure that Tony managed to provoke where 
           // Tbottom limit went way negative and then shot way positive.
           #ifdef FILTERSPY
-          Serial.println(F("Decrement Tbottomlimit"));         
+          Serial.println(F("Decrement exp_valve_closure_cycle"));         
           #endif
           }
 
 
-        /*--------FIXING ABOVE DESIRE PEEP (TBOTTOMLIMIT IS TOO SMALL)------------------------*/
+        /*--------FIXING ABOVE DESIRE PEEP (exp_valve_closure_cycle IS TOO SMALL)------------------------*/
           // The changes that REDUCE PRESSURE won't be limited because they are patient protective in a very important way. 
           // provide some patient protection if the pressure is significantly higher than desired
           // this will also help the filter get to a converged condition sooner
 
           // SAFETY:  IF MORE THAN 4 ABOVE, OPEN EXPIRATORY VAVE RELEASE TO ZERO
          
-		   
+		//TJ 06.15.2020 - Removed "break glass" logic below. If the airway pressure was high enough to damage a lung, it would be during peak inspiration. 
+		// There is no emergency situation during exhalation.
+		/*
 		if(pressure>desired_peep+4){
             digitalWrite(MOTOR_B, LOW); // drop the pressure //TJ 06.12.2020 this will cause exhalation valve to open more than once, even though ILC is designed to open exh. valve only once per exhalation
             //loops_since_major_jump=0  ;   // track when we make major jumps
           }
+		  */
 
           // CASE:   WAY HIGH
           // We are way high -- need to open a lot less
           if  (pressure>desired_peep*3/2){
-            Tbottomlimit = Tbottomlimit*3/2;
+            exp_valve_closure_cycle = exp_valve_closure_cycle*3/2;
             loops_since_major_jump=0  ;   // track when we make major jumps
           }
 
           // CASE;  SLIGHTLY HIGH
           // We are slightly high -- open just a little longer 
-		  if (pressure>desired_peep) Tbottomlimit++; //TJ 06.12.2020 What are the units of Tbottomlimit? 
+		  // TJ 06.15.2020 Changed this statment to be "else if" instead of just "if". This will prevent both "WAY HIGH" and "SLIGHTLY HIGH" conditions to excute if pressure is "WAY HIGH"
+		  else if (pressure>desired_peep) exp_valve_closure_cycle++; //TJ 06.12.2020 What are the units of exp_valve_closure_cycle? 
           tested_settled_peep = 1;  // set a flag so it doesn't get done again
           
-      }   //End of checking pressue and adjusting Tbottomlimit
+      }   //End of checking pressue and adjusting exp_valve_closure_cycle
         
 
   #ifdef TOTALOPENINGSPY
   Serial.print(F("T-b-l: "));
-  Serial.println(Tbottomlimit);
+  Serial.println(exp_valve_closure_cycle);
   #endif
   
 
@@ -260,7 +265,7 @@ int TimeCycledFilter(int pressure) {    // Filter that chooses a single stretch 
   Serial.print(F("Filter output2= "));
   Serial.println(output2);
   Serial.print(F("T-b-l: "));
-  Serial.println(Tbottomlimit);
+  Serial.println(exp_valve_closure_cycle);
   #endif
     
   return(output2);

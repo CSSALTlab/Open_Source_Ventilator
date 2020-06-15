@@ -201,7 +201,7 @@ int bargraph[MAX_PHASES];  // bargraph deprecated
 int beats_per_minute        = 10;
 byte desired_peep            =  5;          // what PEEP we want to happen.
 byte vent_assist             = 0;          // 1 = assist; 0 = none     
-byte peep_type; // PEEP filter type in menu 0 = Assist2/time cycled  1 = PID SDS 121   
+byte peep_type; // PEEP filter type in menu 0 = Assist2/time cycled  1 = PID SDS 121  //TJ 06.15.2020 peep_type = 0 is ILC, peep_type = 1 is PID 
 byte current_phase           = 0;
 int current_pressure        = 0;
 int cut_off;                              // phase at which we turn off the inspiration
@@ -276,7 +276,7 @@ float temp;                               // Temporary working variable
 float current_exp_volume;                 // the volume in the most recent tiny slice (approx 23 mSec)
 
 int smooth_pressure_run;          // counter for how tightly the expriatory pressure is kept
-int tested_settled_peep=0;            // flag for testing the peep ONCE
+int tested_settled_peep=0;            // flag for testing the peep ONCE //TJ 06.15.2020 tested_settled_peep = 0 means not tested; tested_settled_peep = 1 means already tested, don't test again during current loop
 
 //===================================== Define Objects ================================
 #if I2CLCDDISPLAY == true
@@ -1041,6 +1041,8 @@ void pressure_off() {   // now implements both inspiratory pause AND PEEP
     #endif
 
 // SDS120b remvoed peakinspiratorypressure check since it's already done above
+//peep_filter_pressure can only have values of desired_peep+5 or desired_peep-5. This value is set in filter.
+
     if (peep_filter_pressure > desired_peep){
       digitalWrite(MOTOR_B, LOW); // drop the pressure
       if(exp_valve_first_open==0){
@@ -1375,7 +1377,7 @@ if (inspiratory_pause == 1)
   atmospheric_pressure = atmospheric_pressure2 + diff_atmospheric_pressure;
 #endif
 
-  current_pressure = measure_pressure() - atmospheric_pressure  ;    // MEASURE AIRWAY PRESSURE
+  current_pressure = measure_pressure() - atmospheric_pressure  ;    // MEASURE AIRWAY PRESSURE TJ 6.15.2020 - current_pressure is GAUGE pressure
    
 
   // THE FIRST PART of this subroutine gets carried out many, many times
@@ -1398,7 +1400,7 @@ if (inspiratory_pause == 1)
   // Set up a counter to keep track of how settled the expiratory pressure is--do it right at the transition
   if (current_phase == cut_off) {
     total_exp_valve_open_time=0;   // use as a counter of total time spent with exp valve open
-    tested_settled_peep = 0;      // set the flag so we will test thepeep ONCE
+    tested_settled_peep = 0;      // set the flag so we will test the peep ONCE
     loopcounter=0;   // havent made any loops through the expiratory limb;   
     smooth_pressure_run = 0;
     #ifdef I2CDIFFTRANSDUCER
@@ -1546,7 +1548,7 @@ if (current_phase < cut_off)
 
     //////////////////   FILTERS    ////////////////////////////////////////////////////////////
     
-    if(peep_type==0) peep_filter_pressure = TimeCycledFilter(current_pressure); // SDS121 allows filter to be set from menu
+    if(peep_type==0) peep_filter_pressure = TimeCycledFilter(current_pressure); // SDS121 allows filter to be set from menu //TJ 06.15.2020 peep_type is the type of control (PID,ILC) used to control PEEP. 
     else peep_filter_pressure = PIDfilter(current_pressure);
     
  /*   Not needed, already occurs in pressure_off() SDS120b
