@@ -4,7 +4,7 @@ Open source for use worldwide and contributions from others worldwide
 See out documentation at [https://cssaltlab.github.io/Open_Source_Ventilator/](https://cssaltlab.github.io/Open_Source_Ventilator/)
 
 NOTE:
-The ventilator makes references to 2 outside libraries not included in the code found on the Github or in the Arduino IDE.
+The ventilator code makes references to 2 outside libraries not included in the code found on Github or in the Arduino IDE.
 
 
 These two libraries are:  
