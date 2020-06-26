@@ -484,13 +484,13 @@ wdt_reset();
     return false;
 
   if (digitalRead(FN) == LOW)
-    new_status |= BTN_FN;
+    new_status |= BTN_SELECT;
   if (digitalRead(DOWN) == LOW)
     new_status |= BTN_DN;
   if (digitalRead(UP) == LOW)
     new_status |= BTN_UP;
   if (digitalRead(ON_OFF) == LOW)
-    new_status |= BTN_PW;
+    new_status |= BTN_MENU;
 
   //debounce, so, read next button update only after 75 msec
   wdt_reset();
@@ -1104,7 +1104,7 @@ void lcd_slice() {
     return;
   }
 
-  if (button_status & BTN_PW) {
+  if (button_status & BTN_MENU) {
     if (menu_cursor == -1)
       menu_cursor = 1;  // 1st item is ventilate. this jumps directly to this menu
     else
@@ -1112,7 +1112,7 @@ void lcd_slice() {
   }
 
   if (menu_cursor == -1) {            //selected_item = -1, menu is not being displayed
-    if (!(button_status & BTN_FN))      //if start menu only if FN button is down
+    if (!(button_status & BTN_SELECT))      //if start menu only if FN button is down
       return;
     menu_cursor = 0;
   }
@@ -1131,7 +1131,7 @@ void lcd_slice() {
     if (menu_cursor -  screen_top_line >= n_display_rows) {
       screen_top_line = menu_cursor - n_display_rows + 1;
     }
-    if (button_status & BTN_FN) {
+    if (button_status & BTN_SELECT) {
       menu_list[menu_cursor].menu_item_handler(menu_list + menu_cursor, CMD_SELECTED);
       selected_item = menu_cursor;
     }
@@ -1142,7 +1142,7 @@ void lcd_slice() {
       menu_list[menu_cursor].menu_item_handler(menu_list + menu_cursor, CMD_UP);
     else if (button_status & BTN_DN)
       menu_list[menu_cursor].menu_item_handler(menu_list + menu_cursor, CMD_DN);
-    else if (button_status & BTN_FN)
+    else if (button_status & BTN_SELECT)
       selected_item = -1; //deselect
   }
   if (menu_cursor != -1)

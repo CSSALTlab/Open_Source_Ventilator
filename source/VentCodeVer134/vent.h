@@ -148,10 +148,10 @@ extern LiquidCrystal lcd;
 
 #endif
 
-#define BTN_FN                  (1)
+#define BTN_SELECT              (1)
 #define BTN_DN                  (2)
 #define BTN_UP                  (4)
-#define BTN_PW                  (8)
+#define BTN_MENU                (8)
 
 #define CHAR_CARET              (5)
 #define CHAR_TWO                (6)
