@@ -156,10 +156,10 @@ wdt_reset();
       lcd.backlight();
     }
   */
-  pinMode(FN,     INPUT_PULLUP);
+  pinMode(SELECT, INPUT_PULLUP);
   pinMode(UP,     INPUT_PULLUP);
   pinMode(DOWN,   INPUT_PULLUP);
-  pinMode(ON_OFF, INPUT_PULLUP);
+  pinMode(MENU  , INPUT_PULLUP);
 
   wdt_reset();
   //  paint_lcd();
@@ -483,13 +483,13 @@ wdt_reset();
   if (millis() < next_button_read_time)
     return false;
 
-  if (digitalRead(FN) == LOW)
+  if (digitalRead(SELECT) == LOW)
     new_status |= BTN_SELECT;
   if (digitalRead(DOWN) == LOW)
     new_status |= BTN_DN;
   if (digitalRead(UP) == LOW)
     new_status |= BTN_UP;
-  if (digitalRead(ON_OFF) == LOW)
+  if (digitalRead(MENU) == LOW)
     new_status |= BTN_MENU;
 
   //debounce, so, read next button update only after 75 msec
@@ -1112,7 +1112,7 @@ void lcd_slice() {
   }
 
   if (menu_cursor == -1) {            //selected_item = -1, menu is not being displayed
-    if (!(button_status & BTN_SELECT))      //if start menu only if FN button is down
+    if (!(button_status & BTN_SELECT))      //if start menu only if SELECT button is down
       return;
     menu_cursor = 0;
   }

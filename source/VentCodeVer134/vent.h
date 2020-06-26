@@ -199,10 +199,10 @@ extern LiquidCrystal lcd;
 
 //                                      Nano Pin Settings
 #define ALARM_PIN               6
-#define FN                      A0
+#define SELECT                  A0
 #define UP                      A1
 #define DOWN                    A2
-#define ON_OFF                  A3
+#define MENU                    A3
 #define TFT_CS                  10        
 #define TFT_RS                  9
 #define CS_PIN                  8       //this is the pin to select the touch controller on spi interface
