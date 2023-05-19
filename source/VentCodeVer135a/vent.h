@@ -277,7 +277,7 @@ extern int diff_atmospheric_pressure;     //  = sensor1 - sensor2
                                            // only updated at begnning and in zero/reset
                                            
 extern int bargraph[];   // Deprecated
-extern int beats_per_minute;
+
 extern byte actual_BPM;   // Track the actual breath rate, accounts for assisted breaths.  SDS
 extern long breath_duration; // duration of each breath, used to calculate actual BMP SDS
 extern byte desired_peep;   // the desired peep vaue. 
